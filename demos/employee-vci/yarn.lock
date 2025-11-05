@@ -2765,7 +2765,14 @@ optionator@^0.9.3:
     prelude-ls "^1.2.1"
     type-check "^0.4.0"
 
-ownd-vci@../../:
+"ownd-vci-common@file:../common":
+  version "1.0.0"
+  resolved "file:../common"
+  dependencies:
+    sqlite "^5.0.1"
+    sqlite3 "^5.1.6"
+
+"ownd-vci@file:../../":
   version "1.0.0"
   resolved "file:../.."
   dependencies:

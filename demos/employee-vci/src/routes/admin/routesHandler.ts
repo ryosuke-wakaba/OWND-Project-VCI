@@ -4,7 +4,7 @@ import { Result } from "ownd-vci/dist/types.js";
 import {
   handleNotSuccessResult,
   NotSuccessResult,
-} from "ownd-vci/dist/routes/common.js";
+} from "ownd-vci-common/dist/routes/common.js";
 import {
   generateRandomNumericString,
   generateRandomString,
@@ -108,7 +108,7 @@ const credentialOfferForEmployee = async (
   const code = generateRandomString();
   const expiresIn = Number(process.env.VCI_PRE_AUTH_CODE_EXPIRES_IN || "86400");
   const txCode = generateRandomNumericString();
-  await store.addPreAuthCode(code, expiresIn, txCode, employee.id);
+  await store.addPreAuthCode(code, expiresIn, txCode, String(employee.id));
 
   const credentialOfferUrl = generatePreAuthCredentialOffer(
     process.env.CREDENTIAL_ISSUER || "",

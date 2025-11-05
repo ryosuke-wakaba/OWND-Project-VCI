@@ -65,6 +65,7 @@ const DDL_AUTH_CODES = `
     preAuthFlow BOOLEAN,
     txCode VARCHAR(8),
     needsProof BOOLEAN,
+    sub VARCHAR(255),
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     usedAt DATETIME DEFAULT NULL
   )
@@ -117,16 +118,18 @@ export const addAuthCode = async (
   preAuthFlow: boolean,
   txCode: string,
   needsProof: boolean,
+  sub?: string,
 ) => {
   try {
     const db = await store.openDb();
     const result = await db.run(
-      `INSERT INTO ${TBL_NM_AUTH_CODES} (code, expiresIn, preAuthFlow, txCode, needsProof) VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO ${TBL_NM_AUTH_CODES} (code, expiresIn, preAuthFlow, txCode, needsProof, sub) VALUES (?, ?, ?, ?, ?, ?)`,
       code,
       expiresIn,
       preAuthFlow,
       txCode,
       needsProof,
+      sub || null,
     );
     return result.lastID!;
   } catch (err) {

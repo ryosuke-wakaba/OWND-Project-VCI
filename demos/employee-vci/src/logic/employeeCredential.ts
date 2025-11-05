@@ -1,7 +1,7 @@
 import * as jose from "jose";
 
 import store from "../store.js";
-import keyStore from "ownd-vci/dist/store/keyStore.js";
+import keyStore from "ownd-vci-common/dist/store/keyStore.js";
 import { issueFlatCredential } from "ownd-vci/dist/credentials/sd-jwt/issuer.js";
 import { ErrorPayload, Result } from "ownd-vci/dist/types.js";
 

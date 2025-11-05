@@ -1,9 +1,9 @@
-import store from "ownd-vci/dist/store.js";
-import keyStore from "ownd-vci/dist/store/keyStore.js";
+import store from "ownd-vci-common/dist/store.js";
+import keyStore from "ownd-vci-common/dist/store/keyStore.js";
 import authStore, {
   StoredAccessToken,
   TBL_NM_AUTH_CODES,
-} from "ownd-vci/dist/store/authStore.js";
+} from "ownd-vci-common/dist/store/authStore.js";
 import {
   Identifiable,
   AuthorizedCode,
@@ -25,24 +25,26 @@ entity employees {
   *  updatedAt datetime
 }
 
-entity auth_codes_employees {
-  * auth_code_id <<FK>>
-  * employee_id <<FK>>
+entity auth_codes {
+  * id int
   --
-  * created_at: datetime
+  * code string
+  * pre_auth_flow boolean
+  * pin string
+  * needs_proof boolean
+  * sub string (employee.id)
+  * expired_in number
+  * created_at datetime
+  * used_at datetime
 }
 
 auth_codes ||..o| access_tokens
-auth_codes ||..|| auth_codes_employees
 access_tokens ||..|{ c_nonces
-
-employees ||..o| auth_codes_employees
 
 @enduml
 */
 
 const TBL_NM_EMPLOYEES = "employees";
-const TBL_NM_AUTH_CODES_EMPLOYEES = "auth_codes_employees";
 
 const DDL_EMPLOYEES = `
   CREATE TABLE ${TBL_NM_EMPLOYEES} (
@@ -57,19 +59,9 @@ const DDL_EMPLOYEES = `
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `.trim();
-const DDL_PRE_AUTH_CODES_EMPLOYEES = `
-  CREATE TABLE ${TBL_NM_AUTH_CODES_EMPLOYEES} (
-    auth_code_id INTEGER,
-    employee_id INTEGER,
-    PRIMARY KEY (auth_code_id, employee_id),
-    FOREIGN KEY (auth_code_id) REFERENCES ${TBL_NM_AUTH_CODES}(id),
-    FOREIGN KEY (employee_id) REFERENCES ${TBL_NM_EMPLOYEES}(id)
-  )
-`.trim();
 
 const DDL_MAP = {
   [TBL_NM_EMPLOYEES]: DDL_EMPLOYEES,
-  [TBL_NM_AUTH_CODES_EMPLOYEES]: DDL_PRE_AUTH_CODES_EMPLOYEES,
 };
 const createDb = async () => {
   await keyStore.createDb();
@@ -138,21 +130,16 @@ export const addPreAuthCode = async (
   code: string,
   expiresIn: number,
   txCode: string,
-  employeeId: number,
+  sub: string,
 ) => {
   try {
-    const db = await store.openDb();
     const authCodeId = await authStore.addAuthCode(
       code,
       expiresIn,
       true,
       txCode,
       true,
-    );
-    await db.run(
-      `INSERT INTO ${TBL_NM_AUTH_CODES_EMPLOYEES} (auth_code_id, employee_id) VALUES (?, ?)`,
-      authCodeId,
-      employeeId,
+      sub,
     );
     return authCodeId;
   } catch (err) {
@@ -162,13 +149,14 @@ export const addPreAuthCode = async (
 
 type StoredPreAuthCode = {
   usedAt: string;
+  sub?: string;
 } & Omit<AuthorizedCode, "isUsed"> &
   Identifiable;
 export const getPreAuthCodeAndEmployee = async (code: string) => {
   try {
     const db = await store.openDb();
 
-    // pre_auth_codesテーブルからcodeに一致するレコードを取得
+    // auth_codesテーブルからcodeに一致するレコードを取得
     const storedAuthCode = await db.get<StoredPreAuthCode>(
       `
       SELECT * FROM ${TBL_NM_AUTH_CODES} WHERE code = ?
@@ -177,30 +165,22 @@ export const getPreAuthCodeAndEmployee = async (code: string) => {
     );
 
     if (!storedAuthCode) {
-      return null; // 該当するpre_auth_codeがない場合はnullを返す
+      return null; // 該当するauth_codeがない場合はnullを返す
     }
 
-    // pre_auth_codes_employeesからemployee_idを取得
-    const relation = await db.get(
-      `
-      SELECT * FROM ${TBL_NM_AUTH_CODES_EMPLOYEES} WHERE auth_code_id = ?
-    `,
-      [storedAuthCode.id],
-    );
-
-    if (!relation) {
-      throw new Error("PreAuthCode found but no related employee found");
+    if (!storedAuthCode.sub) {
+      throw new Error("AuthCode found but no sub (employee identifier) found");
     }
 
-    // employeesテーブルから該当するemployeeを取得
+    // employeesテーブルからsubに該当するemployeeを取得（subはemployee.idの文字列表現）
     const employee = await db.get<Employee>(
       `
       SELECT * FROM ${TBL_NM_EMPLOYEES} WHERE id = ?
     `,
-      [relation.employee_id],
+      [Number(storedAuthCode.sub)],
     );
     if (!employee) {
-      throw new Error("Relation found but no related employee found");
+      throw new Error("Employee not found for sub: " + storedAuthCode.sub);
     }
 
     return { storedAuthCode, employee };

@@ -3,7 +3,12 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    "./dist/*": "./dist/*"
+  },
   "dependencies": {
+    "ownd-vci": "file:../../",
     "sqlite": "^5.0.1",
     "sqlite3": "^5.1.6"
   },

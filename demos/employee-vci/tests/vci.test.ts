@@ -8,7 +8,7 @@ import {
   generateRandomString,
   generateRandomNumericString,
 } from "ownd-vci/dist/utils/randomStringUtils.js";
-import keyStore from "ownd-vci/dist/store/keyStore.js";
+import keyStore from "ownd-vci-common/dist/store/keyStore.js";
 
 import { init } from "../src/app";
 import store, { NewEmployee } from "../src/store";
@@ -53,7 +53,7 @@ describe("POST /token", () => {
 
   it("should return 400 when pre-authorized_code is invalid", async () => {
     const employee = await store.getEmployeeByNo("1");
-    await store.addPreAuthCode("valid-code", 3600, "12345678", employee?.id!);
+    await store.addPreAuthCode("valid-code", 3600, "12345678", String(employee?.id!));
     const preAuthorizedCode = "invalid-code";
     const response = await request(app.callback()).post("/token").send({
       grant_type: "urn:ietf:params:oauth:grant-type:pre-authorized_code",
@@ -66,7 +66,7 @@ describe("POST /token", () => {
     const employee = await store.getEmployeeByNo("1");
     const preAuthorizedCode = generateRandomString();
     const txCode = generateRandomNumericString();
-    await store.addPreAuthCode(preAuthorizedCode, -1, txCode, employee?.id!);
+    await store.addPreAuthCode(preAuthorizedCode, -1, txCode, String(employee?.id!));
 
     const response = await request(app.callback()).post("/token").send({
       grant_type: "urn:ietf:params:oauth:grant-type:pre-authorized_code",
@@ -86,7 +86,7 @@ describe("POST /token", () => {
     const employee = await store.getEmployeeByNo("1");
     const preAuthorizedCode = generateRandomString();
     const txCode = generateRandomNumericString();
-    await store.addPreAuthCode(preAuthorizedCode, 86400, txCode, employee?.id!);
+    await store.addPreAuthCode(preAuthorizedCode, 86400, txCode, String(employee?.id!));
 
     const response = await request(app.callback()).post("/token").send({
       grant_type: "urn:ietf:params:oauth:grant-type:pre-authorized_code",
@@ -111,7 +111,7 @@ describe("POST /token", () => {
     const employee = await store.getEmployeeByNo("1");
     const preAuthorizedCode = generateRandomString();
     const txCode = generateRandomNumericString();
-    await store.addPreAuthCode(preAuthorizedCode, 86400, txCode, employee?.id!);
+    await store.addPreAuthCode(preAuthorizedCode, 86400, txCode, String(employee?.id!));
     // 1st time
     let response = await request(app.callback()).post("/token").send({
       grant_type: "urn:ietf:params:oauth:grant-type:pre-authorized_code",
@@ -130,7 +130,12 @@ describe("POST /token", () => {
 });
 
 const validAccessTokenMock = async () => {
-  const id = await store.addPreAuthCode("dummy code", 30, "dummy-user-pin", 1);
+  const id = await store.addPreAuthCode(
+    "dummy code",
+    30,
+    "dummy-user-pin",
+    "1",
+  );
   const accessToken = "validToken";
   const expiresIn = 86400;
   const cNonce = "randomNonce";
@@ -182,7 +187,7 @@ describe("POST /credential", () => {
         "dummy code",
         30,
         "dummy user pin",
-        0,
+        "0",
       );
       await store.addAccessToken(
         accessToken,

@@ -1,4 +1,4 @@
-import { StoredAccessToken } from "ownd-vci/dist/store/authStore.js";
+import { StoredAccessToken } from "ownd-vci-common/dist/store/authStore.js";
 import {
   CredentialIssuerConfig,
   IssueSdJwtVcCredential,

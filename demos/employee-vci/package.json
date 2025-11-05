@@ -20,7 +20,8 @@
     "koa-router": "^12.0.0",
     "koa-static": "^5.0.0",
     "libsodium-wrappers": "^0.7.13",
-    "ownd-vci": "../../",
+    "ownd-vci": "file:../../",
+    "ownd-vci-common": "file:../common",
     "sqlite": "^5.0.1",
     "sqlite3": "^5.1.6",
     "uuid": "^9.0.1"
@@ -52,8 +53,6 @@
     "typescript": "^5.2.2"
   },
   "scripts": {
-    "preinstall": "rm -rf node_modules && rm -rf ../*/node_modules && rm -rf ../../node_modules && rm -rf ../event-certificate-manager/*/node_modules",
-    "postinstall": "cd ../common && npm install && cd ../../ && npm install && npm run build",
     "build": "npm run fix && tsc -p tsconfig.json",
     "start": "nodemon",
     "test": "mocha --exit",
