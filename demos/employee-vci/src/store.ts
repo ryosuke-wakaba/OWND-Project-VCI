@@ -192,25 +192,24 @@ export const getPreAuthCodeAndEmployee = async (code: string) => {
 export const addAccessToken = async (
   accessToken: string,
   expiresIn: number,
-  cNonce: string,
-  cNonceExpiresIn: number,
   authorizedCodeId: number,
 ) => {
-  await authStore.addAccessToken(
+  const accessTokenId = await authStore.addAccessToken(
     accessToken,
     expiresIn,
-    cNonce,
-    cNonceExpiresIn,
     authorizedCodeId,
   );
   // preAuthCodeを使用済みに更新
   await authStore.updateAuthCode(authorizedCodeId);
+  return accessTokenId;
 };
+
 export const getAccessToken = async (
   accessToken: string,
 ): Promise<StoredAccessToken | undefined> => {
   return await authStore.getAccessToken(accessToken);
 };
+
 export const refreshNonce = async (
   accessTokenId: number,
   cNonce: string,

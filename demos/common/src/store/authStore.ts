@@ -169,21 +169,31 @@ export const updateAuthCode = async (id: number) => {
 export const addAccessToken = async (
   accessToken: string,
   expiresIn: number,
-  cNonce: string,
-  cNonceExpiresIn: number,
   authorizedCodeId: number,
   // @ts-ignore
-): Promise<ISqlite.RunResult<sqlite3.Statement>> | never => {
+): Promise<number | undefined> => {
   try {
     const db = await store.openDb();
-    let result = await db.run(
-      `INSERT INTO ${TBL_NM_ACCESS_TOKENS} (token, expiresIn, authorized_code_id) VALUES (?, ?,?)`,
+    const result = await db.run(
+      `INSERT INTO ${TBL_NM_ACCESS_TOKENS} (token, expiresIn, authorized_code_id) VALUES (?, ?, ?)`,
       accessToken,
       expiresIn,
       authorizedCodeId,
     );
-    const accessTokenId = result.lastID; // 最後に挿入されたレコードのIDを取得
+    return result.lastID; // アクセストークンのIDを返す
+  } catch (err) {
+    handleError(err);
+  }
+};
 
+export const addCNonce = async (
+  accessTokenId: number,
+  cNonce: string,
+  cNonceExpiresIn: number,
+  // @ts-ignore
+): Promise<ISqlite.RunResult<sqlite3.Statement>> | never => {
+  try {
+    const db = await store.openDb();
     return await db.run(
       `INSERT INTO ${TBL_NM_C_NONCES} (access_token_id, nonce, expired_in) VALUES (?, ?, ?)`,
       accessTokenId,
@@ -288,6 +298,7 @@ export default {
   updateAuthCode,
   getAuthCode,
   addAccessToken,
+  addCNonce,
   getAccessToken,
   refreshNonce,
 };

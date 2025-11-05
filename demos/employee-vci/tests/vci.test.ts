@@ -105,11 +105,6 @@ describe("POST /token", () => {
     const accessToken = response.body.access_token;
     const storedAccessToken = await store.getAccessToken(accessToken);
     assert.equal(response.body.expires_in, storedAccessToken?.expiresIn);
-    assert.equal(response.body.c_nonce, storedAccessToken?.cNonce);
-    assert.equal(
-      response.body.c_nonce_expires_in,
-      storedAccessToken?.cNonceExpiresIn,
-    );
   });
 
   it("should return 400 when the same tx_code is provided again", async () => {
@@ -143,13 +138,9 @@ const validAccessTokenMock = async () => {
   );
   const accessToken = "validToken";
   const expiresIn = 86400;
-  const cNonce = "randomNonce";
-  const cNonceExpiresIn = 86400;
   await store.addAccessToken(
     accessToken,
     expiresIn,
-    cNonce,
-    cNonceExpiresIn,
     id!,
   );
 };
@@ -186,8 +177,6 @@ describe("POST /credential", () => {
     it("should return 401 when the token has expired", async () => {
       const accessToken = "validToken";
       const expiresIn = -1;
-      const cNonce = "";
-      const cNonceExpiresIn = 0;
       const id = await store.addPreAuthCode(
         "dummy code",
         30,
@@ -197,8 +186,6 @@ describe("POST /credential", () => {
       await store.addAccessToken(
         accessToken,
         expiresIn,
-        cNonce,
-        cNonceExpiresIn,
         id!,
       );
       const response = await request(app.callback())
