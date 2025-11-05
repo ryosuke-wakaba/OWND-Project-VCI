@@ -1,3 +1,7 @@
+
+
+--- Done ---
+
 - テーブルの関連変更
     - demos/employee-vci/src/store.tsのauth_codes_employeesテーブルを削除
     - demos/common/src/store/authStore.tsのauth_codesテーブルに`sub VARCHAR`を追加

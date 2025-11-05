@@ -1,3 +1,8 @@
+import { createRequire } from "module";
+const require = createRequire(import.meta.url);
+const setupTestEnv = require("../test-env-setup.cjs");
+setupTestEnv();
+
 import { assert } from "chai";
 import request from "supertest";
 import * as jose from "jose";
