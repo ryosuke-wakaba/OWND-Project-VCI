@@ -30,6 +30,7 @@ export const authCodeStateProvider: AuthCodeStateProvider = async (
     },
   };
 };
+
 export const accessTokenIssuer: AccessTokenIssuer = async (
   authorizedCode: AuthorizedCodeWithStoredData,
 ) => {

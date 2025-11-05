@@ -33,7 +33,6 @@ entity access_tokens {
 entity c_nonces {
   * id number
   --
-  * access_token_id number <<FK>>
   * nonce string
   * expired_in number
   * created_at datetime
@@ -46,7 +45,6 @@ package service_specific {
 }
 
 auth_codes ||..o| access_tokens
-access_tokens ||..o{ c_nonces
 
 auth_codes ||..|{ auth_codes_subject_rel
 subject ||..|{ auth_codes_subject_rel
@@ -82,11 +80,10 @@ const DDL_ACCESS_TOKENS = `
 `.trim();
 const DDL_C_NONCES = `
   CREATE TABLE ${TBL_NM_C_NONCES} (
-  access_token_id INTEGER NOT NULL,
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
   nonce TEXT NOT NULL,
   expired_in INTEGER NOT NULL,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  FOREIGN KEY (access_token_id) REFERENCES ${TBL_NM_ACCESS_TOKENS}(id)
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
   )
 `.trim();
 
@@ -187,7 +184,6 @@ export const addAccessToken = async (
 };
 
 export const addCNonce = async (
-  accessTokenId: number,
   cNonce: string,
   cNonceExpiresIn: number,
   // @ts-ignore
@@ -195,8 +191,7 @@ export const addCNonce = async (
   try {
     const db = await store.openDb();
     return await db.run(
-      `INSERT INTO ${TBL_NM_C_NONCES} (access_token_id, nonce, expired_in) VALUES (?, ?, ?)`,
-      accessTokenId,
+      `INSERT INTO ${TBL_NM_C_NONCES} (nonce, expired_in) VALUES (?, ?)`,
       cNonce,
       cNonceExpiresIn,
     );
@@ -217,28 +212,22 @@ export const getAccessToken = async (
     const db = await store.openDb();
     const row = await db.get<VCIAccessToken & Identifiable & JoinedAuthCode>(
       `
-      SELECT 
+      SELECT
         a.id,
-        a.token, 
-        a.expiresIn, 
+        a.token,
+        a.expiresIn,
         a.authorized_code_id,
-        p.code, 
-        p.expiresIn AS codeExpiresIn, 
+        p.code,
+        p.expiresIn AS codeExpiresIn,
         p.createdAt AS codeCreatedAt,
         p.txCode,
         p.needsProof,
         p.preAuthFlow,
-        c.nonce as cNonce, 
-        c.expired_in as cNonceExpiresIn,
-        c.createdAt as cNonceCreatedAt, 
-        a.createdAt 
+        p.usedAt,
+        a.createdAt
       FROM ${TBL_NM_ACCESS_TOKENS} as a
       LEFT JOIN ${TBL_NM_AUTH_CODES} AS p ON a.authorized_code_id = p.id
-      LEFT JOIN (
-        SELECT *, MAX(createdAt) as MaxCreatedAt FROM ${TBL_NM_C_NONCES} GROUP BY access_token_id
-      ) as c_max ON a.id = c_max.access_token_id
-      LEFT JOIN ${TBL_NM_C_NONCES} as c ON c.access_token_id = a.id AND c.createdAt = c_max.MaxCreatedAt
-      WHERE a.token = ? 
+      WHERE a.token = ?
       ORDER BY a.createdAt DESC, a.rowid DESC
       `,
       accessToken,
@@ -266,7 +255,6 @@ export const getAccessToken = async (
 };
 
 export const refreshNonce = async (
-  accessTokenId: number,
   cNonce: string,
   expiresIn: number,
 ) => {
@@ -274,8 +262,7 @@ export const refreshNonce = async (
     const db = await store.openDb();
 
     return await db.run(
-      `INSERT INTO ${TBL_NM_C_NONCES} (access_token_id, nonce, expired_in) VALUES (?, ?, ?)`,
-      accessTokenId,
+      `INSERT INTO ${TBL_NM_C_NONCES} (nonce, expired_in) VALUES (?, ?)`,
       cNonce,
       expiresIn,
     );

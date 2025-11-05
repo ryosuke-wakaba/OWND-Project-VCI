@@ -6,6 +6,7 @@ import { dirname } from "path";
 
 import { tokenConfigure } from "../../logic/vciConfigProvider.js";
 import { configure } from "../../logic/credentialsConfigProvider.js";
+import { nonceConfigure } from "../../logic/nonceConfigProvider.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename).split("/src")[0];
@@ -16,6 +17,7 @@ const init = () => {
     router,
     tokenConfigure,
     configure,
+    nonceConfigure,
     __dirname,
   );
 

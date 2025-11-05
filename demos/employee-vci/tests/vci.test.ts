@@ -58,7 +58,12 @@ describe("POST /token", () => {
 
   it("should return 400 when pre-authorized_code is invalid", async () => {
     const employee = await store.getEmployeeByNo("1");
-    await store.addPreAuthCode("valid-code", 3600, "12345678", String(employee?.id!));
+    await store.addPreAuthCode(
+      "valid-code",
+      3600,
+      "12345678",
+      String(employee?.id!),
+    );
     const preAuthorizedCode = "invalid-code";
     const response = await request(app.callback()).post("/token").send({
       grant_type: "urn:ietf:params:oauth:grant-type:pre-authorized_code",
@@ -71,7 +76,12 @@ describe("POST /token", () => {
     const employee = await store.getEmployeeByNo("1");
     const preAuthorizedCode = generateRandomString();
     const txCode = generateRandomNumericString();
-    await store.addPreAuthCode(preAuthorizedCode, -1, txCode, String(employee?.id!));
+    await store.addPreAuthCode(
+      preAuthorizedCode,
+      -1,
+      txCode,
+      String(employee?.id!),
+    );
 
     const response = await request(app.callback()).post("/token").send({
       grant_type: "urn:ietf:params:oauth:grant-type:pre-authorized_code",
@@ -91,7 +101,12 @@ describe("POST /token", () => {
     const employee = await store.getEmployeeByNo("1");
     const preAuthorizedCode = generateRandomString();
     const txCode = generateRandomNumericString();
-    await store.addPreAuthCode(preAuthorizedCode, 86400, txCode, String(employee?.id!));
+    await store.addPreAuthCode(
+      preAuthorizedCode,
+      86400,
+      txCode,
+      String(employee?.id!),
+    );
 
     const response = await request(app.callback()).post("/token").send({
       grant_type: "urn:ietf:params:oauth:grant-type:pre-authorized_code",
@@ -111,7 +126,12 @@ describe("POST /token", () => {
     const employee = await store.getEmployeeByNo("1");
     const preAuthorizedCode = generateRandomString();
     const txCode = generateRandomNumericString();
-    await store.addPreAuthCode(preAuthorizedCode, 86400, txCode, String(employee?.id!));
+    await store.addPreAuthCode(
+      preAuthorizedCode,
+      86400,
+      txCode,
+      String(employee?.id!),
+    );
     // 1st time
     let response = await request(app.callback()).post("/token").send({
       grant_type: "urn:ietf:params:oauth:grant-type:pre-authorized_code",
@@ -138,11 +158,7 @@ const validAccessTokenMock = async () => {
   );
   const accessToken = "validToken";
   const expiresIn = 86400;
-  await store.addAccessToken(
-    accessToken,
-    expiresIn,
-    id!,
-  );
+  await store.addAccessToken(accessToken, expiresIn, id!);
 };
 const privateJwk = ellipticJwk.newPrivateJwk("P-256");
 // @ts-ignore
@@ -183,11 +199,7 @@ describe("POST /credential", () => {
         "dummy user pin",
         "0",
       );
-      await store.addAccessToken(
-        accessToken,
-        expiresIn,
-        id!,
-      );
+      await store.addAccessToken(accessToken, expiresIn, id!);
       const response = await request(app.callback())
         .post("/credentials")
         .set("Authorization", "BEARER validToken");
@@ -291,5 +303,33 @@ describe("POST /credential", () => {
       assert.equal(disclosures[5].key, "gender");
       assert.equal(disclosures[5].value, "test3");
     });
+  });
+});
+
+describe("POST /nonce", () => {
+  beforeEach(async () => {
+    await store.destroyDb();
+    await store.createDb();
+  });
+
+  it("should return 200 with c_nonce when requested", async () => {
+    const response = await request(app.callback()).post("/nonce");
+
+    assert.equal(response.status, 200);
+    assert.property(response.body, "c_nonce");
+    assert.property(response.body, "c_nonce_expires_in");
+    assert.typeOf(response.body.c_nonce, "string");
+    assert.typeOf(response.body.c_nonce_expires_in, "number");
+    assert.isNotEmpty(response.body.c_nonce);
+    assert.isAbove(response.body.c_nonce_expires_in, 0);
+  });
+
+  it("should generate different c_nonce on each request", async () => {
+    const response1 = await request(app.callback()).post("/nonce");
+    const response2 = await request(app.callback()).post("/nonce");
+
+    assert.equal(response1.status, 200);
+    assert.equal(response2.status, 200);
+    assert.notEqual(response1.body.c_nonce, response2.body.c_nonce);
   });
 });

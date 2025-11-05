@@ -211,11 +211,10 @@ export const getAccessToken = async (
 };
 
 export const refreshNonce = async (
-  accessTokenId: number,
   cNonce: string,
   expiresIn: number,
 ) => {
-  return await authStore.refreshNonce(accessTokenId, cNonce, expiresIn);
+  return await authStore.refreshNonce(cNonce, expiresIn);
 };
 
 export default {

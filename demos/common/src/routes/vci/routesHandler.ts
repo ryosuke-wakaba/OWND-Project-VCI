@@ -10,6 +10,8 @@ import { TokenIssuer } from "ownd-vci/dist/oid4vci/tokenEndpoint/TokenIssuer.js"
 import { CredentialIssuerConfig } from "ownd-vci/dist/oid4vci/credentialEndpoint/types.js";
 import { StoredAccessToken } from "../../store/authStore.js";
 import { CredentialIssuer } from "ownd-vci/dist/oid4vci/credentialEndpoint/CredentialIssuer.js";
+import { NonceIssuerConfig } from "ownd-vci/dist/oid4vci/nonceEndpoint/types.js";
+import { NonceIssuer } from "ownd-vci/dist/oid4vci/nonceEndpoint/NonceIssuer.js";
 import { resolveAcceptLanguage } from "resolve-accept-language";
 import { localizeIssuerMetadata } from "ownd-vci/dist/utils/localize.js";
 
@@ -143,9 +145,31 @@ export async function handleCredential(
   ctx.status = 200;
 }
 
+export async function handleNonce(
+  ctx: Koa.Context,
+  configGenerator: () => NonceIssuerConfig,
+) {
+  const nonceIssuer = new NonceIssuer(configGenerator());
+  const result = await nonceIssuer.issue();
+
+  if (!result.ok) {
+    const { status, payload } = result.error;
+    ctx.status = status;
+    ctx.body = payload;
+    return;
+  }
+
+  // return nonce response
+  ctx.body = result.payload;
+  ctx.status = 200;
+  ctx.set("Cache-Control", "no-store");
+  ctx.set("Content-Type", "application/json");
+}
+
 export default {
   handleIssueMetadata,
   handleAuthServer,
   handleToken,
   handleCredential,
+  handleNonce,
 };

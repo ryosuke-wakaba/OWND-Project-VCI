@@ -8,6 +8,7 @@ cli/out
 
 demos/employee-vci/.env
 demos/employee-vci/TEST_DB
+TEST_DB
 demos/employee-vci/database.sqlite
 demos/employee-vci/dist
 
