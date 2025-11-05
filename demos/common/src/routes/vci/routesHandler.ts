@@ -3,15 +3,15 @@ import Koa from "koa";
 import {
   getIssuerMetadata,
   readLocalJsonResource,
-} from "../../utils/resourceUtils.js";
+} from "ownd-vci/dist/utils/resourceUtils.js";
 import path from "path";
-import { TokenIssuerConfig } from "../../oid4vci/tokenEndpoint/types.js";
-import { TokenIssuer } from "../../oid4vci/tokenEndpoint/TokenIssuer.js";
-import { CredentialIssuerConfig } from "../../oid4vci/credentialEndpoint/types.js";
+import { TokenIssuerConfig } from "ownd-vci/dist/oid4vci/tokenEndpoint/types.js";
+import { TokenIssuer } from "ownd-vci/dist/oid4vci/tokenEndpoint/TokenIssuer.js";
+import { CredentialIssuerConfig } from "ownd-vci/dist/oid4vci/credentialEndpoint/types.js";
 import { StoredAccessToken } from "../../store/authStore.js";
-import { CredentialIssuer } from "../../oid4vci/credentialEndpoint/CredentialIssuer.js";
+import { CredentialIssuer } from "ownd-vci/dist/oid4vci/credentialEndpoint/CredentialIssuer.js";
 import { resolveAcceptLanguage } from "resolve-accept-language";
-import { localizeIssuerMetadata } from "../../utils/localize.js";
+import { localizeIssuerMetadata } from "ownd-vci/dist/utils/localize.js";
 
 export async function handleIssueMetadata(
   ctx: Koa.Context,

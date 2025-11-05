@@ -1,4 +1,6 @@
-import { Message } from "../types.js";
+export interface Message {
+  message: string;
+}
 
 export type RESULT_TYPE_INVALID_PARAMETER = "INVALID_PARAMETER";
 export type RESULT_TYPE_NOT_FOUND = "NOT_FOUND";

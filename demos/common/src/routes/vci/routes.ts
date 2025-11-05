@@ -2,8 +2,8 @@ import Koa from "koa";
 import Router from "koa-router";
 import { koaBody } from "koa-body";
 
-import { TokenIssuerConfig } from "../../oid4vci/tokenEndpoint/types.js";
-import { CredentialIssuerConfig } from "../../oid4vci/credentialEndpoint/types.js";
+import { TokenIssuerConfig } from "ownd-vci/dist/oid4vci/tokenEndpoint/types.js";
+import { CredentialIssuerConfig } from "ownd-vci/dist/oid4vci/credentialEndpoint/types.js";
 import { StoredAccessToken } from "../../store/authStore.js";
 import routesHandler from "./routesHandler.js";
 

@@ -14,7 +14,7 @@ import { authenticate } from "./authenticate.js";
 import { validateProof } from "./validateProof.js";
 import { Result } from "../../types.js";
 import { toError } from "../utils.js";
-import authStore from "../../store/authStore.js";
+// import authStore from "../../../demos/common/src/authStore.js";
 import {
   credentialRequestJwtVcJsonValidator,
   credentialRequestValidator,
@@ -70,14 +70,15 @@ export class CredentialIssuer<T> {
         return { ok: false, error: { status: 400, payload: error } };
       }
       // proof: OPTIONAL. JSON object containing proof of possession of the key material the issued Credential shall be bound to.
-      const checkFlow = await authStore.getAuthCode(authorizedCode.code);
+      // const checkFlow = await authStore.getAuthCode(authorizedCode.code);
       const validateProofResult = await validateProof(
         credentialRequest.proof,
         this.config.credentialIssuer,
         authorizedCode.proofElements,
         {
-          preAuthorizedFlow:
-            checkFlow == undefined ? true : checkFlow.preAuthFlow,
+          preAuthorizedFlow: true, // TODO: get from checkFlow after design change
+          // preAuthorizedFlow:
+          //   checkFlow == undefined ? true : checkFlow.preAuthFlow,
           supportAnonymousAccess: this.config.supportAnonymousAccess || false,
         },
       );
@@ -134,7 +135,7 @@ export class CredentialIssuer<T> {
       );
       return { ok: false, error: { status: 400, payload: error } };
     }
-    const { type, credentialSubject } = credentialRequest.credential_definition;
+    const { type } = credentialRequest.credential_definition;
     if (!type) {
       // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID1.html#appendix-A.1.1.4
       const error = toError(

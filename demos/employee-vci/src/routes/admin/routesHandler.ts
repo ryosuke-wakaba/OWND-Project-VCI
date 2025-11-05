@@ -1,6 +1,6 @@
 import Koa from "koa";
 
-import { Result } from "ownd-vci/dist/types";
+import { Result } from "ownd-vci/dist/types.js";
 import {
   handleNotSuccessResult,
   NotSuccessResult,

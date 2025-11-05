@@ -21,3 +21,4 @@ demos/participation-cert-vci/TEST_DB
 demos/participation-cert-vci/database.sqlite
 demos/participation-cert-vci/dist
 
+launch.json

@@ -5,7 +5,7 @@ import {
   AuthCodeStateProvider,
   AuthorizedCodeWithStoredData,
   TokenIssuerConfig,
-} from "ownd-vci/dist/oid4vci/tokenEndpoint/types";
+} from "ownd-vci/dist/oid4vci/tokenEndpoint/types.js";
 
 export const authCodeStateProvider: AuthCodeStateProvider = async (
   authorizedCode: string,

@@ -3,18 +3,21 @@ import { CRV, newPrivateJwk, PublicJwk } from "elliptic-jwk";
 import { NotSuccessResult } from "./routes/common.js";
 import { UNIQUE_CONSTRAINT_FAILED } from "./store.js";
 import keyStore from "./store/keyStore.js";
-import { NgResult, Result } from "./types.js";
+import { NgResult, Result } from "ownd-vci/dist/types.js";
 import {
   generateCsr,
   trimmer,
   generateRootCertificate,
-} from "./crypto/x509/issue.js";
-import { checkEcdsaKeyEquality, ellipticJwkToPem } from "./crypto/util.js";
+} from "ownd-vci/dist/crypto/x509/issue.js";
+import {
+  checkEcdsaKeyEquality,
+  ellipticJwkToPem,
+} from "ownd-vci/dist/crypto/util.js";
 import {
   CERT_PEM_POSTAMBLE,
   CERT_PEM_PREAMBLE,
-} from "./crypto/x509/constant.js";
-import { addSeconds, getCurrentUTCDate } from "./utils/datetime.js";
+} from "ownd-vci/dist/crypto/x509/constant.js";
+import { addSeconds, getCurrentUTCDate } from "ownd-vci/dist/utils/datetime.js";
 
 const INVALID_PARAMETER_ERROR: NgResult<NotSuccessResult> = {
   ok: false,

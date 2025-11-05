@@ -1,0 +1,16 @@
+{
+  "name": "ownd-vci-common",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "sqlite": "^5.0.1",
+    "sqlite3": "^5.1.6"
+  },
+  "devDependencies": {
+    "@types/sqlite3": "^3.1.8"
+  },
+  "scripts": {
+    "build": "../../node_modules/.bin/tsc -p tsconfig.json"
+  }
+}
