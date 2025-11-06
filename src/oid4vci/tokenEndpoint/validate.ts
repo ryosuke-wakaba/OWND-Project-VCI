@@ -125,8 +125,8 @@ const validate = async (
     }
     if (authorizedCode.isUsed) {
       const error = {
-        error: "invalid_request",
-        error_description: "the PIN is already used",
+        error: "invalid_grant",
+        error_description: "the tx_code is already used",
       };
       return { ok: false, error };
     }

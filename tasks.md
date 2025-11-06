@@ -1,3 +1,30 @@
+# Doing
+### /tokenエンドポイントのerror codeの適切性の確認と修正
+以下の実装を確認してerror codeが適切にハンドリング、レスポンスされているか確認して、必要があれば修正してください。
+- src/oid4vci/tokenEndpoint/TokenIssuer.ts
+- demos/employee-vci/tests/vci.test.ts
+
+#### 対応するerror codeの仕様
+https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-token-error-response
+```
+If the Token Request is invalid or unauthorized, the Authorization Server constructs the error response as defined as in Section 5.2 of OAuth 2.0 [RFC6749].
+
+The following additional clarifications are provided for some of the error codes already defined in [RFC6749]:
+
+- invalid_request:
+The Authorization Server does not expect a Transaction Code in the Pre-Authorized Code Flow but the Client provides a Transaction Code.
+The Authorization Server expects a Transaction Code in the Pre-Authorized Code Flow but the Client does not provide a Transaction Code.
+
+- invalid_grant:
+The Authorization Server expects a Transaction Code in the Pre-Authorized Code Flow but the Client provides the wrong Transaction Code.
+The End-User provides the wrong Pre-Authorized Code or the Pre-Authorized Code has expired.
+
+- invalid_client:
+The Client tried to send a Token Request with a Pre-Authorized Code without a Client ID but the Authorization Server does not support anonymous access.
+```
+
+# Done
+
 ### /credentialエンドポイントのerror codeの適切性の確認と修正
 以下の実装を確認してerror codeが適切にハンドリング、レスポンスされているか確認して、必要があれば修正してください。
 - src/oid4vci/credentialEndpoint/validateProof.ts
@@ -41,9 +68,6 @@ If the Credential Request does not contain an Access Token that enables issuance
 
 The usage of these parameters takes precedence over the invalid_request parameter defined in Section 8.3.1.1, since they provide more details about the errors.
 ```
-
---- Done ---
-
 ### /credentialエンドポイントのPoP実装のチェック
     - 実装は、src/oid4vci/credentialEndpoint/validateProof.ts
     - proofsのキーが`jwt`だった場合、デコードしたヘッダーにtypが存在して、値が`openid4vci-proof+jwt`であることをチェックしているか？

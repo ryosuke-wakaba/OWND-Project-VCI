@@ -147,6 +147,8 @@ describe("POST /token", () => {
       tx_code: txCode,
     });
     assert.equal(response.status, 400);
+    assert.equal(response.body.error, "invalid_grant");
+    assert.equal(response.body.error_description, "the tx_code is already used");
   });
 });
 
