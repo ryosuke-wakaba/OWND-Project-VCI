@@ -246,7 +246,7 @@ describe("POST /credential", () => {
           proof: { proof_type: "jwt", jwt: token },
         });
       assert.equal(response.status, 400);
-      assert.equal(response.body.error, "invalid_or_missing_proof");
+      assert.equal(response.body.error, "invalid_nonce");
       assert.equal(response.body.error_description, "Failed to verify nonce");
     });
     it("should return 200 when JWK is valid in JWT header", async () => {

@@ -10,7 +10,8 @@ const privateKey = await jose.importJWK(privateJwk, "ES256");
 const jwk = publicJwkFromPrivate(privateJwk);
 
 describe("validateProof function with P-256", () => {
-  const INVALID_OR_MISSING_PROOF = "invalid_or_missing_proof"; // この値は実際の値に置き換えてください。
+  const INVALID_PROOF = "invalid_proof";
+  const INVALID_NONCE = "invalid_nonce";
   const credentialIssuer = "https://example.com"; // 適切なCredential Issuer URLに置き換えてください。
   const cNonce = "test-cnonce"; // テスト用のcNonceを設定してください。
   const createdAt = new Date().toISOString();
@@ -39,7 +40,7 @@ describe("validateProof function with P-256", () => {
     );
     if (!result.ok) {
       const { error, error_description } = result.error;
-      assert.equal(error, INVALID_OR_MISSING_PROOF);
+      assert.equal(error, INVALID_PROOF);
       assert.equal(error_description, "Failed to decode JWT header");
     } else {
       assert.fail("result.ok is true when it should be false");
@@ -63,7 +64,7 @@ describe("validateProof function with P-256", () => {
     );
     if (!result.ok) {
       const { error, error_description } = result.error;
-      assert.equal(error, INVALID_OR_MISSING_PROOF);
+      assert.equal(error, INVALID_PROOF);
       assert.equal(error_description, "Missing JWK in JWT header");
     } else {
       assert.fail("result.ok is true when it should be false");
@@ -87,7 +88,7 @@ describe("validateProof function with P-256", () => {
     );
     if (!result.ok) {
       const { error, error_description } = result.error;
-      assert.equal(error, INVALID_OR_MISSING_PROOF);
+      assert.equal(error, INVALID_PROOF);
       assert.equal(
         error_description,
         "Invalid typ in JWT header, must be openid4vci-proof+jwt",
@@ -119,7 +120,7 @@ describe("validateProof function with P-256", () => {
     );
     if (!result.ok) {
       const { error, error_description } = result.error;
-      assert.equal(error, INVALID_OR_MISSING_PROOF);
+      assert.equal(error, INVALID_PROOF);
       assert.equal(error_description, "Failed to verify JWT");
     } else {
       assert.fail("result.ok is true when it should be false");
@@ -142,7 +143,7 @@ describe("validateProof function with P-256", () => {
     );
     if (!result.ok) {
       const { error, error_description } = result.error;
-      assert.equal(error, INVALID_OR_MISSING_PROOF);
+      assert.equal(error, INVALID_PROOF);
       assert.equal(error_description, "Failed to verify iss");
     } else {
       assert.fail("result.ok is true when it should be false");
@@ -167,7 +168,7 @@ describe("validateProof function with P-256", () => {
     );
     if (!result.ok) {
       const { error, error_description } = result.error;
-      assert.equal(error, INVALID_OR_MISSING_PROOF);
+      assert.equal(error, INVALID_PROOF);
       assert.equal(error_description, "Failed to verify iss");
     } else {
       assert.fail("result.ok is true when it should be false");
@@ -194,7 +195,7 @@ describe("validateProof function with P-256", () => {
     );
     if (!result.ok) {
       const { error, error_description } = result.error;
-      assert.equal(error, INVALID_OR_MISSING_PROOF);
+      assert.equal(error, INVALID_PROOF);
       assert.equal(error_description, "Failed to verify iat");
     } else {
       assert.fail("result.ok is true when it should be false");
@@ -236,7 +237,7 @@ describe("validateProof function with P-256", () => {
     );
     if (!result.ok) {
       const { error, error_description } = result.error;
-      assert.equal(error, INVALID_OR_MISSING_PROOF);
+      assert.equal(error, INVALID_NONCE);
       assert.equal(error_description, "The c_nonce expired");
     } else {
       assert.fail("result.ok is true when it should be false");

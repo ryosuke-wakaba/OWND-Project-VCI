@@ -5,7 +5,8 @@ import { isExpired, toError } from "../utils.js";
 import { DecodedProofJwtHeader, DecodedProofJwt } from "./types.js";
 import { Proof } from "../types/protocol.types.js";
 
-const INVALID_OR_MISSING_PROOF = "invalid_or_missing_proof";
+const INVALID_PROOF = "invalid_proof";
+const INVALID_NONCE = "invalid_nonce";
 const isIatValid = (iat: any): boolean => {
   console.debug(`iat: ${iat}`);
   if (typeof iat !== "number") {
@@ -54,16 +55,13 @@ export const validateProof = async (
   }
   */
   if (!proof.proof_type || proof.proof_type !== "jwt") {
-    const error = toError(
-      INVALID_OR_MISSING_PROOF,
-      "Missing or malformed proof_type",
-    );
+    const error = toError(INVALID_PROOF, "Missing or malformed proof_type");
     return { ok: false, error };
   }
 
   if (!proof.jwt) {
     const error = toError(
-      INVALID_OR_MISSING_PROOF,
+      INVALID_PROOF,
       "If `proof_type` is `jwt`, the `jwt` property is required.",
     );
     return { ok: false, error };
@@ -73,19 +71,13 @@ export const validateProof = async (
   try {
     decodedHeader = jose.decodeProtectedHeader(proof.jwt);
   } catch (err) {
-    const error = toError(
-      INVALID_OR_MISSING_PROOF,
-      "Failed to decode JWT header",
-    );
+    const error = toError(INVALID_PROOF, "Failed to decode JWT header");
     return { ok: false, error };
   }
 
   // get public key jwk as `jwk` property defined in jwt header
   if (!decodedHeader.jwk) {
-    const error = toError(
-      INVALID_OR_MISSING_PROOF,
-      "Missing JWK in JWT header",
-    );
+    const error = toError(INVALID_PROOF, "Missing JWK in JWT header");
     return { ok: false, error };
   }
 
@@ -94,7 +86,7 @@ export const validateProof = async (
   // typ: REQUIRED. MUST be openid4vci-proof+jwt, which explicitly types the proof JWT as recommended in Section 3.11 of [RFC8725].
   if (decodedHeader.typ !== "openid4vci-proof+jwt") {
     const error = toError(
-      INVALID_OR_MISSING_PROOF,
+      INVALID_PROOF,
       "Invalid typ in JWT header, must be openid4vci-proof+jwt",
     );
     return { ok: false, error };
@@ -136,25 +128,25 @@ export const validateProof = async (
     const { preAuthorizedFlow, supportAnonymousAccess } = opt;
     if (!iss) {
       if (!preAuthorizedFlow || !supportAnonymousAccess) {
-        const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify iss");
+        const error = toError(INVALID_PROOF, "Failed to verify iss");
         return { ok: false, error };
       }
     }
     if (!isIatValid(iat)) {
-      const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify iat");
+      const error = toError(INVALID_PROOF, "Failed to verify iat");
       return { ok: false, error };
     }
 
     // Verify nonce
     if (!getCNonceFunc || !nonce) {
-      const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify nonce");
+      const error = toError(INVALID_NONCE, "Failed to verify nonce");
       return { ok: false, error };
     }
 
     // Lookup nonce in database
     const storedNonce = await getCNonceFunc(nonce);
     if (!storedNonce) {
-      const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify nonce");
+      const error = toError(INVALID_NONCE, "Failed to verify nonce");
       return { ok: false, error };
     }
 
@@ -163,11 +155,11 @@ export const validateProof = async (
     const expiresIn = storedNonce.expired_in;
 
     if (nonce !== cNonce) {
-      const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify nonce");
+      const error = toError(INVALID_NONCE, "Failed to verify nonce");
       return { ok: false, error };
     }
     if (isExpired(new Date(createdAt), expiresIn)) {
-      const error = toError(INVALID_OR_MISSING_PROOF, "The c_nonce expired");
+      const error = toError(INVALID_NONCE, "The c_nonce expired");
       return { ok: false, error };
     }
     return {
@@ -178,7 +170,7 @@ export const validateProof = async (
     };
   } catch (e) {
     console.error(e);
-    const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify JWT");
+    const error = toError(INVALID_PROOF, "Failed to verify JWT");
     return { ok: false, error };
   }
 };
