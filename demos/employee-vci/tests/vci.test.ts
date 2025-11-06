@@ -215,19 +215,18 @@ describe("POST /credential", () => {
   });
 
   describe("vc+sd-jwt specific cases", async () => {
-    it("should return 400 when proof is missing in request body", async () => {
+    it("should return 500 when proofs is empty in request body", async () => {
       await validAccessTokenMock();
       const response = await request(app.callback())
         .post("/credentials")
         .set("Authorization", "BEARER validToken")
         .send({
           format: "vc+sd-jwt",
-          credential_definition: { type: "EmployeeCredential" },
-          proof: {},
+          vct: "EmployeeIdentificationCredential",
+          proofs: {},
         });
-      assert.equal(response.status, 400);
-      assert.equal(response.body.error, "invalid_request");
-      assert.equal(response.body.error_description, "Invalid data received!");
+      assert.equal(response.status, 500);
+      assert.equal(response.body.error, "invalid_or_missing_proof");
     });
 
     it("should return 400 when nonce is invalid in JWT payload", async () => {
@@ -245,7 +244,7 @@ describe("POST /credential", () => {
         .send({
           format: "vc+sd-jwt",
           vct: "EmployeeIdentificationCredential",
-          proof: { proof_type: "jwt", jwt: token },
+          proofs: { jwt: [token] },
         });
       assert.equal(response.status, 400);
       assert.equal(response.body.error, "invalid_nonce");
@@ -274,7 +273,7 @@ describe("POST /credential", () => {
       const body = {
         format: "vc+sd-jwt",
         vct: "EmployeeIdentificationCredential",
-        proof: { proof_type: "jwt", jwt: token },
+        proofs: { jwt: [token] },
       };
       console.log(token);
 

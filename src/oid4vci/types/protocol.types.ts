@@ -30,6 +30,16 @@ export interface Proof {
   cwt?: string;
 }
 
+export interface Proofs {
+  // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html
+  // Map of proof type to array of proof JWTs/CWTs
+  jwt?: string[];
+  cwt?: string[];
+  ldp_vp?: {
+    [key: string]: any;
+  }[]; // todo: improve type definition
+}
+
 export interface BaseCredentialRequest {
   // Conditionally required: its necessity depends on the presence of other parameters.
   // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID1.html#name-credential-request
@@ -38,9 +48,11 @@ export interface BaseCredentialRequest {
   format?: string;
 
   // Conditionally required: its necessity depends on the presence of other parameters.
-  // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID1.html#name-credential-request
-  //   The proof object is REQUIRED if the proof_types_supported parameter is non-empty and present in the
-  //   credential_configurations_supported parameter of the Issuer metadata for the requested Credential.
+  // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-request
+  //   The proofs object is OPTIONAL. Contains proofs of possession of key material.
+  proofs?: Proofs;
+
+  // DEPRECATED: Use proofs instead. Kept for backward compatibility.
   proof?: Proof;
 
   // Conditionally required: its necessity depends on the presence of other parameters.

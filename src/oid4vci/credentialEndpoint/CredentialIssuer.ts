@@ -9,6 +9,7 @@ import {
   CredentialRequestJwtVcJson,
   CredentialRequestVcSdJwt,
   HttpRequest,
+  Proof,
 } from "../types/types.js";
 import { authenticate } from "./authenticate.js";
 import { validateProof } from "./validateProof.js";
@@ -64,16 +65,34 @@ export class CredentialIssuer<T> {
 
     const { authorizedCode } = authResult.payload;
     let proofOfPossession = undefined;
-    if (credentialRequest.proof) {
-      // proof: OPTIONAL. JSON object containing proof of possession of the key material the issued Credential shall be bound to.
-      // const checkFlow = await authStore.getAuthCode(authorizedCode.code);
+
+    // Support both new proofs and legacy proof parameter
+    let proofToValidate: Proof | undefined = undefined;
+
+    if (credentialRequest.proofs) {
+      // proofs: New format. Object containing proofs of possession of the key material.
+      // For now, we only support jwt proofs and process only the first one
+      if (
+        credentialRequest.proofs.jwt &&
+        credentialRequest.proofs.jwt.length > 0
+      ) {
+        const jwtProof = credentialRequest.proofs.jwt[0];
+        proofToValidate = {
+          proof_type: "jwt",
+          jwt: jwtProof,
+        };
+      }
+    } else if (credentialRequest.proof) {
+      // proof: Legacy format. Still supported for backward compatibility.
+      proofToValidate = credentialRequest.proof;
+    }
+
+    if (proofToValidate) {
       const validateProofResult = await validateProof(
-        credentialRequest.proof,
+        proofToValidate,
         this.config.credentialIssuer,
         {
           preAuthorizedFlow: true, // TODO: get from checkFlow after design change
-          // preAuthorizedFlow:
-          //   checkFlow == undefined ? true : checkFlow.preAuthFlow,
           supportAnonymousAccess: this.config.supportAnonymousAccess || false,
         },
         this.config.getCNonce,
