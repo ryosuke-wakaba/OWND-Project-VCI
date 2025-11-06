@@ -5,6 +5,7 @@ import {
   CredentialResponse,
   Exists,
   NotExists,
+  IssuerMetadata,
 } from "../types/types.js";
 import * as jose from "jose";
 
@@ -19,6 +20,7 @@ export interface ValidAccessTokenState<T> {
 
 export interface CredentialIssuerConfig<T> {
   credentialIssuer: string;
+  issuerMetadata: IssuerMetadata;
   supportAnonymousAccess?: boolean;
   accessTokenStateProvider: AccessTokenStateProvider<T>;
   issuingExecutor: {

@@ -42,6 +42,12 @@ export interface Proofs {
 
 export interface BaseCredentialRequest {
   // Conditionally required: its necessity depends on the presence of other parameters.
+  // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-request
+  //   REQUIRED when credential_identifiers parameter was not returned from the Token Response.
+  //   It MUST NOT be used otherwise.
+  credential_configuration_id?: string;
+
+  // Conditionally required: its necessity depends on the presence of other parameters.
   // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0-ID1.html#name-credential-request
   //   REQUIRED when the credential_identifiers parameter was not returned from the Token Response.
   //   It MUST NOT be used otherwise.

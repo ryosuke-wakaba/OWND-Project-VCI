@@ -2,6 +2,64 @@
 
 # Done
 
+### /credentialエンドポイントのIFを最新化する(続き)
+- 現在の実装のペイロードが最新版に準拠していないので修正する
+- credential_configuration_idを使用する方法に変更
+
+現在の実装
+```
+{
+  format: "vc+sd-jwt",
+  vct: "EmployeeIdentificationCredential",
+}
+```
+
+最新版の例
+```
+{
+  "credential_configuration_id": "EmployeeIdentificationCredential",
+}
+```
+
+実装内容:
+- src/oid4vci/credentialEndpoint/CredentialIssuer.ts
+    - credential_configuration_idによるクレデンシャル設定の解決を実装
+    - IssuerMetadataのcredential_configurations_supportedから設定を取得
+    - formatとvctはメタデータから取得するように変更
+    - CredentialIssuerConfigにissuerMetadataフィールドを追加
+    - credential_identifierは未サポートとしてエラーを返す
+- demos/employee-vci/src/logic/credentialsConfigProvider.ts
+    - IssuerMetadataVcSdJwtを定義してconfigureに追加
+- demos/employee-vci/tests/vci.test.ts
+    - credential_configuration_idを使用するようにテストを更新
+- すべてのテスト(21個)が合格
+
+### /credentialエンドポイントのIFを最新化する
+- 現在の実装のペイロードが最新版に準拠していないので修正する
+- proofをproofsに変更
+    - ペイロードも以下の例の様に変更
+
+現在の実装
+```
+{
+  proof: {
+    proof_type: "jwt",
+    jwt: "eyJhbGciOiJFUzI1NiIsImp3ayI6eyJrdHkiOiJFQyIsImNydiI6IlAtMjU2IiwieCI6InNqcTYxTGViS2tkNDk3MFBwOUhmYkZuNWNOci1aNlVsZWxQWmNzUXo0NkkiLCJ5Ijoiazc3bHBXLVVhV3M1RTUwM3NWdF9ub0MwUXR3OEREX3JvNVdub1BXZnlocyJ9fQ.eyJub25jZSI6InJhbmRvbU5vbmNlIiwiaWF0IjoxNzYyNDAzODE2LCJhdWQiOiJodHRwczovL2V4YW1wbGUuY29tIiwiZXhwIjoxNzYyNDExMDE2fQ.NjCLNgscYB8qOl8bDcKYS7zWN2ThHqN7lo1iYlRhfKLsIwc5z6Pggp5IEIKiKzlCfu8YKzMu3HEnIAyiv6CfVA",
+  },
+}
+```
+
+最新版の例
+```
+{
+  "proofs": {
+    "jwt": [
+      "eyJraWQiOiJkaWQ6ZXhhbXBsZTplYmZlYjFmNzEyZWJjNmYxYzI3NmUxMmVjMjEva2V5cy8x
+       IiwiYWxnIjoiRVMyNTYiLCJ0eXAiOiJKV1QifQ"
+    ]
+  }
+}
+```
 ### /tokenエンドポイントのerror codeの適切性の確認と修正
 以下の実装を確認してerror codeが適切にハンドリング、レスポンスされているか確認して、必要があれば修正してください。
 - src/oid4vci/tokenEndpoint/TokenIssuer.ts

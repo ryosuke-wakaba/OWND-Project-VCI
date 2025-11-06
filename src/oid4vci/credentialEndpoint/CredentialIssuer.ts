@@ -58,8 +58,39 @@ export class CredentialIssuer<T> {
       return { ok: false, error: { status: 400, payload: error } };
     }
 
-    if (!credentialRequest.format) {
-      const error = toError(INVALID_REQUEST, "Missing or malformed format");
+    // Check for credential_configuration_id or credential_identifier
+    if (
+      !credentialRequest.credential_configuration_id &&
+      !credentialRequest.credential_identifier
+    ) {
+      const error = toError(
+        INVALID_REQUEST,
+        "Missing credential_configuration_id or credential_identifier",
+      );
+      return { ok: false, error: { status: 400, payload: error } };
+    }
+
+    // credential_identifier is not yet supported
+    if (credentialRequest.credential_identifier) {
+      const error = toError(
+        "invalid_credential_request",
+        "credential_identifier is not yet supported",
+      );
+      return { ok: false, error: { status: 400, payload: error } };
+    }
+
+    // Resolve credential configuration from metadata
+    const credentialConfigId = credentialRequest.credential_configuration_id!;
+    const credentialConfig =
+      this.config.issuerMetadata.credential_configurations_supported[
+        credentialConfigId
+      ];
+
+    if (!credentialConfig) {
+      const error = toError(
+        "unknown_credential_configuration",
+        `Unknown credential_configuration_id: ${credentialConfigId}`,
+      );
       return { ok: false, error: { status: 400, payload: error } };
     }
 
@@ -105,6 +136,7 @@ export class CredentialIssuer<T> {
     }
     const issueResult = await this._issue(
       credentialRequest,
+      credentialConfig,
       authorizedCode.code,
       proofOfPossession,
     );
@@ -165,12 +197,17 @@ export class CredentialIssuer<T> {
 
   async _issueVcSdJwt(
     credentialRequest: CredentialRequestVcSdJwt,
+    credentialConfig: any, // TODO: Type this properly
     preAuthorizedCode: string,
     proofOfPossession?: DecodedProofJwt,
   ): Promise<Result<string, ErrorPayloadWithStatusCode>> {
-    const vct = credentialRequest.vct;
+    // Get vct from credentialConfig (resolved from metadata)
+    const vct = credentialConfig.vct;
     if (!vct) {
-      const error = toError(INVALID_REQUEST, "The payload needs vct");
+      const error = toError(
+        INVALID_REQUEST,
+        "The credential configuration does not contain vct",
+      );
       return { ok: false, error: { status: 400, payload: error } };
     }
     if (!this.config.issuingExecutor.sdJwtVc) {
@@ -180,9 +217,13 @@ export class CredentialIssuer<T> {
       );
       return { ok: false, error: { status: 500, payload: error } };
     }
+
+    // Add vct to credentialRequest for backward compatibility with issuingExecutor
+    const requestWithVct = { ...credentialRequest, vct };
+
     const result = await this.config.issuingExecutor.sdJwtVc(
       preAuthorizedCode,
-      credentialRequest,
+      requestWithVct,
       proofOfPossession,
     );
     if (result.ok) {
@@ -194,6 +235,7 @@ export class CredentialIssuer<T> {
 
   async _issue(
     credentialRequest: CredentialRequest,
+    credentialConfig: any, // TODO: Type this properly based on IssuerMetadata
     preAuthorizedCode: string,
     proofOfPossession?: DecodedProofJwt,
   ): Promise<Result<string, ErrorPayloadWithStatusCode>> {
@@ -221,7 +263,8 @@ export class CredentialIssuer<T> {
       },
     };
 
-    switch (credentialRequest.format) {
+    // Use format from credentialConfig resolved from metadata
+    switch (credentialConfig.format) {
       case "jwt_vc_json": {
         const jwtVcJsonRequest =
           credentialRequestJwtVcJsonValidator(credentialRequest);
@@ -236,6 +279,7 @@ export class CredentialIssuer<T> {
           credentialRequestVcSdJwtValidator(credentialRequest);
         return this._issueVcSdJwt(
           vcSdJwtRequest,
+          credentialConfig,
           preAuthorizedCode,
           proofOfPossession,
         );

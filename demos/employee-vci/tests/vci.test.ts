@@ -148,7 +148,10 @@ describe("POST /token", () => {
     });
     assert.equal(response.status, 400);
     assert.equal(response.body.error, "invalid_grant");
-    assert.equal(response.body.error_description, "the tx_code is already used");
+    assert.equal(
+      response.body.error_description,
+      "the tx_code is already used",
+    );
   });
 });
 
@@ -221,8 +224,7 @@ describe("POST /credential", () => {
         .post("/credentials")
         .set("Authorization", "BEARER validToken")
         .send({
-          format: "vc+sd-jwt",
-          vct: "EmployeeIdentificationCredential",
+          credential_configuration_id: "EmployeeIdentificationCredential",
           proofs: {},
         });
       assert.equal(response.status, 500);
@@ -242,8 +244,7 @@ describe("POST /credential", () => {
         .post("/credentials")
         .set("Authorization", "BEARER validToken")
         .send({
-          format: "vc+sd-jwt",
-          vct: "EmployeeIdentificationCredential",
+          credential_configuration_id: "EmployeeIdentificationCredential",
           proofs: { jwt: [token] },
         });
       assert.equal(response.status, 400);
@@ -271,8 +272,7 @@ describe("POST /credential", () => {
         .sign(privateKey);
       await validAccessTokenMock();
       const body = {
-        format: "vc+sd-jwt",
-        vct: "EmployeeIdentificationCredential",
+        credential_configuration_id: "EmployeeIdentificationCredential",
         proofs: { jwt: [token] },
       };
       console.log(token);
