@@ -14,6 +14,7 @@ import {
   generateRandomNumericString,
 } from "ownd-vci/dist/utils/randomStringUtils.js";
 import keyStore from "ownd-vci-common/dist/store/keyStore.js";
+import authStore from "ownd-vci-common/dist/store/authStore.js";
 
 import { init } from "../src/app";
 import store, { NewEmployee } from "../src/store";
@@ -159,6 +160,8 @@ const validAccessTokenMock = async () => {
   const accessToken = "validToken";
   const expiresIn = 86400;
   await store.addAccessToken(accessToken, expiresIn, id!);
+  // Add c_nonce for proof validation
+  await authStore.addCNonce("randomNonce", 86400);
 };
 const privateJwk = ellipticJwk.newPrivateJwk("P-256");
 // @ts-ignore
@@ -239,7 +242,7 @@ describe("POST /credential", () => {
         .set("Authorization", "BEARER validToken")
         .send({
           format: "vc+sd-jwt",
-          vct: "EmployeeCredential",
+          vct: "EmployeeIdentificationCredential",
           proof: { proof_type: "jwt", jwt: token },
         });
       assert.equal(response.status, 400);

@@ -200,6 +200,28 @@ export const addCNonce = async (
   }
 };
 
+export type StoredCNonce = {
+  id: number;
+  nonce: string;
+  expired_in: number;
+  createdAt: string;
+};
+
+export const getCNonce = async (
+  nonce: string,
+): Promise<StoredCNonce | undefined> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.get<StoredCNonce>(
+      `SELECT * FROM ${TBL_NM_C_NONCES} WHERE nonce = ? ORDER BY createdAt DESC LIMIT 1`,
+      nonce,
+    );
+    return result;
+  } catch (err) {
+    handleError(err);
+  }
+};
+
 export type StoredAccessToken = {
   authorizedCode: AuthorizedCode & Identifiable;
 } & VCIAccessToken &
@@ -286,6 +308,7 @@ export default {
   getAuthCode,
   addAccessToken,
   addCNonce,
+  getCNonce,
   getAccessToken,
   refreshNonce,
 };

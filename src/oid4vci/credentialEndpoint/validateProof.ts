@@ -25,15 +25,25 @@ interface Opt {
 export const validateProof = async (
   proof: Proof,
   credentialIssuer: string,
-  proofElements: {
-    cNonce: string;
-    createdAt: string;
-    expiresIn: number;
-  },
+  proofElements:
+    | {
+        cNonce: string;
+        createdAt: string;
+        expiresIn: number;
+      }
+    | undefined,
   opt: Opt = {
     preAuthorizedFlow: false,
     supportAnonymousAccess: false,
   },
+  getCNonceFunc?: (nonce: string) => Promise<
+    | {
+        nonce: string;
+        expired_in: number;
+        createdAt: string;
+      }
+    | undefined
+  >,
 ): Promise<Result<DecodedProofJwt, ErrorPayload>> => {
   /*
     https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-error-response
@@ -129,7 +139,35 @@ export const validateProof = async (
       const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify iat");
       return { ok: false, error };
     }
-    const { cNonce, createdAt, expiresIn } = proofElements;
+
+    // Verify nonce
+    let cNonce: string;
+    let createdAt: string;
+    let expiresIn: number;
+
+    if (proofElements) {
+      // Old flow: nonce from proofElements
+      cNonce = proofElements.cNonce;
+      createdAt = proofElements.createdAt;
+      expiresIn = proofElements.expiresIn;
+    } else if (getCNonceFunc && nonce) {
+      // New flow: lookup nonce in database
+      const storedNonce = await getCNonceFunc(nonce);
+      if (!storedNonce) {
+        const error = toError(
+          INVALID_OR_MISSING_PROOF,
+          "Failed to verify nonce",
+        );
+        return { ok: false, error };
+      }
+      cNonce = storedNonce.nonce;
+      createdAt = storedNonce.createdAt;
+      expiresIn = storedNonce.expired_in;
+    } else {
+      const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify nonce");
+      return { ok: false, error };
+    }
+
     if (!nonce || nonce !== cNonce) {
       const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify nonce");
       return { ok: false, error };

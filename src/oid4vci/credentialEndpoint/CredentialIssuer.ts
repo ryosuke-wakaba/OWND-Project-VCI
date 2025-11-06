@@ -64,11 +64,7 @@ export class CredentialIssuer<T> {
 
     const { authorizedCode } = authResult.payload;
     let proofOfPossession = undefined;
-    if (authorizedCode.proofElements) {
-      if (!credentialRequest.proof) {
-        const error = toError(INVALID_REQUEST, "Missing or malformed format");
-        return { ok: false, error: { status: 400, payload: error } };
-      }
+    if (credentialRequest.proof) {
       // proof: OPTIONAL. JSON object containing proof of possession of the key material the issued Credential shall be bound to.
       // const checkFlow = await authStore.getAuthCode(authorizedCode.code);
       const validateProofResult = await validateProof(
@@ -81,6 +77,7 @@ export class CredentialIssuer<T> {
           //   checkFlow == undefined ? true : checkFlow.preAuthFlow,
           supportAnonymousAccess: this.config.supportAnonymousAccess || false,
         },
+        this.config.getCNonce,
       );
       if (!validateProofResult.ok) {
         const { ok, error } = validateProofResult;
@@ -99,8 +96,8 @@ export class CredentialIssuer<T> {
       return { ok, error };
     }
 
-    // update nonce
-    if (authorizedCode.proofElements) {
+    // update nonce (optional - nonce refresh requirement was removed from protocol)
+    if (authorizedCode.proofElements && this.config.updateNonce) {
       const { nonce, expiresIn } = await this.config.updateNonce(
         authResult.payload.storedAccessToken,
       );

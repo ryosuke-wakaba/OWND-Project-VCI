@@ -7,8 +7,8 @@ import {
 import { CredentialRequestVcSdJwt } from "ownd-vci/dist/oid4vci/types/protocol.types.js";
 
 import employeeCredential from "./employeeCredential.js";
-import { updateNonce } from "ownd-vci/dist/oid4vci/credentialEndpoint/defaults/nonce.js";
-import { accessTokenStateProvider } from "ownd-vci/dist/oid4vci/credentialEndpoint/defaults/accessToken.js";
+import { accessTokenStateProvider } from "ownd-vci-common/dist/oid4vci/credentialEndpoint/defaults/accessToken.js";
+import authStore from "ownd-vci-common/dist/store/authStore.js";
 
 const issueSdJwtVcCredential: IssueSdJwtVcCredential = async (
   authorizedCode: string,
@@ -47,6 +47,6 @@ export const configure = (): CredentialIssuerConfig<StoredAccessToken> => {
     supportAnonymousAccess: true,
     accessTokenStateProvider: accessTokenStateProvider,
     issuingExecutor: { sdJwtVc: issueSdJwtVcCredential },
-    updateNonce,
+    getCNonce: authStore.getCNonce,
   };
 };

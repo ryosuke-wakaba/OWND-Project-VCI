@@ -30,7 +30,15 @@ export interface CredentialIssuerConfig<T> {
     jwtVcJson?: IssueJwtVcJsonCredential;
     sdJwtVc?: IssueSdJwtVcCredential;
   };
-  updateNonce: UpdateNonce<T>;
+  updateNonce?: UpdateNonce<T>;
+  getCNonce?: (nonce: string) => Promise<
+    | {
+        nonce: string;
+        expired_in: number;
+        createdAt: string;
+      }
+    | undefined
+  >;
 }
 
 export interface ErrorPayloadWithStatusCode {

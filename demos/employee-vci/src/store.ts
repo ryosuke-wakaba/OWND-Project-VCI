@@ -210,13 +210,6 @@ export const getAccessToken = async (
   return await authStore.getAccessToken(accessToken);
 };
 
-export const refreshNonce = async (
-  cNonce: string,
-  expiresIn: number,
-) => {
-  return await authStore.refreshNonce(cNonce, expiresIn);
-};
-
 export default {
   createDb,
   destroyDb,
@@ -226,5 +219,4 @@ export default {
   getPreAuthCodeAndEmployee,
   addAccessToken,
   getAccessToken,
-  refreshNonce,
 };
