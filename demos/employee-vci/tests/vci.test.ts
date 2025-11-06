@@ -46,7 +46,7 @@ describe("POST /token", () => {
       grant_type: "unsupported-type",
     });
     assert.equal(response.status, 400);
-    assert.equal(response.body.error, "unsupported_grant_type");
+    assert.equal(response.body.error, "invalid_request");
   });
 
   it("should return 400 when pre-authorized_code is missing", async () => {

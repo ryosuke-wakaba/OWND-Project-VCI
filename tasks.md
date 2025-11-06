@@ -1,4 +1,7 @@
 # Doing
+
+# Done
+
 ### /tokenエンドポイントのerror codeの適切性の確認と修正
 以下の実装を確認してerror codeが適切にハンドリング、レスポンスされているか確認して、必要があれば修正してください。
 - src/oid4vci/tokenEndpoint/TokenIssuer.ts
@@ -22,8 +25,6 @@ The End-User provides the wrong Pre-Authorized Code or the Pre-Authorized Code h
 - invalid_client:
 The Client tried to send a Token Request with a Pre-Authorized Code without a Client ID but the Authorization Server does not support anonymous access.
 ```
-
-# Done
 
 ### /credentialエンドポイントのerror codeの適切性の確認と修正
 以下の実装を確認してerror codeが適切にハンドリング、レスポンスされているか確認して、必要があれば修正してください。
