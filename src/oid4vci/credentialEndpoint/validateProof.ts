@@ -25,13 +25,6 @@ interface Opt {
 export const validateProof = async (
   proof: Proof,
   credentialIssuer: string,
-  proofElements:
-    | {
-        cNonce: string;
-        createdAt: string;
-        expiresIn: number;
-      }
-    | undefined,
   opt: Opt = {
     preAuthorizedFlow: false,
     supportAnonymousAccess: false,
@@ -141,34 +134,23 @@ export const validateProof = async (
     }
 
     // Verify nonce
-    let cNonce: string;
-    let createdAt: string;
-    let expiresIn: number;
-
-    if (proofElements) {
-      // Old flow: nonce from proofElements
-      cNonce = proofElements.cNonce;
-      createdAt = proofElements.createdAt;
-      expiresIn = proofElements.expiresIn;
-    } else if (getCNonceFunc && nonce) {
-      // New flow: lookup nonce in database
-      const storedNonce = await getCNonceFunc(nonce);
-      if (!storedNonce) {
-        const error = toError(
-          INVALID_OR_MISSING_PROOF,
-          "Failed to verify nonce",
-        );
-        return { ok: false, error };
-      }
-      cNonce = storedNonce.nonce;
-      createdAt = storedNonce.createdAt;
-      expiresIn = storedNonce.expired_in;
-    } else {
+    if (!getCNonceFunc || !nonce) {
       const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify nonce");
       return { ok: false, error };
     }
 
-    if (!nonce || nonce !== cNonce) {
+    // Lookup nonce in database
+    const storedNonce = await getCNonceFunc(nonce);
+    if (!storedNonce) {
+      const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify nonce");
+      return { ok: false, error };
+    }
+
+    const cNonce = storedNonce.nonce;
+    const createdAt = storedNonce.createdAt;
+    const expiresIn = storedNonce.expired_in;
+
+    if (nonce !== cNonce) {
       const error = toError(INVALID_OR_MISSING_PROOF, "Failed to verify nonce");
       return { ok: false, error };
     }

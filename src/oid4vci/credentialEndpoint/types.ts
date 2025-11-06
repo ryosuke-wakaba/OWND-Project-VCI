@@ -13,11 +13,6 @@ export interface ValidAccessTokenState<T> {
   createdAt: Date;
   authorizedCode: {
     code: string; // todo Issue実行時にSubjectを特定するために持っているが、storedAccessTokenに各実施に固有の持ち方ができるので多分無くせる
-    proofElements?: {
-      cNonce: string;
-      expiresIn: number;
-      createdAt: string;
-    };
   };
   storedAccessToken: T;
 }

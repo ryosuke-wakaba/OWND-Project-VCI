@@ -70,7 +70,6 @@ export class CredentialIssuer<T> {
       const validateProofResult = await validateProof(
         credentialRequest.proof,
         this.config.credentialIssuer,
-        authorizedCode.proofElements,
         {
           preAuthorizedFlow: true, // TODO: get from checkFlow after design change
           // preAuthorizedFlow:
@@ -96,27 +95,12 @@ export class CredentialIssuer<T> {
       return { ok, error };
     }
 
-    // update nonce (optional - nonce refresh requirement was removed from protocol)
-    if (authorizedCode.proofElements && this.config.updateNonce) {
-      const { nonce, expiresIn } = await this.config.updateNonce(
-        authResult.payload.storedAccessToken,
-      );
-      return {
-        ok: true,
-        payload: {
-          credential: issueResult.payload,
-          c_nonce: nonce,
-          c_nonce_expires_in: expiresIn,
-        },
-      };
-    } else {
-      return {
-        ok: true,
-        payload: {
-          credential: issueResult.payload,
-        },
-      };
-    }
+    return {
+      ok: true,
+      payload: {
+        credential: issueResult.payload,
+      },
+    };
   }
 
   async _issueJwtVcJson(
