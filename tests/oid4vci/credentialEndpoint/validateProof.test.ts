@@ -70,11 +70,39 @@ describe("validateProof function with P-256", () => {
     }
   });
 
+  it("should return an error if typ is missing or invalid in JWT header", async () => {
+    const token = await new jose.SignJWT({})
+      .setProtectedHeader({ alg: "ES256", jwk })
+      .setIssuedAt()
+      .setIssuer("urn:example:issuer")
+      .setAudience(credentialIssuer)
+      .setExpirationTime("2h")
+      .sign(privateKey);
+    const proof = { proof_type: "jwt", jwt: token };
+    const result = await validateProof(
+      proof,
+      credentialIssuer,
+      { preAuthorizedFlow: false, supportAnonymousAccess: false },
+      getCNonceMock,
+    );
+    if (!result.ok) {
+      const { error, error_description } = result.error;
+      assert.equal(error, INVALID_OR_MISSING_PROOF);
+      assert.equal(
+        error_description,
+        "Invalid typ in JWT header, must be openid4vci-proof+jwt",
+      );
+    } else {
+      assert.fail("result.ok is true when it should be false");
+    }
+  });
+
   it("should return an error if JWT verification fails", async () => {
     const anotherPrivateJwk = ellipticJwk.newPrivateJwk("P-256");
     const token = await new jose.SignJWT({})
       .setProtectedHeader({
         alg: "ES256",
+        typ: "openid4vci-proof+jwt",
         jwk: publicJwkFromPrivate(anotherPrivateJwk),
       })
       .setIssuedAt()
@@ -100,7 +128,7 @@ describe("validateProof function with P-256", () => {
 
   it("should return an error if iss verification fails 1", async () => {
     const token = await new jose.SignJWT({})
-      .setProtectedHeader({ alg: "ES256", jwk })
+      .setProtectedHeader({ alg: "ES256", typ: "openid4vci-proof+jwt", jwk })
       .setIssuedAt()
       .setAudience(credentialIssuer)
       .setExpirationTime("2h")
@@ -122,7 +150,7 @@ describe("validateProof function with P-256", () => {
   });
   it("should return an error if iss verification fails 2", async () => {
     const token = await new jose.SignJWT({})
-      .setProtectedHeader({ alg: "ES256", jwk })
+      .setProtectedHeader({ alg: "ES256", typ: "openid4vci-proof+jwt", jwk })
       .setIssuedAt()
       .setAudience(credentialIssuer)
       .setExpirationTime("2h")
@@ -149,6 +177,7 @@ describe("validateProof function with P-256", () => {
     const token = await new jose.SignJWT({ nonce: cNonce })
       .setProtectedHeader({
         alg: "ES256",
+        typ: "openid4vci-proof+jwt",
         jwk: publicJwkFromPrivate(privateJwk),
       })
       .setIssuer("urn:example:issuer")
@@ -175,6 +204,7 @@ describe("validateProof function with P-256", () => {
     const token = await new jose.SignJWT({ nonce: cNonce })
       .setProtectedHeader({
         alg: "ES256",
+        typ: "openid4vci-proof+jwt",
         jwk: publicJwkFromPrivate(privateJwk),
       })
       .setIssuedAt()
@@ -214,7 +244,7 @@ describe("validateProof function with P-256", () => {
   });
   it("should return a valid payload if all verifications pass", async () => {
     const token = await new jose.SignJWT({ nonce: cNonce })
-      .setProtectedHeader({ alg: "ES256", jwk })
+      .setProtectedHeader({ alg: "ES256", typ: "openid4vci-proof+jwt", jwk })
       .setIssuedAt()
       .setIssuer("urn:example:issuer")
       .setAudience(credentialIssuer)
@@ -291,7 +321,11 @@ describe("validateProof function with other algorithms", () => {
   describe("secp256k1", () => {
     it("should return a valid payload if all verifications pass", async () => {
       const token = await new jose.SignJWT({ nonce: cNonce })
-        .setProtectedHeader({ alg: "ES256K", jwk: jwkK1 })
+        .setProtectedHeader({
+          alg: "ES256K",
+          typ: "openid4vci-proof+jwt",
+          jwk: jwkK1,
+        })
         .setIssuedAt()
         .setIssuer("urn:example:issuer")
         .setAudience(credentialIssuer)

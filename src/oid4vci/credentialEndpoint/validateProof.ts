@@ -88,6 +88,18 @@ export const validateProof = async (
     );
     return { ok: false, error };
   }
+
+  // Check typ header parameter
+  // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-proof-types
+  // typ: REQUIRED. MUST be openid4vci-proof+jwt, which explicitly types the proof JWT as recommended in Section 3.11 of [RFC8725].
+  if (decodedHeader.typ !== "openid4vci-proof+jwt") {
+    const error = toError(
+      INVALID_OR_MISSING_PROOF,
+      "Invalid typ in JWT header, must be openid4vci-proof+jwt",
+    );
+    return { ok: false, error };
+  }
+
   try {
     // iss: OPTIONAL (string).
     // The value of this claim MUST be the client_id of the client making the credential request.

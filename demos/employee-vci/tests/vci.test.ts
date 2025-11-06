@@ -231,7 +231,7 @@ describe("POST /credential", () => {
     it("should return 400 when nonce is invalid in JWT payload", async () => {
       const payload = { nonce: "wrong_nonce" };
       const token = await new jose.SignJWT(payload)
-        .setProtectedHeader({ alg: "ES256", jwk })
+        .setProtectedHeader({ alg: "ES256", typ: "openid4vci-proof+jwt", jwk })
         .setIssuedAt()
         .setAudience(process.env.CREDENTIAL_ISSUER || "")
         .setExpirationTime("2h")
@@ -263,7 +263,7 @@ describe("POST /credential", () => {
 
       const payload = { nonce: "randomNonce" };
       const token = await new jose.SignJWT(payload)
-        .setProtectedHeader({ alg: "ES256", jwk })
+        .setProtectedHeader({ alg: "ES256", typ: "openid4vci-proof+jwt", jwk })
         .setIssuedAt()
         .setAudience(process.env.CREDENTIAL_ISSUER || "")
         .setExpirationTime("2h")

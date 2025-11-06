@@ -1,3 +1,7 @@
+- /credentialエンドポイントのPoP実装のチェック
+    - 実装は、src/oid4vci/credentialEndpoint/validateProof.ts
+    - proofsのキーが`jwt`だった場合、デコードしたヘッダーにtypが存在して、値が`openid4vci-proof+jwt`であることをチェックしているか？
+    - 未対応だった場合、チェック処理を追加して`invalid_proof`エラーを返すように修正する
 
 --- Done ---
 - /credentialエンドポイントを修正
