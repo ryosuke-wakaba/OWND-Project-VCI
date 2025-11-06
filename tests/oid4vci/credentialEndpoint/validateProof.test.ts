@@ -15,16 +15,28 @@ describe("validateProof function with P-256", () => {
   const cNonce = "test-cnonce"; // テスト用のcNonceを設定してください。
   const createdAt = new Date().toISOString();
   const expiresIn = 3600; // 1時間の有効期限
-  const proofElements = {
-    cNonce,
-    createdAt,
-    expiresIn,
+
+  // Mock getCNonce function
+  const getCNonceMock = async (nonce: string) => {
+    if (nonce === cNonce) {
+      return {
+        nonce: cNonce,
+        expired_in: expiresIn,
+        createdAt,
+      };
+    }
+    return undefined;
   };
 
   // JWTのデコードに失敗した場合のテスト
   it("should return an error if JWT header decoding fails", async () => {
     const proof = { proof_type: "jwt", jwt: "invalid-jwt" };
-    const result = await validateProof(proof, credentialIssuer, proofElements);
+    const result = await validateProof(
+      proof,
+      credentialIssuer,
+      { preAuthorizedFlow: false, supportAnonymousAccess: false },
+      getCNonceMock,
+    );
     if (!result.ok) {
       const { error, error_description } = result.error;
       assert.equal(error, INVALID_OR_MISSING_PROOF);
@@ -43,7 +55,12 @@ describe("validateProof function with P-256", () => {
       .setExpirationTime("2h")
       .sign(privateKey);
     const proof = { proof_type: "jwt", jwt: token };
-    const result = await validateProof(proof, credentialIssuer, proofElements);
+    const result = await validateProof(
+      proof,
+      credentialIssuer,
+      { preAuthorizedFlow: false, supportAnonymousAccess: false },
+      getCNonceMock,
+    );
     if (!result.ok) {
       const { error, error_description } = result.error;
       assert.equal(error, INVALID_OR_MISSING_PROOF);
@@ -66,7 +83,12 @@ describe("validateProof function with P-256", () => {
       .setExpirationTime("2h")
       .sign(privateKey);
     const proof = { proof_type: "jwt", jwt: token };
-    const result = await validateProof(proof, credentialIssuer, proofElements);
+    const result = await validateProof(
+      proof,
+      credentialIssuer,
+      { preAuthorizedFlow: false, supportAnonymousAccess: false },
+      getCNonceMock,
+    );
     if (!result.ok) {
       const { error, error_description } = result.error;
       assert.equal(error, INVALID_OR_MISSING_PROOF);
@@ -84,7 +106,12 @@ describe("validateProof function with P-256", () => {
       .setExpirationTime("2h")
       .sign(privateKey);
     const proof = { proof_type: "jwt", jwt: token };
-    const result = await validateProof(proof, credentialIssuer, proofElements);
+    const result = await validateProof(
+      proof,
+      credentialIssuer,
+      { preAuthorizedFlow: false, supportAnonymousAccess: false },
+      getCNonceMock,
+    );
     if (!result.ok) {
       const { error, error_description } = result.error;
       assert.equal(error, INVALID_OR_MISSING_PROOF);
@@ -101,10 +128,15 @@ describe("validateProof function with P-256", () => {
       .setExpirationTime("2h")
       .sign(privateKey);
     const proof = { proof_type: "jwt", jwt: token };
-    const result = await validateProof(proof, credentialIssuer, proofElements, {
-      preAuthorizedFlow: true,
-      supportAnonymousAccess: false,
-    });
+    const result = await validateProof(
+      proof,
+      credentialIssuer,
+      {
+        preAuthorizedFlow: true,
+        supportAnonymousAccess: false,
+      },
+      getCNonceMock,
+    );
     if (!result.ok) {
       const { error, error_description } = result.error;
       assert.equal(error, INVALID_OR_MISSING_PROOF);
@@ -125,7 +157,12 @@ describe("validateProof function with P-256", () => {
       // iatを意図的に設定しない
       .sign(privateKey);
     const proof = { proof_type: "jwt", jwt: token };
-    const result = await validateProof(proof, credentialIssuer, proofElements);
+    const result = await validateProof(
+      proof,
+      credentialIssuer,
+      { preAuthorizedFlow: false, supportAnonymousAccess: false },
+      getCNonceMock,
+    );
     if (!result.ok) {
       const { error, error_description } = result.error;
       assert.equal(error, INVALID_OR_MISSING_PROOF);
@@ -150,11 +187,23 @@ describe("validateProof function with P-256", () => {
     const pastDate = new Date(
       Date.now() - (expiresIn * 1000 + 1000),
     ).toISOString();
-    const result = await validateProof(proof, credentialIssuer, {
-      cNonce,
-      expiresIn,
-      createdAt: pastDate,
-    });
+    // Mock that returns expired nonce
+    const getCNonceExpiredMock = async (nonce: string) => {
+      if (nonce === cNonce) {
+        return {
+          nonce: cNonce,
+          expired_in: expiresIn,
+          createdAt: pastDate,
+        };
+      }
+      return undefined;
+    };
+    const result = await validateProof(
+      proof,
+      credentialIssuer,
+      { preAuthorizedFlow: false, supportAnonymousAccess: false },
+      getCNonceExpiredMock,
+    );
     if (!result.ok) {
       const { error, error_description } = result.error;
       assert.equal(error, INVALID_OR_MISSING_PROOF);
@@ -172,7 +221,12 @@ describe("validateProof function with P-256", () => {
       .setExpirationTime("2h")
       .sign(privateKey);
     const proof = { proof_type: "jwt", jwt: token };
-    const result = await validateProof(proof, credentialIssuer, proofElements);
+    const result = await validateProof(
+      proof,
+      credentialIssuer,
+      { preAuthorizedFlow: false, supportAnonymousAccess: false },
+      getCNonceMock,
+    );
     if (result.ok) {
       const { jwt } = result.payload;
       assert.deepEqual(jwt.header.jwk, publicJwkFromPrivate(privateJwk));
@@ -199,10 +253,17 @@ describe("validateProof function with other algorithms", () => {
   const cNonce = "test-cnonce"; // テスト用のcNonceを設定してください。
   const createdAt = new Date().toISOString();
   const expiresIn = 3600; // 1時間の有効期限
-  const proofElements = {
-    cNonce,
-    createdAt,
-    expiresIn,
+
+  // Mock getCNonce function
+  const getCNonceMock = async (nonce: string) => {
+    if (nonce === cNonce) {
+      return {
+        nonce: cNonce,
+        expired_in: expiresIn,
+        createdAt,
+      };
+    }
+    return undefined;
   };
 
   // Currently, unable to test with key pair for P-384
@@ -240,7 +301,8 @@ describe("validateProof function with other algorithms", () => {
       const result = await validateProof(
         proof,
         credentialIssuer,
-        proofElements,
+        { preAuthorizedFlow: false, supportAnonymousAccess: false },
+        getCNonceMock,
       );
       if (result.ok) {
         const { jwt } = result.payload;

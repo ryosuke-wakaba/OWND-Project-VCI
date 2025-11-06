@@ -1,3 +1,5 @@
+
+--- Done ---
 - /credentialエンドポイントを修正
     - 現在、設計変更の影響でコメントアウトしているためテストコードが通らない
         - src/oid4vci/credentialEndpoint/defaults/accessToken.ts
@@ -40,7 +42,6 @@
             - 該当する実装は、src/oid4vci/credentialEndpoint/CredentialIssuer.ts
             - nonceの値はproofsから取得した値で検索
 
---- Done ---
 - /nonceエンドポイントを追加
     - src/oid4vci/noncetokenEndpoint/TokenIssuer.tsに倣って、NonceIssuer.tsを追加
         - validateは不要
