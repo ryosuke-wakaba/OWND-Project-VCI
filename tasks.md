@@ -1,4 +1,17 @@
 # Doing
+### ts-toolboxの導入
+以下のソースコードをパッケージ化したので置き換えてください。
+- src/credentials
+- src/crypto
+
+パッケージ情報
+https://www.npmjs.com/package/@ownd-project/ts-toolbox
+
+パッケージのソースコード
+/Users/ryousuke/repositories/ownd/tool-box
+
+# Done
+
 ### SD-JWT-VCのformat文字列の変更
 以下の通り仕様に変更が入ったので反映させてください。
 
@@ -7,8 +20,6 @@
 
 ### c_nonce, c_nonce_expires_inの全面撤去
 最新のプロトコルではレスポンスとしての当該データは廃止されているので実装を修正してください
-
-# Done
 
 以下は/credentialsエンドポイントへのリクエストを処理する一連の流れから、変更を加えたい部分を抜粋して、大まかな処理順に並べたものです。
 コードの各部分に埋め込んだTODOコメントの内容を読み取って、必要な対応をしてください。

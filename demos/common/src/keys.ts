@@ -8,15 +8,11 @@ import {
   generateCsr,
   trimmer,
   generateRootCertificate,
-} from "ownd-vci/dist/crypto/x509/issue.js";
-import {
-  checkEcdsaKeyEquality,
-  ellipticJwkToPem,
-} from "ownd-vci/dist/crypto/util.js";
-import {
   CERT_PEM_POSTAMBLE,
   CERT_PEM_PREAMBLE,
-} from "ownd-vci/dist/crypto/x509/constant.js";
+  checkEcdsaKeyEquality,
+  ellipticJwkToPem,
+} from "@ownd-project/ts-toolbox";
 import { addSeconds, getCurrentUTCDate } from "ownd-vci/dist/utils/datetime.js";
 
 const INVALID_PARAMETER_ERROR: NgResult<NotSuccessResult> = {
