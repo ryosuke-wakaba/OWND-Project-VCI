@@ -132,16 +132,7 @@ export async function handleCredential(
     return;
   }
 
-  const { credential, c_nonce, c_nonce_expires_in } = result.payload;
-  const responseBody = { credential };
-  ctx.body =
-    c_nonce && c_nonce_expires_in
-      ? {
-          ...responseBody,
-          c_nonce,
-          c_nonce_expires_in,
-        }
-      : responseBody;
+  ctx.body = result.payload;
   ctx.status = 200;
 }
 

@@ -119,8 +119,6 @@ export interface CredentialResponse {
   credential?: unknown;
 
   transaction_id?: string;
-  c_nonce?: string;
-  c_nonce_expires_in?: number;
   notification_id?: string;
 }
 
