@@ -137,7 +137,7 @@ export class CredentialIssuer<T> {
     const issueResult = await this._issue(
       credentialRequest,
       credentialConfig,
-      authorizedCode.code,
+      authorizedCode.sub,
       proofOfPossession,
     );
 
@@ -156,7 +156,7 @@ export class CredentialIssuer<T> {
 
   async _issueJwtVcJson(
     credentialRequest: CredentialRequestJwtVcJson,
-    preAuthorizedCode: string,
+    sub: string | undefined,
     proofOfPossession?: DecodedProofJwt,
   ): Promise<Result<string, ErrorPayloadWithStatusCode>> {
     console.log(`credential request: ${JSON.stringify(credentialRequest)}`);
@@ -184,7 +184,7 @@ export class CredentialIssuer<T> {
       return { ok: false, error: { status: 500, payload: error } };
     }
     const result = await this.config.issuingExecutor.jwtVcJson(
-      preAuthorizedCode,
+      sub,
       credentialRequest,
       proofOfPossession,
     );
@@ -198,7 +198,7 @@ export class CredentialIssuer<T> {
   async _issueVcSdJwt(
     credentialRequest: CredentialRequestVcSdJwt,
     credentialConfig: any, // TODO: Type this properly
-    preAuthorizedCode: string,
+    sub: string | undefined,
     proofOfPossession?: DecodedProofJwt,
   ): Promise<Result<string, ErrorPayloadWithStatusCode>> {
     // Get vct from credentialConfig (resolved from metadata)
@@ -222,7 +222,7 @@ export class CredentialIssuer<T> {
     const requestWithVct = { ...credentialRequest, vct };
 
     const result = await this.config.issuingExecutor.sdJwtVc(
-      preAuthorizedCode,
+      sub,
       requestWithVct,
       proofOfPossession,
     );
@@ -236,7 +236,7 @@ export class CredentialIssuer<T> {
   async _issue(
     credentialRequest: CredentialRequest,
     credentialConfig: any, // TODO: Type this properly based on IssuerMetadata
-    preAuthorizedCode: string,
+    sub: string | undefined,
     proofOfPossession?: DecodedProofJwt,
   ): Promise<Result<string, ErrorPayloadWithStatusCode>> {
     /*
@@ -268,11 +268,7 @@ export class CredentialIssuer<T> {
       case "jwt_vc_json": {
         const jwtVcJsonRequest =
           credentialRequestJwtVcJsonValidator(credentialRequest);
-        return this._issueJwtVcJson(
-          jwtVcJsonRequest,
-          preAuthorizedCode,
-          proofOfPossession,
-        );
+        return this._issueJwtVcJson(jwtVcJsonRequest, sub, proofOfPossession);
       }
       case "vc+sd-jwt": {
         const vcSdJwtRequest =
@@ -280,7 +276,7 @@ export class CredentialIssuer<T> {
         return this._issueVcSdJwt(
           vcSdJwtRequest,
           credentialConfig,
-          preAuthorizedCode,
+          sub,
           proofOfPossession,
         );
       }

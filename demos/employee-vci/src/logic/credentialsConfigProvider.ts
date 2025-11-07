@@ -14,7 +14,7 @@ import { accessTokenStateProvider } from "ownd-vci-common/dist/oid4vci/credentia
 import authStore from "ownd-vci-common/dist/store/authStore.js";
 
 const issueSdJwtVcCredential: IssueSdJwtVcCredential = async (
-  authorizedCode: string,
+  sub: string | undefined,
   payload: CredentialRequestVcSdJwt,
   proofOfPossession?: DecodedProofJwt,
 ) => {
@@ -33,7 +33,7 @@ const issueSdJwtVcCredential: IssueSdJwtVcCredential = async (
   console.debug({ payload });
   if (vct === "EmployeeIdentificationCredential") {
     return await employeeCredential.issueEmployeeCredential(
-      authorizedCode,
+      sub,
       proofOfPossession.jwt.header.jwk,
     );
   } else {

@@ -14,6 +14,7 @@ export interface ValidAccessTokenState<T> {
   createdAt: Date;
   authorizedCode: {
     code: string; // todo Issue実行時にSubjectを特定するために持っているが、storedAccessTokenに各実施に固有の持ち方ができるので多分無くせる
+    sub?: string;
   };
   storedAccessToken: T;
 }
@@ -82,41 +83,41 @@ export type AccessTokenStateProvider<T> = (
 ) => Promise<NotExists | Exists<ValidAccessTokenState<T>>>;
 
 /**
- * IssueJwtVcJsonCredential is a function that takes a pre-authorized code, a payload, and proof information to issue a JWT formatted VC (Verifiable Credential).
+ * IssueJwtVcJsonCredential is a function that takes a subject identifier, a payload, and proof information to issue a JWT formatted VC (Verifiable Credential).
  *
- * @param preAuthorizedCode - The pre-authorized code used to issue the JWT VC.
+ * @param sub - The subject identifier (sub claim) for the credential.
  * @param payload - The payload containing the information to be included in the VC.
  * @param proofOfPossession - The proof information required to issue the VC.
  * @returns Promise<Result<string, ErrorPayload>> -
  *           A promise that returns the JWT string of the VC upon successful issuance,
  *           or a Result containing an ErrorPayload if the issuance fails.
  *
- * This function asynchronously issues a JWT formatted VC based on the specified pre-authorized code, payload, and proof information.
+ * This function asynchronously issues a JWT formatted VC based on the specified subject identifier, payload, and proof information.
  * If the issuance is successful, it returns the JWT string of the VC. If the issuance fails for any reason,
  * an ErrorPayload containing details of the error is returned.
  */
 export type IssueJwtVcJsonCredential = (
-  preAuthorizedCode: string,
+  sub: string | undefined,
   payload: CredentialRequestJwtVcJson,
   proofOfPossession?: DecodedProofJwt,
 ) => Promise<Result<string, ErrorPayload>>;
 
 /**
- * IssueSdJwtVcCredential is a function that takes a pre-authorized code, a payload, and proof information to issue a JWT formatted VC (Verifiable Credential).
+ * IssueSdJwtVcCredential is a function that takes a subject identifier, a payload, and proof information to issue a JWT formatted VC (Verifiable Credential).
  *
- * @param preAuthorizedCode - The pre-authorized code used to issue the JWT VC.
+ * @param sub - The subject identifier (sub claim) for the credential.
  * @param payload - The payload containing the information to be included in the VC.
  * @param proofOfPossession - The proof information required to issue the VC.
  * @returns Promise<Result<string, ErrorPayload>> -
  *           A promise that returns the JWT string of the VC upon successful issuance,
  *           or a Result containing an ErrorPayload if the issuance fails.
  *
- * This function asynchronously issues a SD-JWT formatted VC based on the specified pre-authorized code, payload, and proof information.
+ * This function asynchronously issues a SD-JWT formatted VC based on the specified subject identifier, payload, and proof information.
  * If the issuance is successful, it returns the SD-JWT string of the VC. If the issuance fails for any reason,
  * an ErrorPayload containing details of the error is returned.
  */
 export type IssueSdJwtVcCredential = (
-  preAuthorizedCode: string,
+  sub: string | undefined,
   payload: CredentialRequestVcSdJwt,
   proofOfPossession?: DecodedProofJwt,
 ) => Promise<Result<string, ErrorPayload>>;

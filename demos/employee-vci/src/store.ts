@@ -126,6 +126,20 @@ export const getEmployeeByNo = async (employeeNo: string) => {
   }
 };
 
+export const getEmployeeById = async (id: string | number) => {
+  try {
+    const db = await store.openDb();
+    const employee = await db.get<Employee>(
+      `SELECT * FROM ${TBL_NM_EMPLOYEES} WHERE id = ?`,
+      typeof id === "string" ? Number(id) : id,
+    );
+    return employee || null;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
 export const addPreAuthCode = async (
   code: string,
   expiresIn: number,
@@ -215,6 +229,7 @@ export default {
   destroyDb,
   registerEmployee,
   getEmployeeByNo,
+  getEmployeeById,
   addPreAuthCode,
   getPreAuthCodeAndEmployee,
   addAccessToken,

@@ -108,6 +108,7 @@ interface JoinedAuthCode {
   codeExpiresIn: number;
   codeCreatedAt: string;
   usedAt: string;
+  sub: string;
 }
 export const addAuthCode = async (
   code: string,
@@ -246,6 +247,7 @@ export const getAccessToken = async (
         p.needsProof,
         p.preAuthFlow,
         p.usedAt,
+        p.sub,
         a.createdAt
       FROM ${TBL_NM_ACCESS_TOKENS} as a
       LEFT JOIN ${TBL_NM_AUTH_CODES} AS p ON a.authorized_code_id = p.id
@@ -266,6 +268,7 @@ export const getAccessToken = async (
           preAuthFlow: row.preAuthFlow,
           isUsed: row.usedAt !== null,
           createdAt: row.codeCreatedAt,
+          sub: row.sub,
         },
       };
     } else {

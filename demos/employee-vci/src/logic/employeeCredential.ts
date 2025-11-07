@@ -6,14 +6,16 @@ import { issueFlatCredential } from "ownd-vci/dist/credentials/sd-jwt/issuer.js"
 import { ErrorPayload, Result } from "ownd-vci/dist/types.js";
 
 const issueEmployeeCredential = async (
-  authorizedCode: string,
+  sub: string | undefined,
   jwk: jose.JWK,
 ): Promise<Result<string, ErrorPayload>> => {
-  const data = await store.getPreAuthCodeAndEmployee(authorizedCode);
-  if (!data) {
+  if (!sub) {
+    return { ok: false, error: { error: "MissingSub" } };
+  }
+  const employee = await store.getEmployeeById(sub);
+  if (!employee) {
     return { ok: false, error: { error: "NotFound" } }; // todo define constant
   }
-  const { employee } = data;
   const keyPair = await keyStore.getLatestKeyPair();
   if (keyPair) {
     const { x509cert } = keyPair;

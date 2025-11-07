@@ -1,4 +1,209 @@
 # Doing
+以下は/credentialsエンドポイントへのリクエストを処理する一連の流れから、変更を加えたい部分を抜粋して、大まかな処理順に並べたものです。
+コードの各部分に埋め込んだTODOコメントの内容を読み取って、必要な対応をしてください。
+
+- POST /credentials
+    - デモアプリ側
+        
+        demos/common/src/routes/vci/routesHandler.ts
+        
+        ```tsx
+        export async function handleCredential(
+          ctx: Koa.Context,
+          configGenerator: () => CredentialIssuerConfig<StoredAccessToken>,
+        ) {
+          const credentialIssuer = new CredentialIssuer(configGenerator());
+          const result = await credentialIssuer.issue({
+            getHeader: (name: string) => ctx.get(name),
+            getBody: () => ctx.request.body,
+          });
+        
+          const { credential, c_nonce, c_nonce_expires_in } = result.payload;
+          const responseBody = { credential };
+          ctx.body =
+            c_nonce && c_nonce_expires_in
+              ? {
+                  ...responseBody,
+                  c_nonce,
+                  c_nonce_expires_in,
+                }
+              : responseBody;
+          ctx.status = 200;
+        }
+        ```
+        
+    - 共通モジュール側
+        
+        src/oid4vci/credentialEndpoint/CredentialIssuer.ts
+        
+        ```tsx
+        export class CredentialIssuer<T> {
+          // eslint-disable-next-line no-unused-vars
+          constructor(private config: CredentialIssuerConfig<T>) {}
+          async issue(httpRequest: HttpRequest): Promise<IssueResult> {
+          
+            const authResult = await authenticate(
+              httpRequest.getHeader("Authorization"),
+              this.config.accessTokenStateProvider,
+            );
+            //TODO ✅ここでsubをもらうようにする(accessTokenStateProviderで頑張れるはず)
+            
+            const credentialRequest = (() => {
+              try {
+                return credentialRequestValidator(httpRequest.getBody());
+              } catch (e) {
+                return undefined;
+              }
+            })();
+            
+            const issueResult = await this._issue(
+              credentialRequest,
+              credentialConfig,
+              authorizedCode.code,//TODO ✅ここでsubを渡すようにする
+              proofOfPossession,
+            );
+        ```
+        
+        ```tsx
+          async _issue(
+            credentialRequest: CredentialRequest,
+            credentialConfig: any, 
+            preAuthorizedCode: string,//TODO ✅subに変更
+            proofOfPossession?: DecodedProofJwt,
+          ): Promise<Result<string, ErrorPayloadWithStatusCode>> {
+          
+              case "vc+sd-jwt": {
+                const vcSdJwtRequest =
+                  credentialRequestVcSdJwtValidator(credentialRequest);
+                return this._issueVcSdJwt(
+                  vcSdJwtRequest,
+                  credentialConfig,
+                  preAuthorizedCode,
+                  proofOfPossession,
+                );
+              }
+        ```
+        
+        ```tsx
+          async _issueVcSdJwt(
+            credentialRequest: CredentialRequestVcSdJwt,
+            credentialConfig: any, 
+            preAuthorizedCode: string,//TODO ✅subに変更
+            proofOfPossession?: DecodedProofJwt,
+          ): Promise<Result<string, ErrorPayloadWithStatusCode>> {
+            // Get vct from credentialConfig (resolved from metadata)
+            const vct = credentialConfig.vct;
+        
+            // Add vct to credentialRequest for backward compatibility with issuingExecutor
+            const requestWithVct = { ...credentialRequest, vct };
+        
+            const result = await this.config.issuingExecutor.sdJwtVc(
+              preAuthorizedCode,//TODO ✅subに変更
+              requestWithVct,
+              proofOfPossession,
+            );
+            if (result.ok) {
+              return result;
+            } else {
+              return { ok: false, error: { status: 500, payload: result.error } };
+            }
+          }
+        ```
+        
+    - アプリ側に戻る
+        
+        demos/employee-vci/src/logic/credentialsConfigProvider.ts
+        
+        ```tsx
+        export const configure = (): CredentialIssuerConfig<StoredAccessToken> => {
+          return {
+            credentialIssuer: process.env.CREDENTIAL_ISSUER || "",
+            issuerMetadata: issuerMetadata,
+            supportAnonymousAccess: true,
+            accessTokenStateProvider: accessTokenStateProvider,
+            issuingExecutor: { sdJwtVc: issueSdJwtVcCredential },
+            getCNonce: authStore.getCNonce,
+          };
+        };
+        ```
+        
+        ```tsx
+        const issueSdJwtVcCredential: IssueSdJwtVcCredential = async (
+          authorizedCode: string,//TODO ✅subに変更
+          payload: CredentialRequestVcSdJwt,
+          proofOfPossession?: DecodedProofJwt,
+        ) => {
+          if (
+            !proofOfPossession ||
+            !proofOfPossession.jwt ||
+            !proofOfPossession.jwt.header ||
+            !proofOfPossession.jwt.header.jwk
+          ) {
+            const error = {
+              error: "invalid_or_missing_proof",
+            };
+            return { ok: false, error };
+          }
+          const vct = payload.vct; //TODO✅ここでcredential_configuration_idをもらう
+          console.debug({ payload });
+          if (vct === "EmployeeIdentificationCredential") {
+            return await employeeCredential.issueEmployeeCredential(
+              authorizedCode,//TODO ✅subに変更
+              proofOfPossession.jwt.header.jwk,
+            );
+          } else {
+            const error = {
+              error: "unsupported_credential_type",
+            };
+            return { ok: false, error };
+          }
+        };
+        ```
+        
+        demos/employee-vci/src/logic/employeeCredential.ts
+        
+        ```tsx
+        const issueEmployeeCredential = async (
+          authorizedCode: string,//TODO ✅subに変更
+          jwk: jose.JWK,
+        ): Promise<Result<string, ErrorPayload>> => {
+          const data = await store.getPreAuthCodeAndEmployee(authorizedCode);//TODO ✅employeesをsubで直接検索する
+          if (!data) {
+            return { ok: false, error: { error: "NotFound" } }; // todo define constant
+          }
+          const { employee } = data;
+          const keyPair = await keyStore.getLatestKeyPair();
+          if (keyPair) {
+            const { x509cert } = keyPair;
+            const x5c = x509cert ? JSON.parse(x509cert) : [];
+            // issue vc
+            const iss = process.env.CREDENTIAL_ISSUER_IDENTIFIER;
+            const iat = Math.floor(Date.now() / 1000);
+            const exp = iat + 60 * 60 * 24 * 365;
+            const vct = "EmployeeIdentificationCredential";
+            const { companyName, employeeNo, division, givenName, familyName, gender } =
+              employee;
+            const claims = {
+              companyName,
+              employeeNo,
+              division,
+              givenName,
+              familyName,
+              gender,
+              cnf: { jwk },
+              vct,
+              iss,
+              iat,
+              exp,
+            };
+            const credential = await issueFlatCredential(claims, keyPair, x5c);
+            return { ok: true, payload: credential };
+          } else {
+            const error = { status: 500, error: "No keypair exists" };
+            return { ok: false, error };
+          }
+        };
+        ```
 
 # Done
 

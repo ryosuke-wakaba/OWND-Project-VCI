@@ -15,6 +15,7 @@ export const accessTokenStateProvider: AccessTokenStateProvider<StoredAccessToke
   const payload = {
     authorizedCode: {
       code: storedAccessToken.authorizedCode.code,
+      sub: storedAccessToken.authorizedCode.sub,
       proofElements: undefined,
     },
     expiresIn: storedAccessToken.expiresIn,
