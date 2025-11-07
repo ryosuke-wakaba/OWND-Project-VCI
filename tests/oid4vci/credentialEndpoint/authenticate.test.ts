@@ -8,6 +8,7 @@ import {
 const accessToken: ValidAccessTokenState<{}> = {
   authorizedCode: {
     code: "test token",
+    sub: "test-subject",
   },
   expiresIn: 86400,
   createdAt: new Date(),
@@ -83,6 +84,7 @@ describe("authenticate function", () => {
     const accessToken: ValidAccessTokenState<{}> = {
       authorizedCode: {
         code: "test token",
+        sub: "test-subject",
       },
       expiresIn: 3600, // 1時間で期限切れ
       createdAt: new Date(new Date().getTime() - 10000000), // 過去の日付を設定
@@ -111,6 +113,7 @@ describe("authenticate function", () => {
     const accessToken: ValidAccessTokenState<{}> = {
       authorizedCode: {
         code: "test token",
+        sub: "test-subject",
       },
       expiresIn: 86400,
       createdAt: new Date(),

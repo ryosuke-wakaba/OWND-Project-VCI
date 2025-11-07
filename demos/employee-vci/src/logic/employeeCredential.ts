@@ -6,12 +6,9 @@ import { issueFlatCredential } from "ownd-vci/dist/credentials/sd-jwt/issuer.js"
 import { ErrorPayload, Result } from "ownd-vci/dist/types.js";
 
 const issueEmployeeCredential = async (
-  sub: string | undefined,
+  sub: string,
   jwk: jose.JWK,
 ): Promise<Result<string, ErrorPayload>> => {
-  if (!sub) {
-    return { ok: false, error: { error: "MissingSub" } };
-  }
   const employee = await store.getEmployeeById(sub);
   if (!employee) {
     return { ok: false, error: { error: "NotFound" } }; // todo define constant

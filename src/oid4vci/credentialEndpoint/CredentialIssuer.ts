@@ -95,6 +95,16 @@ export class CredentialIssuer<T> {
     }
 
     const { authorizedCode } = authResult.payload;
+
+    // Validate that sub is present
+    if (!authorizedCode.sub) {
+      const error = toError(
+        INVALID_REQUEST,
+        "Missing subject identifier (sub)",
+      );
+      return { ok: false, error: { status: 400, payload: error } };
+    }
+
     let proofOfPossession = undefined;
 
     // Support both new proofs and legacy proof parameter
@@ -156,7 +166,7 @@ export class CredentialIssuer<T> {
 
   async _issueJwtVcJson(
     credentialRequest: CredentialRequestJwtVcJson,
-    sub: string | undefined,
+    sub: string,
     proofOfPossession?: DecodedProofJwt,
   ): Promise<Result<string, ErrorPayloadWithStatusCode>> {
     console.log(`credential request: ${JSON.stringify(credentialRequest)}`);
@@ -198,7 +208,7 @@ export class CredentialIssuer<T> {
   async _issueVcSdJwt(
     credentialRequest: CredentialRequestVcSdJwt,
     credentialConfig: any, // TODO: Type this properly
-    sub: string | undefined,
+    sub: string,
     proofOfPossession?: DecodedProofJwt,
   ): Promise<Result<string, ErrorPayloadWithStatusCode>> {
     // Get vct from credentialConfig (resolved from metadata)
@@ -236,7 +246,7 @@ export class CredentialIssuer<T> {
   async _issue(
     credentialRequest: CredentialRequest,
     credentialConfig: any, // TODO: Type this properly based on IssuerMetadata
-    sub: string | undefined,
+    sub: string,
     proofOfPossession?: DecodedProofJwt,
   ): Promise<Result<string, ErrorPayloadWithStatusCode>> {
     /*

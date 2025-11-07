@@ -14,7 +14,7 @@ export interface ValidAccessTokenState<T> {
   createdAt: Date;
   authorizedCode: {
     code: string; // todo Issue実行時にSubjectを特定するために持っているが、storedAccessTokenに各実施に固有の持ち方ができるので多分無くせる
-    sub?: string;
+    sub: string;
   };
   storedAccessToken: T;
 }
@@ -97,7 +97,7 @@ export type AccessTokenStateProvider<T> = (
  * an ErrorPayload containing details of the error is returned.
  */
 export type IssueJwtVcJsonCredential = (
-  sub: string | undefined,
+  sub: string,
   payload: CredentialRequestJwtVcJson,
   proofOfPossession?: DecodedProofJwt,
 ) => Promise<Result<string, ErrorPayload>>;
@@ -117,7 +117,7 @@ export type IssueJwtVcJsonCredential = (
  * an ErrorPayload containing details of the error is returned.
  */
 export type IssueSdJwtVcCredential = (
-  sub: string | undefined,
+  sub: string,
   payload: CredentialRequestVcSdJwt,
   proofOfPossession?: DecodedProofJwt,
 ) => Promise<Result<string, ErrorPayload>>;

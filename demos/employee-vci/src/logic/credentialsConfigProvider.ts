@@ -14,7 +14,7 @@ import { accessTokenStateProvider } from "ownd-vci-common/dist/oid4vci/credentia
 import authStore from "ownd-vci-common/dist/store/authStore.js";
 
 const issueSdJwtVcCredential: IssueSdJwtVcCredential = async (
-  sub: string | undefined,
+  sub: string,
   payload: CredentialRequestVcSdJwt,
   proofOfPossession?: DecodedProofJwt,
 ) => {
