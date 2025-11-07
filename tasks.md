@@ -1,4 +1,10 @@
 # Doing
+### SD-JWT-VCのformat文字列の変更
+以下の通り仕様に変更が入ったので反映させてください。
+
+- before: vc+sd-jwt
+- after: dc+sd-jwt
+
 ### c_nonce, c_nonce_expires_inの全面撤去
 最新のプロトコルではレスポンスとしての当該データは廃止されているので実装を修正してください
 

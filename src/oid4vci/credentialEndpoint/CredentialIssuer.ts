@@ -280,7 +280,7 @@ export class CredentialIssuer<T> {
           credentialRequestJwtVcJsonValidator(credentialRequest);
         return this._issueJwtVcJson(jwtVcJsonRequest, sub, proofOfPossession);
       }
-      case "vc+sd-jwt": {
+      case "dc+sd-jwt": {
         const vcSdJwtRequest =
           credentialRequestVcSdJwtValidator(credentialRequest);
         return this._issueVcSdJwt(

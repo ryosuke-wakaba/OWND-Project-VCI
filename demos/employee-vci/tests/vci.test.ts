@@ -217,7 +217,7 @@ describe("POST /credential", () => {
     });
   });
 
-  describe("vc+sd-jwt specific cases", async () => {
+  describe("dc+sd-jwt specific cases", async () => {
     it("should return 500 when proofs is empty in request body", async () => {
       await validAccessTokenMock();
       const response = await request(app.callback())

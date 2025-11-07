@@ -49,7 +49,7 @@ const issuerMetadata: IssuerMetadataVcSdJwt = {
   credential_endpoint: `${process.env.CREDENTIAL_ISSUER}/credentials`,
   credential_configurations_supported: {
     EmployeeIdentificationCredential: {
-      format: "vc+sd-jwt",
+      format: "dc+sd-jwt",
       scope: "EmployeeIdentificationCredential",
       cryptographic_binding_methods_supported: ["jwk"],
       credential_signing_alg_values_supported: ["ES256"],
