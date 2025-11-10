@@ -40,7 +40,7 @@ export const employeeCredentialConfig = {
     },
   ],
   vct: "EmployeeIdentificationCredential",
-  claims: {
+  credential_metadata: {
     companyName: {
       display: [
         { name: "会社名", locale: "ja-JP" },

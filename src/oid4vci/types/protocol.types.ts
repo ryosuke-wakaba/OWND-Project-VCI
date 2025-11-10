@@ -146,6 +146,8 @@ export interface BaseLogo {
  */
 export interface IssuerDisplay extends BaseDisplay {
   logo?: BaseLogo;
+  background_color?: string;
+  text_color?: string;
 }
 
 /**
@@ -170,6 +172,7 @@ interface BaseIssuerMetadata {
   credential_issuer: string;
   authorization_servers?: string[];
   credential_endpoint: string;
+  nonce_endpoint?: string; // REQUIRED by HAIP when cryptographic binding is supported
   batch_credential_endpoint?: string;
   deferred_credential_endpoint?: string;
   notification_endpoint?: string;
@@ -204,9 +207,9 @@ export interface IssuerMetadataJwtVcJson extends BaseIssuerMetadata {
   credential_configurations_supported: {
     [key: string]: {
       format: string;
-      scope?: string;
-      cryptographic_binding_methods_supported?: string[];
-      credential_signing_alg_values_supported?: string[];
+      scope?: string; // REQUIRED by HAIP for each credential configuration
+      cryptographic_binding_methods_supported: string[]; // REQUIRED by OID4VCI 1.0
+      credential_signing_alg_values_supported: string[]; // REQUIRED by OID4VCI 1.0
       proof_types_supported?: {
         [key: string]: {
           proof_signing_alg_values_supported: string[];
@@ -229,9 +232,9 @@ export interface IssuerMetadataLdpVc extends BaseIssuerMetadata {
   credential_configurations_supported: {
     [key: string]: {
       format: string;
-      scope?: string;
-      cryptographic_binding_methods_supported?: string[];
-      credential_signing_alg_values_supported?: string[];
+      scope?: string; // REQUIRED by HAIP for each credential configuration
+      cryptographic_binding_methods_supported: string[]; // REQUIRED by OID4VCI 1.0
+      credential_signing_alg_values_supported: string[]; // REQUIRED by OID4VCI 1.0
       proof_types_supported?: {
         [key: string]: {
           proof_signing_alg_values_supported: string[];
@@ -259,9 +262,9 @@ export interface IssuerMetadataVcSdJwt extends BaseIssuerMetadata {
   credential_configurations_supported: {
     [key: string]: {
       format: string;
-      scope?: string;
-      cryptographic_binding_methods_supported?: string[];
-      credential_signing_alg_values_supported?: string[];
+      scope?: string; // REQUIRED by HAIP for each credential configuration
+      cryptographic_binding_methods_supported: string[]; // REQUIRED by OID4VCI 1.0
+      credential_signing_alg_values_supported: string[]; // REQUIRED by OID4VCI 1.0
       proof_types_supported?: {
         [key: string]: {
           proof_signing_alg_values_supported: string[];
@@ -271,7 +274,7 @@ export interface IssuerMetadataVcSdJwt extends BaseIssuerMetadata {
 
       // Added parameters specific to A.3.
       vct: string;
-      claims: Claims;
+      credential_metadata: Claims; // Updated from 'claims' to 'credential_metadata' per latest spec
       order?: string[];
     };
   };

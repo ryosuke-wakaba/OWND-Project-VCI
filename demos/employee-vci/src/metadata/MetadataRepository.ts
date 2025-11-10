@@ -20,6 +20,7 @@ export class MetadataRepository implements IMetadataRepository {
       credential_issuer: this.credentialIssuer,
       authorization_servers: [this.credentialIssuer],
       credential_endpoint: `${this.credentialIssuer}/credentials`,
+      nonce_endpoint: `${this.credentialIssuer}/nonce`, // REQUIRED by HAIP when key binding is supported
       display: this.buildDisplayInfo(),
       credential_configurations_supported: this.buildCredentialConfigurations(),
     };

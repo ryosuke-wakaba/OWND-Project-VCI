@@ -1,34 +1,51 @@
 # Doing
 
+# Done
+
+### OID4VCI仕様準拠のためのIssuer Metadata修正
+
+最新のOID4VCI 1.0仕様およびHAIP draft-04との差異を修正しました。
+
+#### 参考ドキュメント
+- `documents/oid4vci-spec-compliance-analysis.md`（差異分析）
+- [OID4VCI 1.0 WG Draft](https://openid.github.io/OpenID4VCI/openid-4-verifiable-credential-issuance-1_0-wg-draft.html)
+- [HAIP draft-04](https://openid.net/specs/openid4vc-high-assurance-interoperability-profile-1_0-04.html)
+
+#### 実施内容
+
+**型定義の修正（src/oid4vci/types/protocol.types.ts）**:
+- `nonce_endpoint`をBaseIssuerMetadataに追加（HAIP要件）
+- `cryptographic_binding_methods_supported`と`credential_signing_alg_values_supported`を必須フィールドに変更
+- `scope`にHAIP要件のコメントを追加
+- `IssuerDisplay`に`background_color`/`text_color`を追加
+- SD-JWT VC設定の`claims`を`credential_metadata`にリネーム
+
+**実装の修正**:
+- demos/employee-vci/src/metadata/MetadataRepository.ts: `nonce_endpoint`を追加
+- demos/employee-vci/src/metadata/credentialConfigs.ts: `credential_metadata`に対応
+- demos/employee-vci/src/logic/credentialsConfigProvider.ts: 同上
+- src/utils/localize.ts: `credential_metadata`のローカライゼーション対応
+- tests/utils/localize.test.ts: テスト更新
+- demos/employee-vci/tests/vci.test.ts: nonce_endpoint検証追加
+
+**重要な修正**:
+- `token_endpoint`はCredential Issuer Metadataには含めない（OAuth 2.0 Authorization Server Metadata (RFC 8414)に属するため）
+
+**テスト結果**:
+- ライブラリ: 32 passing, 1 pending
+- employee-vci: 30 passing
+
 ### メタデータのハードコード実装への移行
 現在、Issuer MetadataをJSONファイル(`metadata/dev/credential_issuer_metadata.json`)から読み込んでいるが、
 TypeScriptでハードコード実装に移行し、将来的なDB実装への道筋をつける。
 
-#### 設計ドキュメント
-`documents/metadata-simple-design.md` を参照
-
-#### 実装方針
-- **src/**: 汎用的なインターフェース定義のみ
-- **demos/employee-vci/**: 具体的な実装（employee-vci固有）
-- **DB切り替え**: 将来的に必要になった際は実装を直接書き換え（Factoryパターンなし）
-
-#### 実装タスク
-1. src/metadata/IMetadataRepository.ts作成（汎用インターフェース）
-2. demos/employee-vci/src/metadata/credentialConfigs.ts作成（クレデンシャル設定定義）
-3. demos/employee-vci/src/metadata/MetadataRepository.ts作成（ハードコード実装）
-4. demos/common/src/routes/vci/routesHandler.ts更新（リポジトリを引数で受け取る）
-5. demos/common/src/routes/vci/routes.ts更新（setupCommonRouteにリポジトリを渡す）
-6. demos/employee-vci/src/routes/vci/routes.ts更新（リポジトリをインスタンス化）
-7. 既存JSONファイル削除（metadata/dev/, metadata/prod/）
-8. テスト実行・確認
-
-#### 期待効果
-- 型安全なメタデータ管理
-- 環境変数による動的な値の注入
-- dev/prodファイルの重複削除
-- 将来のDB実装への容易な切り替え
-
-# Done
+**実施内容**:
+- IMetadataRepository interfaceを作成（src/metadata/）
+- employee-vci固有のMetadataRepositoryとcredentialConfigsを実装
+- JSONファイルからTypeScript設定への移行完了
+- メタデータエンドポイントのテスト8件を追加
+- 全テスト合格（ライブラリ: 32 passing 1 pending、employee-vci: 29 passing）
+- 設計ドキュメント追加（documents/metadata-*.md）
 
 ### ts-toolboxの導入
 以下のソースコードをパッケージ化したので置き換えました。

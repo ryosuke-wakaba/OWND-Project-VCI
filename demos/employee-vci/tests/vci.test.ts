@@ -355,9 +355,22 @@ describe("GET /.well-known/openid-credential-issuer", () => {
 
     assert.property(response.body, "credential_issuer");
     assert.property(response.body, "credential_endpoint");
+    assert.property(response.body, "nonce_endpoint");
     assert.property(response.body, "credential_configurations_supported");
     assert.property(response.body, "display");
     assert.isArray(response.body.display);
+  });
+
+  it("should include nonce_endpoint for HAIP compliance", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/openid-credential-issuer",
+    );
+
+    const credentialIssuer = response.body.credential_issuer;
+    const nonceEndpoint = response.body.nonce_endpoint;
+
+    assert.isDefined(nonceEndpoint);
+    assert.equal(nonceEndpoint, `${credentialIssuer}/nonce`);
   });
 
   it("should include EmployeeIdentificationCredential configuration", async () => {
@@ -404,22 +417,25 @@ describe("GET /.well-known/openid-credential-issuer", () => {
     const empConfig =
       response.body.credential_configurations_supported
         .EmployeeIdentificationCredential;
-    const claims = empConfig.claims;
+    const credentialMetadata = empConfig.credential_metadata;
 
-    assert.property(claims, "companyName");
-    assert.property(claims, "employeeNo");
-    assert.property(claims, "givenName");
-    assert.property(claims, "familyName");
-    assert.property(claims, "gender");
-    assert.property(claims, "division");
+    assert.property(credentialMetadata, "companyName");
+    assert.property(credentialMetadata, "employeeNo");
+    assert.property(credentialMetadata, "givenName");
+    assert.property(credentialMetadata, "familyName");
+    assert.property(credentialMetadata, "gender");
+    assert.property(credentialMetadata, "division");
 
     // Check display names for one claim
-    assert.isArray(claims.companyName.display);
-    assert.equal(claims.companyName.display.length, 2);
-    assert.equal(claims.companyName.display[0].name, "会社名");
-    assert.equal(claims.companyName.display[0].locale, "ja-JP");
-    assert.equal(claims.companyName.display[1].name, "Company Name");
-    assert.equal(claims.companyName.display[1].locale, "en-US");
+    assert.isArray(credentialMetadata.companyName.display);
+    assert.equal(credentialMetadata.companyName.display.length, 2);
+    assert.equal(credentialMetadata.companyName.display[0].name, "会社名");
+    assert.equal(credentialMetadata.companyName.display[0].locale, "ja-JP");
+    assert.equal(
+      credentialMetadata.companyName.display[1].name,
+      "Company Name",
+    );
+    assert.equal(credentialMetadata.companyName.display[1].locale, "en-US");
   });
 
   it("should use default company name and brand color", async () => {
@@ -456,7 +472,9 @@ describe("GET /.well-known/openid-credential-issuer", () => {
     assert.equal(credentialEndpoint, `${credentialIssuer}/credentials`);
 
     // Check logo URIs
-    const jaDisplay = response.body.display.find((d: any) => d.locale === "ja-JP");
+    const jaDisplay = response.body.display.find(
+      (d: any) => d.locale === "ja-JP",
+    );
     assert.equal(
       jaDisplay.logo.uri,
       `${credentialIssuer}/images/company-logo.png`,

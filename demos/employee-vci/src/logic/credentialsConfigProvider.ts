@@ -59,7 +59,7 @@ const issuerMetadata: IssuerMetadataVcSdJwt = {
         },
       },
       vct: "EmployeeIdentificationCredential",
-      claims: {
+      credential_metadata: {
         companyName: {},
         employeeNo: {},
         division: {},
