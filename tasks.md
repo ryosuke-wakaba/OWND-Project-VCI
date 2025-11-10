@@ -1,16 +1,48 @@
 # Doing
-### ts-toolboxの導入
-以下のソースコードをパッケージ化したので置き換えてください。
-- src/credentials
-- src/crypto
 
-パッケージ情報
-https://www.npmjs.com/package/@ownd-project/ts-toolbox
+### メタデータのハードコード実装への移行
+現在、Issuer MetadataをJSONファイル(`metadata/dev/credential_issuer_metadata.json`)から読み込んでいるが、
+TypeScriptでハードコード実装に移行し、将来的なDB実装への道筋をつける。
 
-パッケージのソースコード
-/Users/ryousuke/repositories/ownd/tool-box
+#### 設計ドキュメント
+`documents/metadata-simple-design.md` を参照
+
+#### 実装方針
+- **src/**: 汎用的なインターフェース定義のみ
+- **demos/employee-vci/**: 具体的な実装（employee-vci固有）
+- **DB切り替え**: 将来的に必要になった際は実装を直接書き換え（Factoryパターンなし）
+
+#### 実装タスク
+1. src/metadata/IMetadataRepository.ts作成（汎用インターフェース）
+2. demos/employee-vci/src/metadata/credentialConfigs.ts作成（クレデンシャル設定定義）
+3. demos/employee-vci/src/metadata/MetadataRepository.ts作成（ハードコード実装）
+4. demos/common/src/routes/vci/routesHandler.ts更新（リポジトリを引数で受け取る）
+5. demos/common/src/routes/vci/routes.ts更新（setupCommonRouteにリポジトリを渡す）
+6. demos/employee-vci/src/routes/vci/routes.ts更新（リポジトリをインスタンス化）
+7. 既存JSONファイル削除（metadata/dev/, metadata/prod/）
+8. テスト実行・確認
+
+#### 期待効果
+- 型安全なメタデータ管理
+- 環境変数による動的な値の注入
+- dev/prodファイルの重複削除
+- 将来のDB実装への容易な切り替え
 
 # Done
+
+### ts-toolboxの導入
+以下のソースコードをパッケージ化したので置き換えました。
+- src/credentials → @ownd-project/ts-toolbox
+- src/crypto → @ownd-project/ts-toolbox
+
+パッケージ情報: https://www.npmjs.com/package/@ownd-project/ts-toolbox
+
+**実施内容**:
+- @ownd-project/ts-toolbox (v1.0.0) をインストール
+- src/credentials/jwt/issuer.ts, demos/common/src/keys.ts, demos/employee-vci/src/logic/employeeCredential.ts のインポート更新
+- src/crypto/, src/credentials/sd-jwt/issuer.ts, tests/crypto/ を削除
+- 全テスト合格（ライブラリ: 33, employee-vci: 21）
+- コード削減: -406行
 
 ### SD-JWT-VCのformat文字列の変更
 以下の通り仕様に変更が入ったので反映させてください。

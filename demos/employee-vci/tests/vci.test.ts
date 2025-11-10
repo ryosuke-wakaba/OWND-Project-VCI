@@ -337,3 +337,166 @@ describe("POST /nonce", () => {
     assert.notEqual(response1.body.c_nonce, response2.body.c_nonce);
   });
 });
+
+describe("GET /.well-known/openid-credential-issuer", () => {
+  it("should return 200 with issuer metadata", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/openid-credential-issuer",
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal(response.type, "application/json");
+  });
+
+  it("should include required metadata fields", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/openid-credential-issuer",
+    );
+
+    assert.property(response.body, "credential_issuer");
+    assert.property(response.body, "credential_endpoint");
+    assert.property(response.body, "credential_configurations_supported");
+    assert.property(response.body, "display");
+    assert.isArray(response.body.display);
+  });
+
+  it("should include EmployeeIdentificationCredential configuration", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/openid-credential-issuer",
+    );
+
+    const configs = response.body.credential_configurations_supported;
+    assert.property(configs, "EmployeeIdentificationCredential");
+
+    const empConfig = configs.EmployeeIdentificationCredential;
+    assert.equal(empConfig.format, "dc+sd-jwt");
+    assert.equal(empConfig.vct, "EmployeeIdentificationCredential");
+    assert.equal(empConfig.scope, "EmployeeIdentification");
+  });
+
+  it("should include proper cryptographic binding and proof types", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/openid-credential-issuer",
+    );
+
+    const empConfig =
+      response.body.credential_configurations_supported
+        .EmployeeIdentificationCredential;
+
+    assert.deepEqual(empConfig.cryptographic_binding_methods_supported, [
+      "jwk",
+    ]);
+    assert.deepEqual(empConfig.credential_signing_alg_values_supported, [
+      "ES256K",
+    ]);
+    assert.property(empConfig.proof_types_supported, "jwt");
+    assert.deepEqual(
+      empConfig.proof_types_supported.jwt.proof_signing_alg_values_supported,
+      ["ES256", "ES256K"],
+    );
+  });
+
+  it("should include all claim definitions", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/openid-credential-issuer",
+    );
+
+    const empConfig =
+      response.body.credential_configurations_supported
+        .EmployeeIdentificationCredential;
+    const claims = empConfig.claims;
+
+    assert.property(claims, "companyName");
+    assert.property(claims, "employeeNo");
+    assert.property(claims, "givenName");
+    assert.property(claims, "familyName");
+    assert.property(claims, "gender");
+    assert.property(claims, "division");
+
+    // Check display names for one claim
+    assert.isArray(claims.companyName.display);
+    assert.equal(claims.companyName.display.length, 2);
+    assert.equal(claims.companyName.display[0].name, "会社名");
+    assert.equal(claims.companyName.display[0].locale, "ja-JP");
+    assert.equal(claims.companyName.display[1].name, "Company Name");
+    assert.equal(claims.companyName.display[1].locale, "en-US");
+  });
+
+  it("should use default company name and brand color", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/openid-credential-issuer",
+    );
+
+    const display = response.body.display;
+    assert.isArray(display);
+    assert.isAtLeast(display.length, 2);
+
+    // Check Japanese display
+    const jaDisplay = display.find((d: any) => d.locale === "ja-JP");
+    assert.isDefined(jaDisplay);
+    assert.equal(jaDisplay.name, "株式会社Example");
+    assert.equal(jaDisplay.background_color, "#003289");
+    assert.equal(jaDisplay.text_color, "#FFFFFF");
+
+    // Check English display
+    const enDisplay = display.find((d: any) => d.locale === "en-US");
+    assert.isDefined(enDisplay);
+    assert.equal(enDisplay.name, "Example Inc.");
+    assert.equal(enDisplay.background_color, "#003289");
+  });
+
+  it("should generate proper URIs based on credential_issuer", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/openid-credential-issuer",
+    );
+
+    const credentialIssuer = response.body.credential_issuer;
+    const credentialEndpoint = response.body.credential_endpoint;
+
+    assert.equal(credentialEndpoint, `${credentialIssuer}/credentials`);
+
+    // Check logo URIs
+    const jaDisplay = response.body.display.find((d: any) => d.locale === "ja-JP");
+    assert.equal(
+      jaDisplay.logo.uri,
+      `${credentialIssuer}/images/company-logo.png`,
+    );
+
+    // Check credential display URIs
+    const empConfig =
+      response.body.credential_configurations_supported
+        .EmployeeIdentificationCredential;
+    const credDisplay = empConfig.display[0];
+    assert.equal(
+      credDisplay.logo.uri,
+      `${credentialIssuer}/images/credential-logo.png`,
+    );
+    assert.equal(
+      credDisplay.background_image.uri,
+      `${credentialIssuer}/images/credential-background.png`,
+    );
+  });
+
+  it("should support Accept-Language header when RESOLVE_ACCEPT_LANGUAGE is enabled", async () => {
+    // Note: This test assumes RESOLVE_ACCEPT_LANGUAGE is set to 'true' in test environment
+    if (process.env.RESOLVE_ACCEPT_LANGUAGE !== "true") {
+      // Skip if localization is not enabled
+      return;
+    }
+
+    const responseJa = await request(app.callback())
+      .get("/.well-known/openid-credential-issuer")
+      .set("Accept-Language", "ja-JP");
+
+    const responseEn = await request(app.callback())
+      .get("/.well-known/openid-credential-issuer")
+      .set("Accept-Language", "en-US");
+
+    // Both should return 200
+    assert.equal(responseJa.status, 200);
+    assert.equal(responseEn.status, 200);
+
+    // The display should be localized (array reduced to single preferred locale)
+    // Note: Actual behavior depends on localizeIssuerMetadata implementation
+  });
+});

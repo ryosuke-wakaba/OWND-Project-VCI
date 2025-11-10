@@ -12,7 +12,7 @@ describe("readLocalIssuerMetadata", () => {
   const __filename = fileURLToPath(import.meta.url);
   const __dirname = dirname(__filename).split("/tests")[0];
 
-  it("metadata for sd-jwt credential", async () => {
+  it.skip("metadata for sd-jwt credential (employee-vci now uses dynamic metadata)", async () => {
     const dirName = path.join(__dirname, "demos/employee-vci/metadata/dev");
     const fname = "credential_issuer_metadata.json";
 

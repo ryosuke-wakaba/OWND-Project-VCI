@@ -1,9 +1,6 @@
 import Koa from "koa";
 
-import {
-  getIssuerMetadata,
-  readLocalJsonResource,
-} from "ownd-vci/dist/utils/resourceUtils.js";
+import { readLocalJsonResource } from "ownd-vci/dist/utils/resourceUtils.js";
 import path from "path";
 import { TokenIssuerConfig } from "ownd-vci/dist/oid4vci/tokenEndpoint/types.js";
 import { TokenIssuer } from "ownd-vci/dist/oid4vci/tokenEndpoint/TokenIssuer.js";
@@ -14,21 +11,27 @@ import { NonceIssuerConfig } from "ownd-vci/dist/oid4vci/nonceEndpoint/types.js"
 import { NonceIssuer } from "ownd-vci/dist/oid4vci/nonceEndpoint/NonceIssuer.js";
 import { resolveAcceptLanguage } from "resolve-accept-language";
 import { localizeIssuerMetadata } from "ownd-vci/dist/utils/localize.js";
+import { IMetadataRepository } from "ownd-vci/dist/metadata/IMetadataRepository.js";
 
+/**
+ * Issuer Metadataを返すハンドラ
+ *
+ * @param ctx - Koaコンテキスト
+ * @param metadataRepository - メタデータリポジトリ実装（各demoから注入）
+ * @param availableLocales - 対応ロケール
+ * @param defaultLocale - デフォルトロケール
+ */
 export async function handleIssueMetadata(
   ctx: Koa.Context,
-  dirname: string,
+  metadataRepository: IMetadataRepository,
   availableLocales: string[],
   defaultLocale: string,
 ) {
-  const environment = process.env.ENVIRONMENT || "dev";
   const needsLocalization = process.env.RESOLVE_ACCEPT_LANGUAGE === "true";
 
   try {
-    const originalMetadataJson = await getIssuerMetadata(
-      path.join(dirname, "metadata", environment),
-      "credential_issuer_metadata.json",
-    );
+    // リポジトリから取得
+    const originalMetadataJson = await metadataRepository.getIssuerMetadata();
     console.debug(originalMetadataJson);
 
     if (!needsLocalization) {
@@ -52,7 +55,6 @@ export async function handleIssueMetadata(
         availableLocales,
         defaultLocale,
       );
-      // TODO: stop dynamic generation.
       ctx.body = localizeIssuerMetadata(
         structuredClone(originalMetadataJson),
         preferred,

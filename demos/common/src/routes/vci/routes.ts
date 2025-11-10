@@ -6,6 +6,7 @@ import { TokenIssuerConfig } from "ownd-vci/dist/oid4vci/tokenEndpoint/types.js"
 import { CredentialIssuerConfig } from "ownd-vci/dist/oid4vci/credentialEndpoint/types.js";
 import { NonceIssuerConfig } from "ownd-vci/dist/oid4vci/nonceEndpoint/types.js";
 import { StoredAccessToken } from "../../store/authStore.js";
+import { IMetadataRepository } from "ownd-vci/dist/metadata/IMetadataRepository.js";
 import routesHandler from "./routesHandler.js";
 
 export const setupCommonRoute = (
@@ -13,6 +14,7 @@ export const setupCommonRoute = (
   tokenConfigGenerator: () => TokenIssuerConfig,
   credentialConfigGenerator: () => CredentialIssuerConfig<StoredAccessToken>,
   nonceConfigGenerator: () => NonceIssuerConfig,
+  metadataRepository: IMetadataRepository,
   dirname: string,
   availableLocales: string[] = ["en-US", "ja-JP"],
   defaultLocale: string = "ja-JP",
@@ -22,7 +24,7 @@ export const setupCommonRoute = (
     async (ctx: Koa.Context) => {
       await routesHandler.handleIssueMetadata(
         ctx,
-        dirname,
+        metadataRepository,
         availableLocales,
         defaultLocale,
       );
