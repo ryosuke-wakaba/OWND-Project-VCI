@@ -2,6 +2,43 @@
 
 # Done
 
+### Authorization Server Metadataの動的生成への移行
+
+Authorization Server MetadataをJSONファイルから読み込む方式から、TypeScriptでの動的生成に移行しました。
+
+#### 実施内容
+
+**型定義の追加（src/oid4vci/types/protocol.types.ts）**:
+- AuthorizationServerMetadata型を追加（RFC 8414準拠）
+- issuer, token_endpoint, grant_types_supported, token_endpoint_auth_methods_supportedなどを定義
+
+**インターフェース拡張（src/metadata/IMetadataRepository.ts）**:
+- getAuthorizationServerMetadata()メソッドを追加
+
+**実装の追加（demos/employee-vci/src/metadata/MetadataRepository.ts）**:
+- getAuthorizationServerMetadata()の実装
+- 環境変数（CREDENTIAL_ISSUER）から動的に生成
+- Anonymous Accessサポート（token_endpoint_auth_methods_supported: ["none"]）
+
+**ルートハンドラの修正**:
+- demos/common/src/routes/vci/routesHandler.ts: handleAuthServerをファイル読み込みからリポジトリ経由に変更
+- demos/common/src/routes/vci/routes.ts: handleAuthServerにmetadataRepositoryを渡す
+
+**テストの追加（demos/employee-vci/tests/vci.test.ts）**:
+- Authorization Server Metadataエンドポイントのテスト5件追加
+- token_endpoint, grant_types_supported, token_endpoint_auth_methods_supportedの検証
+
+**その他の修正**:
+- tests/oid4vci/types/validator.test.ts: SD-JWT VCテストデータの`claims`を`credential_metadata`に修正
+
+**テスト結果**:
+- ライブラリ: 32 passing, 1 pending
+- employee-vci: 35 passing
+
+**補足**:
+- `supportAnonymousAccess: true`のため、`token_endpoint_auth_methods_supported: ["none"]`が適切
+- Wallet Attestation (attest_jwt_client_auth) は将来的な拡張として検討可能
+
 ### OID4VCI仕様準拠のためのIssuer Metadata修正
 
 最新のOID4VCI 1.0仕様およびHAIP draft-04との差異を修正しました。

@@ -518,3 +518,70 @@ describe("GET /.well-known/openid-credential-issuer", () => {
     // Note: Actual behavior depends on localizeIssuerMetadata implementation
   });
 });
+
+describe("GET /.well-known/oauth-authorization-server", () => {
+  it("should return 200 with authorization server metadata", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/oauth-authorization-server",
+    );
+
+    assert.equal(response.status, 200);
+    assert.equal(response.type, "application/json");
+
+    console.log(response.body);
+  });
+
+  it("should include required OAuth 2.0 fields", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/oauth-authorization-server",
+    );
+
+    const requiredFields = ["issuer", "token_endpoint"];
+
+    requiredFields.forEach((field) => {
+      assert.isDefined(
+        response.body[field],
+        `${field} should be defined in authorization server metadata`,
+      );
+    });
+  });
+
+  it("should include token_endpoint with correct URL", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/oauth-authorization-server",
+    );
+
+    const issuer = response.body.issuer;
+    const tokenEndpoint = response.body.token_endpoint;
+
+    assert.isDefined(tokenEndpoint);
+    assert.equal(tokenEndpoint, `${issuer}/token`);
+  });
+
+  it("should include grant_types_supported with pre-authorized_code", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/oauth-authorization-server",
+    );
+
+    const grantTypes = response.body.grant_types_supported;
+
+    assert.isDefined(grantTypes);
+    assert.isArray(grantTypes);
+    assert.include(
+      grantTypes,
+      "urn:ietf:params:oauth:grant-type:pre-authorized_code",
+    );
+  });
+
+  it("should include token_endpoint_auth_methods_supported", async () => {
+    const response = await request(app.callback()).get(
+      "/.well-known/oauth-authorization-server",
+    );
+
+    const authMethods = response.body.token_endpoint_auth_methods_supported;
+
+    assert.isDefined(authMethods);
+    assert.isArray(authMethods);
+    assert.include(authMethods, "none");
+  });
+});

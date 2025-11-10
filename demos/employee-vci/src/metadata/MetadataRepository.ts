@@ -1,5 +1,8 @@
 import { IMetadataRepository } from "ownd-vci/dist/metadata/IMetadataRepository.js";
-import { IssuerMetadata } from "ownd-vci/dist/oid4vci/types/protocol.types.js";
+import {
+  IssuerMetadata,
+  AuthorizationServerMetadata,
+} from "ownd-vci/dist/oid4vci/types/protocol.types.js";
 import { employeeCredentialConfig } from "./credentialConfigs.js";
 
 /**
@@ -23,6 +26,17 @@ export class MetadataRepository implements IMetadataRepository {
       nonce_endpoint: `${this.credentialIssuer}/nonce`, // REQUIRED by HAIP when key binding is supported
       display: this.buildDisplayInfo(),
       credential_configurations_supported: this.buildCredentialConfigurations(),
+    };
+  }
+
+  async getAuthorizationServerMetadata(): Promise<AuthorizationServerMetadata> {
+    return {
+      issuer: this.credentialIssuer,
+      token_endpoint: `${this.credentialIssuer}/token`,
+      grant_types_supported: [
+        "urn:ietf:params:oauth:grant-type:pre-authorized_code",
+      ],
+      token_endpoint_auth_methods_supported: ["none"], // Anonymous access supported
     };
   }
 

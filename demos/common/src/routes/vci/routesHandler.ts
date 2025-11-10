@@ -1,7 +1,5 @@
 import Koa from "koa";
 
-import { readLocalJsonResource } from "ownd-vci/dist/utils/resourceUtils.js";
-import path from "path";
 import { TokenIssuerConfig } from "ownd-vci/dist/oid4vci/tokenEndpoint/types.js";
 import { TokenIssuer } from "ownd-vci/dist/oid4vci/tokenEndpoint/TokenIssuer.js";
 import { CredentialIssuerConfig } from "ownd-vci/dist/oid4vci/credentialEndpoint/types.js";
@@ -76,13 +74,13 @@ export async function handleIssueMetadata(
   }
 }
 
-export async function handleAuthServer(ctx: Koa.Context, dirname: string) {
-  const environment = process.env.ENVIRONMENT || "dev";
+export async function handleAuthServer(
+  ctx: Koa.Context,
+  metadataRepository: IMetadataRepository,
+) {
   try {
-    const metadataJson = await readLocalJsonResource(
-      path.join(dirname, "metadata", environment),
-      "authorization_server.json",
-    );
+    const metadataJson =
+      await metadataRepository.getAuthorizationServerMetadata();
     console.debug(metadataJson);
     ctx.body = metadataJson;
     ctx.status = 200;

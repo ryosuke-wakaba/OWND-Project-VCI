@@ -33,7 +33,7 @@ export const setupCommonRoute = (
   router.get(
     "/.well-known/oauth-authorization-server",
     async (ctx: Koa.Context) => {
-      await routesHandler.handleAuthServer(ctx, dirname);
+      await routesHandler.handleAuthServer(ctx, metadataRepository);
     },
   );
   router.post("/token", koaBody(), async (ctx: Koa.Context) => {

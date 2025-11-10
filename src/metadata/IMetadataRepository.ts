@@ -1,4 +1,7 @@
-import { IssuerMetadata } from "../oid4vci/types/protocol.types.js";
+import {
+  IssuerMetadata,
+  AuthorizationServerMetadata,
+} from "../oid4vci/types/protocol.types.js";
 
 /**
  * メタデータリポジトリのインターフェース
@@ -10,4 +13,10 @@ export interface IMetadataRepository {
    * @returns IssuerMetadata
    */
   getIssuerMetadata(): Promise<IssuerMetadata>;
+
+  /**
+   * Authorization Server Metadataを取得
+   * @returns AuthorizationServerMetadata
+   */
+  getAuthorizationServerMetadata(): Promise<AuthorizationServerMetadata>;
 }
