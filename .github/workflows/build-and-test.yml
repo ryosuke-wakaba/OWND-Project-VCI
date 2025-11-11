@@ -71,12 +71,12 @@ jobs:
       - name: yarn install in root
         run: yarn install
         working-directory: ./
-      - name: build parent library
+      - name: yarn install in demos/common
+        run: yarn install
+        working-directory: ./demos/common
+      - name: build parent library and demos/common
         run: npm run build
         working-directory: ./
-      - name: build demos/common
-        run: npm run build
-        working-directory: ./demos/common
       - name: yarn install
         run: yarn install
       - name: yarn test
