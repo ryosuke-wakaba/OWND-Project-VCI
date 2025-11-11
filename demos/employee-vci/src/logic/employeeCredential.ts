@@ -15,8 +15,10 @@ const issueEmployeeCredential = async (
   }
   const keyPair = await keyStore.getLatestKeyPair();
   if (keyPair) {
-    const { x509cert } = keyPair;
+    const { x509cert, kty, crv, x, y, d } = keyPair;
     const x5c = x509cert ? JSON.parse(x509cert) : [];
+    // Extract JWK properties only
+    const issuerJwk = { kty, crv, x, y, d };
     // issue vc
     const iss = process.env.CREDENTIAL_ISSUER_IDENTIFIER;
     const iat = Math.floor(Date.now() / 1000);
@@ -37,7 +39,7 @@ const issueEmployeeCredential = async (
       iat,
       exp,
     };
-    const credential = await issueFlatCredential(claims, keyPair, x5c);
+    const credential = await issueFlatCredential(claims, issuerJwk, x5c);
     return { ok: true, payload: credential };
   } else {
     const error = { status: 500, error: "No keypair exists" };
