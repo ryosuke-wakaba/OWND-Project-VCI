@@ -1,4 +1,5 @@
 import * as jose from "jose";
+import { PrivateJwk } from "elliptic-jwk";
 
 import store from "../store.js";
 import keyStore from "ownd-vci-common/dist/store/keyStore.js";
@@ -15,10 +16,17 @@ const issueEmployeeCredential = async (
   }
   const keyPair = await keyStore.getLatestKeyPair();
   if (keyPair) {
-    const { x509cert, kty, crv, x, y, d } = keyPair;
+    const { x509cert } = keyPair;
     const x5c = x509cert ? JSON.parse(x509cert) : [];
-    // Extract JWK properties only
-    const issuerJwk = { kty, crv, x, y, d };
+    // Extract JWK properties only - cast to PrivateJwk to access inherited properties
+    const privateJwk = keyPair as unknown as PrivateJwk;
+    const issuerJwk: PrivateJwk = {
+      kty: privateJwk.kty,
+      crv: privateJwk.crv,
+      x: privateJwk.x,
+      y: privateJwk.y,
+      d: privateJwk.d,
+    };
     // issue vc
     const iss = process.env.CREDENTIAL_ISSUER_IDENTIFIER;
     const iat = Math.floor(Date.now() / 1000);
