@@ -24,6 +24,11 @@ jobs:
         run: yarn install
       - name: build ownd-vci only
         run: npm run generate-json-schemas && ./node_modules/.bin/tsc -p tsconfig.build.json
+      - name: verify ownd-vci build output
+        run: |
+          ls -la dist/ || echo "dist/ not found"
+          ls -la dist/types.d.ts || echo "dist/types.d.ts not found"
+          ls -la dist/utils/localize.d.ts || echo "dist/utils/localize.d.ts not found"
       - name: yarn install in demos/common
         run: yarn install
         working-directory: demos/common
@@ -74,9 +79,6 @@ jobs:
       matrix:
         os: [ubuntu-latest]
         node: [18.16.0]
-    defaults:
-      run:
-        working-directory: demos/employee-vci
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -91,12 +93,16 @@ jobs:
         run: npm install -g yarn
       - name: yarn install
         run: yarn install
+        working-directory: demos/employee-vci
       - name: yarn test
         run: yarn test
+        working-directory: demos/employee-vci
       - name: prettier
         run: yarn lint:prettier
+        working-directory: demos/employee-vci
       - name: eslint
         run: yarn lint
+        working-directory: demos/employee-vci
   # for-demos-participation-cert-vci:
   #   runs-on: ${{ matrix.os }}
   #   strategy:
