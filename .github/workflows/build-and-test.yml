@@ -89,6 +89,19 @@ jobs:
         with:
           name: build-artifacts
           path: ./
+      - name: verify downloaded artifacts
+        run: |
+          echo "=== Checking dist/ directory ==="
+          ls -la dist/ || echo "dist/ not found"
+          echo "=== Checking for .d.ts files ==="
+          ls -la dist/types.d.ts || echo "dist/types.d.ts not found"
+          ls -la dist/types.js || echo "dist/types.js not found"
+          ls -la dist/utils/localize.d.ts || echo "dist/utils/localize.d.ts not found"
+          ls -la dist/utils/localize.js || echo "dist/utils/localize.js not found"
+          ls -la dist/utils/datetime.d.ts || echo "dist/utils/datetime.d.ts not found"
+          ls -la dist/utils/datetime.js || echo "dist/utils/datetime.js not found"
+          echo "=== Checking demos/common/dist/ ==="
+          ls -la demos/common/dist/ || echo "demos/common/dist/ not found"
       - name: install yarn
         run: npm install -g yarn
       - name: yarn install
