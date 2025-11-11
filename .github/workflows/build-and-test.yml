@@ -44,6 +44,9 @@ jobs:
       - name: yarn install in demos/common
         run: yarn install
         working-directory: demos/common
+      - name: clean demos/common build artifacts
+        run: rm -rf dist/ tsconfig.tsbuildinfo
+        working-directory: demos/common
       - name: build demos/common
         run: npm run build
         working-directory: demos/common
