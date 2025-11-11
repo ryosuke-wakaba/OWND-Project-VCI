@@ -47,6 +47,13 @@ jobs:
       - name: build demos/common
         run: npm run build
         working-directory: demos/common
+      - name: verify demos/common build output
+        run: |
+          echo "=== Checking demos/common/dist/ ==="
+          ls -laR demos/common/dist/ || echo "demos/common/dist/ not found"
+          echo "=== Checking for store.js and store.d.ts ==="
+          ls -la demos/common/dist/store.js || echo "store.js not found"
+          ls -la demos/common/dist/store.d.ts || echo "store.d.ts not found"
       - name: upload build artifacts
         uses: actions/upload-artifact@v4
         with:
