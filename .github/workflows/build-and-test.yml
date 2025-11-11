@@ -27,6 +27,8 @@ jobs:
           echo "=== Checking source files ==="
           ls -la src/index.ts || echo "src/index.ts not found"
           ls -la src/types.ts || echo "src/types.ts not found"
+      - name: clean build output
+        run: rm -rf dist/ tsconfig.build.tsbuildinfo
       - name: build ownd-vci only
         run: |
           npm run generate-json-schemas
