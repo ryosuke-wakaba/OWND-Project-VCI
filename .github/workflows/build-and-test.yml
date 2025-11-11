@@ -22,8 +22,18 @@ jobs:
         run: npm install -g yarn
       - name: yarn install
         run: yarn install
+      - name: verify source files before build
+        run: |
+          echo "=== Checking source files ==="
+          ls -la src/index.ts || echo "src/index.ts not found"
+          ls -la src/types.ts || echo "src/types.ts not found"
       - name: build ownd-vci only
-        run: npm run generate-json-schemas && ./node_modules/.bin/tsc -p tsconfig.build.json
+        run: |
+          npm run generate-json-schemas
+          echo "=== Running TypeScript compiler ==="
+          ./node_modules/.bin/tsc --version
+          ./node_modules/.bin/tsc -p tsconfig.build.json --listFiles | tail -20
+          echo "=== TypeScript compilation completed ==="
       - name: verify ownd-vci build output
         run: |
           ls -la dist/ || echo "dist/ not found"
