@@ -22,11 +22,14 @@ jobs:
         run: npm install -g yarn
       - name: yarn install
         run: yarn install
+      - name: build ownd-vci only
+        run: npm run generate-json-schemas && ./node_modules/.bin/tsc -p tsconfig.build.json
       - name: yarn install in demos/common
         run: yarn install
         working-directory: demos/common
-      - name: build ownd-vci and demos/common
+      - name: build demos/common
         run: npm run build
+        working-directory: demos/common
       - name: upload build artifacts
         uses: actions/upload-artifact@v4
         with:
