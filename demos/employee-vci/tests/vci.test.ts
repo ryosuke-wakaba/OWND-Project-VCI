@@ -261,7 +261,7 @@ describe("POST /credential", () => {
         x,
         y: y || "",
         d,
-      });
+      } as any);
 
       const payload = { nonce: "randomNonce" };
       const token = await new jose.SignJWT(payload)
