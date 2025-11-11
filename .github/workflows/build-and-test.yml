@@ -74,6 +74,9 @@ jobs:
       - name: build parent library
         run: npm run build
         working-directory: ./
+      - name: build demos/common
+        run: npm run build
+        working-directory: ./demos/common
       - name: yarn install
         run: yarn install
       - name: yarn test
