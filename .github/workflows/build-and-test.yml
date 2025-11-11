@@ -68,6 +68,12 @@ jobs:
           node-version: ${{ matrix.node }}
       - name: install yarn
         run: npm install -g yarn
+      - name: yarn install in root
+        run: yarn install
+        working-directory: ./
+      - name: build parent library
+        run: npm run build
+        working-directory: ./
       - name: yarn install
         run: yarn install
       - name: yarn test
