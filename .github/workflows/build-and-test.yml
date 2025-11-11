@@ -22,6 +22,9 @@ jobs:
         run: npm install -g yarn
       - name: yarn install
         run: yarn install
+      - name: yarn install in demos/common
+        run: yarn install
+        working-directory: demos/common
       - name: build ownd-vci and demos/common
         run: npm run build
       - name: upload build artifacts
