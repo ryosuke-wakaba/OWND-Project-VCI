@@ -22,6 +22,15 @@ jobs:
         run: npm install -g yarn
       - name: yarn install
         run: yarn install
+      - name: build ownd-vci and demos/common
+        run: npm run build
+      - name: upload build artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            dist/
+            demos/common/dist/
       - name: yarn test
         run: yarn test
       - name: prettier
@@ -53,6 +62,7 @@ jobs:
   #     - name: eslint
   #       run: yarn lint
   for-demos-employee-vci:
+    needs: for-common
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -66,17 +76,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node }}
+      - name: download build artifacts
+        uses: actions/download-artifact@v4
+        with:
+          name: build-artifacts
+          path: ./
       - name: install yarn
         run: npm install -g yarn
-      - name: yarn install in root
-        run: yarn install
-        working-directory: ./
-      - name: yarn install in demos/common
-        run: yarn install
-        working-directory: ./demos/common
-      - name: build parent library and demos/common
-        run: npm run build
-        working-directory: ./
       - name: yarn install
         run: yarn install
       - name: yarn test
