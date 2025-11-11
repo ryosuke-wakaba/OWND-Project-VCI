@@ -126,8 +126,10 @@ jobs:
           ls -la demos/common/dist/ || echo "demos/common/dist/ not found"
       - name: install yarn
         run: npm install -g yarn
-      - name: yarn install
-        run: yarn install
+      - name: yarn install and link local packages
+        run: |
+          yarn install --check-files
+          yarn install --force
         working-directory: demos/employee-vci
       - name: yarn test
         run: yarn test
