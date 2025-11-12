@@ -4,7 +4,7 @@
 employee-vci（社員証クレデンシャル発行サーバー）のUI機能について整理するドキュメント
 
 **最終更新**: 2025-01-12
-**実装状況**: Phase 1 完了（社員管理UI）
+**実装状況**: Phase 2 完了（社員管理UI + クレデンシャル発行UI）
 
 ---
 
@@ -39,15 +39,15 @@ employee-vci（社員証クレデンシャル発行サーバー）のUI機能に
   - [x] 確認ダイアログ付き削除
   - [x] Basic認証対応（credentials: 'include'）
 
-#### クレデンシャル発行管理（将来実装）
-- [ ] Pre-Authorized Code 発行
-  - [ ] 対象社員の選択
-  - [ ] TX Code（PIN）の生成・設定
-  - [ ] 有効期限の設定
-  - [ ] 発行されたCodeの表示（QRコード含む）
-- [ ] 発行履歴の表示
+#### クレデンシャル発行管理 ✅ Phase 2 完了
+- [x] Pre-Authorized Code 発行
+  - [x] 対象社員の選択（社員一覧から「発行」ボタンをクリック）
+  - [x] TX Code（PIN）の生成・設定（自動生成）
+  - [x] 有効期限の設定（環境変数で設定）
+  - [x] 発行されたCodeの表示（QRコード含む）
+- [ ] 発行履歴の表示（将来実装）
   - [ ] 発行日時、対象社員、使用状態などの確認
-- [ ] 発行済みCodeの管理
+- [ ] 発行済みCodeの管理（将来実装）
   - [ ] 未使用/使用済みの状態確認
   - [ ] 有効期限の確認
 
@@ -133,11 +133,18 @@ Credential Offer ページ → (TX Code入力) → 完了画面
 - [x] Basic認証による保護
 - [x] レスポンシブ対応の基本CSS
 
-### Phase 2（基本機能の拡充）- 将来実装
+### Phase 2（クレデンシャル発行機能）✅ 完了
+- [x] クレデンシャル発行機能のUI統合
+  - [x] 社員一覧に「発行」ボタン追加
+  - [x] Credential Offer表示ページ
+  - [x] QRコード生成機能
+  - [x] TX Code表示
+  - [x] URLコピー機能
+
+### Phase 2.5（基本機能の拡充）- 将来実装
 - [ ] 社員検索機能（社員番号、氏名）
 - [ ] ソート機能（各カラム）
 - [ ] ページネーション
-- [ ] クレデンシャル発行機能のUI統合
 - [ ] バリデーションエラーの詳細表示
 
 ### Phase 3（将来的な拡張）- 将来実装
@@ -197,9 +204,10 @@ Credential Offer ページ → (TX Code入力) → 完了画面
 
 ### 8-1. ビューテンプレート (views/)
 - `views/layout.ejs` - 共通レイアウト
-- `views/admin/employees.ejs` - 社員一覧
+- `views/admin/employees.ejs` - 社員一覧（「発行」ボタン含む）
 - `views/admin/employee-new.ejs` - 社員登録フォーム
 - `views/admin/employee-edit.ejs` - 社員編集フォーム
+- `views/admin/credential-offer.ejs` - Credential Offer表示ページ（QRコード生成機能含む）
 
 ### 8-2. スタイルシート (public/)
 - `public/styles/admin.css` - 管理画面用CSS
@@ -217,6 +225,8 @@ Credential Offer ページ → (TX Code入力) → 完了画面
   - `handleEmployeeEditForm()`
   - `handleEmployeeUpdate()`
   - `handleEmployeeDelete()`
+  - `handleEmployeeCredentialOfferDisplay()` - Credential Offer表示
+  - `credentialOfferForEmployee()` - Credential Offer生成（既存関数を活用）
 
 ### 8-4. APIエンドポイント
 
@@ -227,6 +237,7 @@ Credential Offer ページ → (TX Code入力) → 完了画面
 - `GET /admin/employees/:id/edit` - 編集フォーム表示
 - `POST /admin/employees/:id/update` - 社員更新処理
 - `DELETE /admin/employees/:id` - 社員削除処理
+- `GET /admin/employees/:employeeNo/offer` - Credential Offer表示ページ
 
 #### 既存（変更なし）
 - `GET /.well-known/openid-credential-issuer` - Issuer Metadata
@@ -283,16 +294,19 @@ CREDENTIAL_ISSUER=http://localhost:3001
 ## 11. 次のステップ
 
 ### 完了済み
-- [x] Phase 1 の機能実装
+- [x] Phase 1 の機能実装（社員管理UI）
+- [x] Phase 2 の機能実装（クレデンシャル発行UI）
 - [x] 技術スタックの決定
 - [x] 基本的なUI/UX実装
+- [x] QRコード生成機能の統合
 - [x] ローカルでの動作確認
 
-### 今後の予定（Phase 2以降）
+### 今後の予定（Phase 2.5以降）
 - [ ] 検索・フィルタリング機能の実装
 - [ ] ソート機能の実装
 - [ ] ページネーションの実装
-- [ ] クレデンシャル発行UIの統合
+- [ ] 発行履歴の表示機能
+- [ ] 発行済みCodeの管理機能
 - [ ] エンドユーザー向け画面の実装
 - [ ] CSRF対策の追加
 - [ ] より詳細なバリデーション

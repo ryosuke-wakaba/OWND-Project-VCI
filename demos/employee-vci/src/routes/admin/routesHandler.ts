@@ -138,6 +138,7 @@ export async function handleEmployeesList(ctx: Koa.Context) {
     await ctx.render("admin/employees", {
       title: "社員一覧",
       employees,
+      layout: "layout",
     });
   } catch (err) {
     console.error(err);
@@ -149,6 +150,7 @@ export async function handleEmployeesList(ctx: Koa.Context) {
 export async function handleEmployeeNewForm(ctx: Koa.Context) {
   await ctx.render("admin/employee-new", {
     title: "社員登録",
+    layout: "layout",
   });
 }
 
@@ -164,6 +166,7 @@ export async function handleEmployeeEditForm(ctx: Koa.Context) {
     await ctx.render("admin/employee-edit", {
       title: "社員編集",
       employee,
+      layout: "layout",
     });
   } catch (err) {
     console.error(err);
@@ -204,6 +207,29 @@ export async function handleEmployeeDelete(ctx: Koa.Context) {
   }
 }
 
+export async function handleEmployeeCredentialOfferDisplay(ctx: Koa.Context) {
+  try {
+    const { employeeNo } = ctx.params;
+    const result = await credentialOfferForEmployee(employeeNo);
+
+    if (result.ok) {
+      await ctx.render("admin/credential-offer", {
+        title: "クレデンシャル発行",
+        subject: result.payload.subject,
+        credentialOffer: result.payload.credentialOffer,
+        txCode: result.payload.txCode,
+        layout: "layout",
+      });
+    } else {
+      handleNotSuccessResult(result.error, ctx);
+    }
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to generate credential offer" };
+  }
+}
+
 export default {
   handleNewEmployee,
   handleEmployeeCredentialOffer,
@@ -212,4 +238,5 @@ export default {
   handleEmployeeEditForm,
   handleEmployeeUpdate,
   handleEmployeeDelete,
+  handleEmployeeCredentialOfferDisplay,
 };

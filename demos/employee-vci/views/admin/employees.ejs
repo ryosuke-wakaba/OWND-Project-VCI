@@ -1,9 +1,27 @@
-<h2>社員一覧</h2>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Employee VCI</title>
+  <link rel="stylesheet" href="/styles/admin.css?v=2">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Employee VCI 管理画面</h1>
+      <nav>
+        <a href="/admin/employees">社員管理</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <h2>社員一覧</h2>
 
-<div class="toolbar">
-  <div></div>
-  <a href="/admin/employees/new" class="btn btn-primary">新規登録</a>
-</div>
+    <div class="toolbar">
+      <div></div>
+      <a href="/admin/employees/new" class="btn btn-primary">新規登録</a>
+    </div>
 
 <% if (employees && employees.length > 0) { %>
   <table>
@@ -27,6 +45,7 @@
           <td><%= employee.gender === 'male' ? '男性' : employee.gender === 'female' ? '女性' : 'その他' %></td>
           <td>
             <div class="actions">
+              <a href="/admin/employees/<%= employee.employeeNo %>/offer" class="btn btn-primary btn-small">発行</a>
               <a href="/admin/employees/<%= employee.id %>/edit" class="btn btn-secondary btn-small">編集</a>
               <button onclick="deleteEmployee(<%= employee.id %>)" class="btn btn-danger btn-small">削除</button>
             </div>
@@ -65,3 +84,11 @@ async function deleteEmployee(id) {
   }
 }
 </script>
+  </main>
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Employee VCI</p>
+    </div>
+  </footer>
+</body>
+</html>

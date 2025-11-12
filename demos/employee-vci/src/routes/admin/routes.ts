@@ -63,6 +63,14 @@ const init = () => {
     },
   );
 
+  router.get(
+    "/admin/employees/:employeeNo/offer",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleEmployeeCredentialOfferDisplay(ctx);
+    },
+  );
+
   router.post(
     "/admin/employees/:employeeNo/credential-offer",
     auth(basicAuthOpts()),
