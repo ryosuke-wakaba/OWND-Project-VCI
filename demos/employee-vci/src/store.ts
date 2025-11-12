@@ -224,12 +224,67 @@ export const getAccessToken = async (
   return await authStore.getAccessToken(accessToken);
 };
 
+export const getAllEmployees = async (): Promise<Employee[]> => {
+  try {
+    const db = await store.openDb();
+    const employees = await db.all<Employee[]>(
+      `SELECT * FROM ${TBL_NM_EMPLOYEES} ORDER BY createdAt DESC`,
+    );
+    return employees;
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
+export const updateEmployee = async (
+  id: number,
+  employee: NewEmployee,
+): Promise<void> => {
+  try {
+    const db = await store.openDb();
+    const sql = `
+      UPDATE ${TBL_NM_EMPLOYEES}
+      SET companyName = ?, employeeNo = ?, givenName = ?,
+          familyName = ?, gender = ?, division = ?,
+          updatedAt = CURRENT_TIMESTAMP
+      WHERE id = ?
+    `;
+    await db.run(
+      sql,
+      employee.companyName,
+      employee.employeeNo,
+      employee.givenName,
+      employee.familyName,
+      employee.gender,
+      employee.division,
+      id,
+    );
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
+export const deleteEmployee = async (id: number): Promise<void> => {
+  try {
+    const db = await store.openDb();
+    await db.run(`DELETE FROM ${TBL_NM_EMPLOYEES} WHERE id = ?`, id);
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
 export default {
   createDb,
   destroyDb,
   registerEmployee,
   getEmployeeByNo,
   getEmployeeById,
+  getAllEmployees,
+  updateEmployee,
+  deleteEmployee,
   addPreAuthCode,
   getPreAuthCodeAndEmployee,
   addAccessToken,

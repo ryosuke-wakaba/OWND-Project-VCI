@@ -12,12 +12,54 @@ const init = () => {
 
   commonAdminRoutes.setupCommonRoute(router);
 
+  // Employee Management UI Routes
+  router.get(
+    "/admin/employees",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleEmployeesList(ctx);
+    },
+  );
+
+  router.get(
+    "/admin/employees/new",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleEmployeeNewForm(ctx);
+    },
+  );
+
   router.post(
     "/admin/employees/new",
     auth(basicAuthOpts()),
     koaBody(),
     async (ctx: Koa.Context) => {
       await routesHandler.handleNewEmployee(ctx);
+    },
+  );
+
+  router.get(
+    "/admin/employees/:id/edit",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleEmployeeEditForm(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/employees/:id/update",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleEmployeeUpdate(ctx);
+    },
+  );
+
+  router.delete(
+    "/admin/employees/:id",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleEmployeeDelete(ctx);
     },
   );
 
