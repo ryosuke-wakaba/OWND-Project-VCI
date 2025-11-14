@@ -32,6 +32,7 @@ export class MetadataRepository implements IMetadataRepository {
   async getAuthorizationServerMetadata(): Promise<AuthorizationServerMetadata> {
     return {
       issuer: this.credentialIssuer,
+      authorization_endpoint: `${this.credentialIssuer}/authorize`,
       token_endpoint: `${this.credentialIssuer}/token`,
       grant_types_supported: [
         "urn:ietf:params:oauth:grant-type:pre-authorized_code",

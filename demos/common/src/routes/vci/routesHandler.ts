@@ -30,7 +30,7 @@ export async function handleIssueMetadata(
   try {
     // リポジトリから取得
     const originalMetadataJson = await metadataRepository.getIssuerMetadata();
-    console.debug(originalMetadataJson);
+    console.debug("Issuer Metadata:", JSON.stringify(originalMetadataJson));
 
     if (!needsLocalization) {
       ctx.body = originalMetadataJson;
@@ -81,7 +81,7 @@ export async function handleAuthServer(
   try {
     const metadataJson =
       await metadataRepository.getAuthorizationServerMetadata();
-    console.debug(metadataJson);
+    console.debug("Authorization Server Metadata:", JSON.stringify(metadataJson));
     ctx.body = metadataJson;
     ctx.status = 200;
     ctx.set("Content-Type", "application/json");
@@ -96,6 +96,11 @@ export async function handleToken(
   ctx: Koa.Context,
   configGenerator: () => TokenIssuerConfig,
 ) {
+  console.log("=== Token Request Started ===");
+  console.log("Grant Type:", ctx.request.body?.grant_type);
+  console.log("Pre-authorized Code:", ctx.request.body?.["pre-authorized_code"]?.substring(0, 10) + "...");
+  console.log("TX Code provided:", !!ctx.request.body?.tx_code);
+
   const tokenRequest = new TokenIssuer(configGenerator());
   const result = await tokenRequest.issue({
     getHeader: (name: string) => ctx.get(name),
@@ -103,11 +108,16 @@ export async function handleToken(
   });
 
   if (!result.ok) {
+    console.log("❌ Token Request Failed:", JSON.stringify(result.error.payload));
     const { status, payload } = result.error;
     ctx.status = status;
     ctx.body = payload;
     return;
   }
+
+  console.log("✅ Token Issued Successfully");
+  console.log("Access Token:", result.payload.access_token.substring(0, 10) + "...");
+  console.log("=== Token Request Completed ===\n");
 
   // return access token
   ctx.body = result.payload;
@@ -120,17 +130,29 @@ export async function handleCredential(
   ctx: Koa.Context,
   configGenerator: () => CredentialIssuerConfig<StoredAccessToken>,
 ) {
+  console.log("=== Credential Request Started ===");
+  console.log("Authorization Header:", ctx.get("Authorization")?.substring(0, 20) + "...");
+  console.log("Credential Configuration ID:", ctx.request.body?.credential_configuration_id);
+  console.log("VCT:", ctx.request.body?.vct);
+  console.log("Proof Type:", ctx.request.body?.proof?.proof_type);
+  console.log("Number of JWT Proofs:", ctx.request.body?.proofs?.jwt?.length || 0);
+
   const credentialIssuer = new CredentialIssuer(configGenerator());
   const result = await credentialIssuer.issue({
     getHeader: (name: string) => ctx.get(name),
     getBody: () => ctx.request.body,
   });
   if (!result.ok) {
-    console.debug({ error: result.error });
+    console.log("❌ Credential Request Failed:", JSON.stringify(result.error.payload));
+    console.debug("Error details:", JSON.stringify(result.error));
     ctx.status = result.error.status;
     ctx.body = result.error.payload;
     return;
   }
+
+  console.log("✅ Credential Issued Successfully");
+  console.log("Credential format:", result.payload.credential ? "credential field" : "credentials field");
+  console.log("=== Credential Request Completed ===\n");
 
   ctx.body = result.payload;
   ctx.status = 200;
@@ -140,15 +162,23 @@ export async function handleNonce(
   ctx: Koa.Context,
   configGenerator: () => NonceIssuerConfig,
 ) {
+  console.log("=== Nonce Request Started ===");
+
   const nonceIssuer = new NonceIssuer(configGenerator());
   const result = await nonceIssuer.issue();
 
   if (!result.ok) {
+    console.log("❌ Nonce Request Failed:", JSON.stringify(result.error.payload));
     const { status, payload } = result.error;
     ctx.status = status;
     ctx.body = payload;
     return;
   }
+
+  console.log("✅ Nonce Issued Successfully");
+  console.log("C_nonce:", result.payload.c_nonce);
+  console.log("C_nonce expires in:", result.payload.c_nonce_expires_in, "seconds");
+  console.log("=== Nonce Request Completed ===\n");
 
   // return nonce response
   ctx.body = result.payload;

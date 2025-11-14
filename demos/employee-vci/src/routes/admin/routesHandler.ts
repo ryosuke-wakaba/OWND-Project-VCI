@@ -104,16 +104,27 @@ export type GenerateCredentialOfferResult = {
 const credentialOfferForEmployee = async (
   employeeNo: string,
 ): Promise<Result<GenerateCredentialOfferResult, NotSuccessResult>> => {
+  console.log("=== Credential Offer Generation Started ===");
+  console.log("Employee No:", employeeNo);
+
   // get employee
   const employee = await store.getEmployeeByNo(employeeNo);
   if (!employee) {
+    console.log("❌ Employee not found:", employeeNo);
     return { ok: false, error: { type: "NOT_FOUND" } };
   }
+
+  console.log("✅ Employee found:", employee.familyName, employee.givenName);
 
   // generate pre-auth code
   const code = generateRandomString();
   const expiresIn = Number(process.env.VCI_PRE_AUTH_CODE_EXPIRES_IN || "86400");
   const txCode = generateRandomNumericString();
+
+  console.log("Pre-authorized Code:", code.substring(0, 10) + "...");
+  console.log("TX Code:", txCode);
+  console.log("Expires in:", expiresIn, "seconds");
+
   await store.addPreAuthCode(code, expiresIn, txCode, String(employee.id));
 
   const credentialOfferUrl = generatePreAuthCredentialOffer(
@@ -122,6 +133,9 @@ const credentialOfferForEmployee = async (
     code,
     {},
   );
+
+  console.log("✅ Credential Offer URL generated");
+  console.log("=== Credential Offer Generation Completed ===\n");
 
   const payload = {
     subject: { employeeNo },
@@ -213,11 +227,22 @@ export async function handleEmployeeCredentialOfferDisplay(ctx: Koa.Context) {
     const result = await credentialOfferForEmployee(employeeNo);
 
     if (result.ok) {
+      // Calculate expiration time
+      const expiresInSeconds = parseInt(
+        process.env.VCI_PRE_AUTH_CODE_EXPIRES_IN || "86400",
+        10,
+      );
+      const expiresAt = new Date(Date.now() + expiresInSeconds * 1000);
+
       await ctx.render("admin/credential-offer", {
         title: "クレデンシャル発行",
         subject: result.payload.subject,
         credentialOffer: result.payload.credentialOffer,
         txCode: result.payload.txCode,
+        expiresAtJST: expiresAt.toLocaleString("ja-JP", {
+          timeZone: "Asia/Tokyo",
+        }),
+        expiresAtUTC: expiresAt.toISOString(),
         layout: "layout",
       });
     } else {

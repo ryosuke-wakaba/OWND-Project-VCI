@@ -191,10 +191,12 @@ export const addCNonce = async (
 ): Promise<ISqlite.RunResult<sqlite3.Statement>> | never => {
   try {
     const db = await store.openDb();
+    const createdAt = Math.floor(Date.now() / 1000); // Unix timestamp in seconds
     return await db.run(
-      `INSERT INTO ${TBL_NM_C_NONCES} (nonce, expired_in) VALUES (?, ?)`,
+      `INSERT INTO ${TBL_NM_C_NONCES} (nonce, expired_in, createdAt) VALUES (?, ?, ?)`,
       cNonce,
       cNonceExpiresIn,
+      createdAt,
     );
   } catch (err) {
     handleError(err);
@@ -205,7 +207,7 @@ export type StoredCNonce = {
   id: number;
   nonce: string;
   expired_in: number;
-  createdAt: string;
+  createdAt: number; // Unix timestamp in seconds
 };
 
 export const getCNonce = async (

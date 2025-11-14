@@ -30,7 +30,7 @@ const issueSdJwtVcCredential: IssueSdJwtVcCredential = async (
     return { ok: false, error };
   }
   const vct = payload.vct;
-  console.debug({ payload });
+  console.debug("Credential issuance payload:", JSON.stringify(payload));
   if (vct === "EmployeeIdentificationCredential") {
     return await employeeCredential.issueEmployeeCredential(
       sub,
@@ -71,6 +71,16 @@ const issuerMetadata: IssuerMetadataVcSdJwt = {
   },
 };
 
+// Wrapper to convert createdAt from number to string for compatibility
+const getCNonceWrapper = async (nonce: string) => {
+  const result = await authStore.getCNonce(nonce);
+  if (!result) return undefined;
+  return {
+    ...result,
+    createdAt: result.createdAt.toString(),
+  };
+};
+
 export const configure = (): CredentialIssuerConfig<StoredAccessToken> => {
   return {
     credentialIssuer: process.env.CREDENTIAL_ISSUER || "",
@@ -78,6 +88,6 @@ export const configure = (): CredentialIssuerConfig<StoredAccessToken> => {
     supportAnonymousAccess: true,
     accessTokenStateProvider: accessTokenStateProvider,
     issuingExecutor: { sdJwtVc: issueSdJwtVcCredential },
-    getCNonce: authStore.getCNonce,
+    getCNonce: getCNonceWrapper,
   };
 };
