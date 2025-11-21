@@ -174,3 +174,221 @@ c_nonce（Client Nonce）を格納。
 | `addCNonce` | c_nonceを登録 |
 | `getCNonce` | c_nonceを取得 |
 | `refreshNonce` | 新しいc_nonceを発行 |
+
+---
+
+## Admin API
+
+全デモで共通の鍵管理API。Basic認証が必要。
+
+### 認証
+
+```
+Authorization: Basic base64(username:password)
+```
+
+環境変数 `BASIC_AUTH_USERNAME`, `BASIC_AUTH_PASSWORD` で設定。
+
+### エンドポイント一覧
+
+| メソッド | パス | 説明 |
+|----------|------|------|
+| POST | `/admin/keys/new` | 新規鍵ペア生成 |
+| GET | `/admin/keys/:kid` | 鍵情報取得 |
+| POST | `/admin/keys/:kid/revoke` | 鍵失効 |
+| POST | `/admin/keys/:kid/csr` | CSR生成 |
+| POST | `/admin/keys/:kid/signselfcert` | 自己署名証明書作成 |
+| POST | `/admin/keys/:kid/registercert` | 証明書登録 |
+
+---
+
+### POST `/admin/keys/new`
+
+新規鍵ペアを生成。
+
+#### リクエスト
+
+```json
+{
+  "kid": "key-1",
+  "curve": "secp256k1"
+}
+```
+
+| フィールド | 型 | 必須 | 説明 |
+|------------|------|------|------|
+| kid | string | ○ | 鍵識別子 |
+| curve | string | - | 楕円曲線（デフォルト: P-256）<br>対応: P-256, secp256k1 |
+
+#### レスポンス
+
+**成功 (201)**
+```json
+{
+  "status": "success",
+  "message": "Data created successfully!"
+}
+```
+
+---
+
+### GET `/admin/keys/:kid`
+
+鍵情報を取得。
+
+#### パスパラメータ
+
+| パラメータ | 説明 |
+|------------|------|
+| kid | 鍵識別子 |
+
+#### レスポンス
+
+**成功 (200)**
+```json
+{
+  "status": "success",
+  "payload": {
+    "kid": "key-1",
+    "kty": "EC",
+    "crv": "secp256k1",
+    "x": "...",
+    "y": "...",
+    "createdAt": "2025-01-01T00:00:00.000Z",
+    "revokedAt": null
+  }
+}
+```
+
+---
+
+### POST `/admin/keys/:kid/revoke`
+
+鍵を失効。
+
+#### パスパラメータ
+
+| パラメータ | 説明 |
+|------------|------|
+| kid | 鍵識別子 |
+
+#### レスポンス
+
+**成功 (200)**
+```json
+{
+  "status": "success",
+  "message": "Data revoked successfully!"
+}
+```
+
+---
+
+### POST `/admin/keys/:kid/csr`
+
+CSR（Certificate Signing Request）を生成。
+
+#### パスパラメータ
+
+| パラメータ | 説明 |
+|------------|------|
+| kid | 鍵識別子 |
+
+#### リクエスト
+
+```json
+{
+  "subject": "/CN=example.com/O=Example Org"
+}
+```
+
+#### レスポンス
+
+**成功 (200)**
+```json
+{
+  "status": "success",
+  "payload": "-----BEGIN CERTIFICATE REQUEST-----\n..."
+}
+```
+
+---
+
+### POST `/admin/keys/:kid/signselfcert`
+
+自己署名証明書を作成。
+
+#### パスパラメータ
+
+| パラメータ | 説明 |
+|------------|------|
+| kid | 鍵識別子 |
+
+#### リクエスト
+
+```json
+{
+  "csr": "-----BEGIN CERTIFICATE REQUEST-----\n..."
+}
+```
+
+#### レスポンス
+
+**成功 (200)**
+```json
+{
+  "status": "success",
+  "payload": "-----BEGIN CERTIFICATE-----\n..."
+}
+```
+
+---
+
+### POST `/admin/keys/:kid/registercert`
+
+X.509証明書チェーンを登録。
+
+#### パスパラメータ
+
+| パラメータ | 説明 |
+|------------|------|
+| kid | 鍵識別子 |
+
+#### リクエスト
+
+```json
+{
+  "certificates": [
+    "-----BEGIN CERTIFICATE-----\n...",
+    "-----BEGIN CERTIFICATE-----\n..."
+  ]
+}
+```
+
+#### レスポンス
+
+**成功 (200)**
+```json
+{
+  "status": "success",
+  "message": "certificate registration succeeded"
+}
+```
+
+---
+
+### エラーレスポンス
+
+| ステータス | 説明 |
+|------------|------|
+| 400 | 不正なリクエスト |
+| 401 | 認証エラー |
+| 404 | 鍵が見つからない |
+| 500 | サーバーエラー |
+
+```json
+{
+  "status": "error",
+  "message": "エラー内容"
+}
+```
