@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Learning VCI</title>
+  <link rel="stylesheet" href="/styles/admin.css?v=2">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Learning VCI 管理画面</h1>
+      <nav>
+        <a href="/admin/learners">学習者管理</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <h2>学習者登録</h2>
+
+    <div class="form-container">
+      <form action="/admin/learners/new" method="POST">
+        <div class="form-group">
+          <label for="learnerNo">学習者番号 *</label>
+          <input type="text" id="learnerNo" name="learner[learnerNo]" required>
+        </div>
+
+        <div class="form-group">
+          <label for="familyName">姓 *</label>
+          <input type="text" id="familyName" name="learner[familyName]" required>
+        </div>
+
+        <div class="form-group">
+          <label for="givenName">名 *</label>
+          <input type="text" id="givenName" name="learner[givenName]" required>
+        </div>
+
+        <div class="form-group">
+          <label for="issuingAuthority">発行機関 *</label>
+          <input type="text" id="issuingAuthority" name="learner[issuingAuthority]" required>
+        </div>
+
+        <div class="form-group">
+          <label for="issuingCountry">発行国 *</label>
+          <input type="text" id="issuingCountry" name="learner[issuingCountry]" value="JP" required>
+        </div>
+
+        <div class="form-group">
+          <label for="achievementTitle">コース/資格タイトル *</label>
+          <input type="text" id="achievementTitle" name="learner[achievementTitle]" required>
+        </div>
+
+        <div class="form-group">
+          <label for="achievementDescription">実績の説明</label>
+          <textarea id="achievementDescription" name="learner[achievementDescription]" rows="3"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="learningOutcomes">学習成果 (カンマ区切り)</label>
+          <textarea id="learningOutcomes" name="learner[learningOutcomes]" rows="3" placeholder="例: データ分析, 機械学習, Python"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="assessmentGrade">評価/成績</label>
+          <input type="text" id="assessmentGrade" name="learner[assessmentGrade]" placeholder="例: A, 優, 合格">
+        </div>
+
+        <div class="form-group">
+          <label for="dateOfIssuance">発行日 *</label>
+          <input type="date" id="dateOfIssuance" name="learner[dateOfIssuance]" required>
+        </div>
+
+        <div class="form-group">
+          <label for="dateOfExpiry">有効期限</label>
+          <input type="date" id="dateOfExpiry" name="learner[dateOfExpiry]">
+        </div>
+
+        <div class="form-actions">
+          <button type="submit" class="btn btn-primary">登録</button>
+          <a href="/admin/learners" class="btn btn-secondary">キャンセル</a>
+        </div>
+      </form>
+    </div>
+  </main>
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Learning VCI</p>
+    </div>
+  </footer>
+</body>
+</html>

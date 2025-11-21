@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %> - Learning VCI</title>
+  <link rel="stylesheet" href="/styles/admin.css?v=2">
+</head>
+<body>
+  <header>
+    <div class="container">
+      <h1>Learning VCI 管理画面</h1>
+      <nav>
+        <a href="/admin/learners">学習者管理</a>
+      </nav>
+    </div>
+  </header>
+  <main class="container">
+    <h2>学習者一覧</h2>
+
+    <div class="toolbar">
+      <div></div>
+      <a href="/admin/learners/new" class="btn btn-primary">新規登録</a>
+    </div>
+
+<% if (learners && learners.length > 0) { %>
+  <table>
+    <thead>
+      <tr>
+        <th>学習者番号</th>
+        <th>氏名</th>
+        <th>コースタイトル</th>
+        <th>発行機関</th>
+        <th>発行日</th>
+        <th>アクション</th>
+      </tr>
+    </thead>
+    <tbody>
+      <% learners.forEach(function(learner) { %>
+        <tr>
+          <td><%= learner.learnerNo %></td>
+          <td><%= learner.familyName %> <%= learner.givenName %></td>
+          <td><%= learner.achievementTitle %></td>
+          <td><%= learner.issuingAuthority %></td>
+          <td><%= learner.dateOfIssuance %></td>
+          <td>
+            <div class="actions">
+              <a href="/admin/learners/<%= learner.learnerNo %>/offer" class="btn btn-primary btn-small">発行</a>
+              <a href="/admin/learners/<%= learner.id %>/edit" class="btn btn-secondary btn-small">編集</a>
+              <button onclick="deleteLearner(<%= learner.id %>)" class="btn btn-danger btn-small">削除</button>
+            </div>
+          </td>
+        </tr>
+      <% }); %>
+    </tbody>
+  </table>
+<% } else { %>
+  <div class="empty-state">
+    <p>登録されている学習者がいません</p>
+    <a href="/admin/learners/new" class="btn btn-primary">最初の学習者を登録</a>
+  </div>
+<% } %>
+
+<script>
+async function deleteLearner(id) {
+  if (!confirm('この学習者を削除してもよろしいですか？')) {
+    return;
+  }
+
+  try {
+    const response = await fetch(`/admin/learners/${id}`, {
+      method: 'DELETE',
+      credentials: 'include'
+    });
+
+    if (response.ok) {
+      location.reload();
+    } else {
+      alert('削除に失敗しました');
+    }
+  } catch (err) {
+    console.error(err);
+    alert('削除に失敗しました');
+  }
+}
+</script>
+  </main>
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Learning VCI</p>
+    </div>
+  </footer>
+</body>
+</html>

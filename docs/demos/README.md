@@ -8,6 +8,7 @@
 |------|------|------|
 | [common](./common.md) | デモ共通モジュール | 有効 |
 | [employee-vci](./employee-vci.md) | 従業員証明書VCI | 有効 |
+| [learning-vci](./learning-vci.md) | 学習証明書VCI | 有効 |
 | [event-certificate-manager](./event-certificate-manager.md) | イベント証明書管理（VCI + VP） | メンテナンス対象外 |
 | [participation-cert-vci](./participation-cert-vci.md) | 参加証明書VCI | メンテナンス対象外 |
 | [proxy-vci](./proxy-vci.md) | プロキシVCI | メンテナンス対象外 |
