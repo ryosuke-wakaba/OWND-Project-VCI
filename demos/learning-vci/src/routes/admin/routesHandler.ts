@@ -81,6 +81,25 @@ const registerLearner = async (
       return { ok: false, error: { type: "INVALID_PARAMETER" } };
     }
 
+    // Convert comma-separated learning outcomes to JSON array
+    let learningOutcomesJson: string | undefined;
+    if (learningOutcomes && typeof learningOutcomes === "string") {
+      const trimmed = learningOutcomes.trim();
+      if (trimmed) {
+        // Check if already JSON array
+        if (trimmed.startsWith("[")) {
+          learningOutcomesJson = trimmed;
+        } else {
+          // Convert comma-separated string to JSON array
+          const items = trimmed
+            .split(",")
+            .map((s) => s.trim())
+            .filter((s) => s.length > 0);
+          learningOutcomesJson = JSON.stringify(items);
+        }
+      }
+    }
+
     const newLearner: NewLearner = {
       learnerNo,
       givenName,
@@ -89,7 +108,7 @@ const registerLearner = async (
       issuingCountry,
       achievementTitle,
       achievementDescription: achievementDescription || undefined,
-      learningOutcomes: learningOutcomes || undefined,
+      learningOutcomes: learningOutcomesJson,
       assessmentGrade: assessmentGrade || undefined,
       dateOfIssuance,
       dateOfExpiry: dateOfExpiry || undefined,
@@ -212,6 +231,25 @@ export async function handleLearnerUpdate(ctx: Koa.Context) {
       ctx.status = 400;
       ctx.body = { error: "Invalid data received" };
       return;
+    }
+
+    // Convert comma-separated learning outcomes to JSON array
+    if (
+      learner.learningOutcomes &&
+      typeof learner.learningOutcomes === "string"
+    ) {
+      const trimmed = learner.learningOutcomes.trim();
+      if (trimmed) {
+        if (!trimmed.startsWith("[")) {
+          const items = trimmed
+            .split(",")
+            .map((s: string) => s.trim())
+            .filter((s: string) => s.length > 0);
+          learner.learningOutcomes = JSON.stringify(items);
+        }
+      } else {
+        learner.learningOutcomes = undefined;
+      }
     }
 
     await store.updateLearner(Number(id), learner);
