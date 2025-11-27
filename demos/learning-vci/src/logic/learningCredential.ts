@@ -18,7 +18,11 @@ const issueLearningCredential = async (
   const keyPair = await keyStore.getLatestKeyPair();
   if (keyPair) {
     const { x509cert } = keyPair;
-    const x5c = x509cert ? JSON.parse(x509cert) : [];
+    if (!x509cert) {
+      const error = { status: 500, error: "No X.509 certificate registered for key" };
+      return { ok: false, error };
+    }
+    const x5c: string[] = JSON.parse(x509cert);
 
     const privateJwk = keyPair as unknown as PrivateJwk;
     const issuerJwk: PrivateJwk = {
