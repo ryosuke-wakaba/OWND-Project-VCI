@@ -40,6 +40,63 @@ EUDI Wallet仕様に準拠した教育クレデンシャルを発行する。`de
 
 ---
 
+## 起動手順
+
+### 1. 環境設定
+
+`.env.sample` をコピーして `.env` を作成:
+
+```bash
+cd demos/learning-vci
+cp .env.sample .env
+```
+
+### 2. 外部URL経由でアクセスする場合（zrok等）
+
+モバイルウォレットからアクセスするには、ローカルサーバーを外部公開する必要があります。
+
+#### zrokのセットアップ
+
+```bash
+# zrokで公開（別ターミナルで実行）
+zrok share public http://localhost:3001
+```
+
+表示されたURL（例: `https://xxxxx.share.zrok.io`）を `.env` に設定:
+
+```bash
+# .env
+CREDENTIAL_ISSUER=https://xxxxx.share.zrok.io
+CREDENTIAL_ISSUER_IDENTIFIER=https://xxxxx.share.zrok.io
+```
+
+#### ngrokの場合
+
+```bash
+ngrok http 3001
+```
+
+### 3. ビルド・起動
+
+```bash
+# ビルド
+npm run build
+
+# 起動
+npm run dev
+```
+
+### 4. 管理画面へアクセス
+
+- ローカル: http://localhost:3001/admin/learners
+- 外部URL: https://xxxxx.share.zrok.io/admin/learners
+
+Basic認証:
+- ユーザー名: `BASIC_AUTH_USERNAME` の値（デフォルト: admin）
+- パスワード: `BASIC_AUTH_PASSWORD` の値（デフォルト: admin）
+
+---
+
 ## 実装状況
 
 ### Phase 1: プロジェクト構造作成 ✅
