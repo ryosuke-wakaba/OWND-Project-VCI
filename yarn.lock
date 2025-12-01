@@ -149,10 +149,10 @@
   resolved "https://registry.npmjs.org/@one-ini/wasm/-/wasm-0.1.1.tgz"
   integrity sha512-XuySG1E38YScSJoMlqovLru4KTUNSjgVTIjyh7qMX6aNN5HY5Ct5LhRJdxO79JtTzKfzV/bnWpz+zquYrISsvw==
 
-"@ownd-project/ts-toolbox@^1.0.0":
-  version "1.0.0"
-  resolved "https://registry.npmjs.org/@ownd-project/ts-toolbox/-/ts-toolbox-1.0.0.tgz"
-  integrity sha512-mCXHODo0Kb4m14DcOThkPpSZZNn+N1nPp55M2cn0jdjP3jgi1aPpcMpMTX2iKgKMPHEl80NudWk5kgENvALfcg==
+"@ownd-project/ts-toolbox@^1.0.1":
+  version "1.0.1"
+  resolved "https://registry.npmjs.org/@ownd-project/ts-toolbox/-/ts-toolbox-1.0.1.tgz"
+  integrity sha512-5KKHc4qccN+ZfF6GjkkTF8wF97YfMVuzhurk0zsI9ZGjmlSWfvrb31MS6cjtJUIb3QeNBaOGxQtsOICFROAw0Q==
   dependencies:
     "@meeco/sd-jwt" "^0.0.2"
     asn1js "^3.0.6"

@@ -18,7 +18,7 @@
   "dependencies": {
     "@ladjs/koa-views": "^9.0.0",
     "@meeco/sd-jwt": "^0.0.2",
-    "@ownd-project/ts-toolbox": "^1.0.0",
+    "@ownd-project/ts-toolbox": "^1.0.1",
     "ajv": "^8.16.0",
     "axios": "^1.5.1",
     "dotenv": "^16.3.1",
@@ -70,6 +70,7 @@
     "fix": "npm run fix:eslint && npm run fix:prettier",
     "fix:eslint": "npm run lint --fix",
     "fix:prettier": "npm run lint:prettier --write",
-    "generate-json-schemas": "node generate-json-schema.js"
+    "generate-json-schemas": "node generate-json-schema.js",
+    "update-toolbox": "./scripts/update-toolbox.sh"
   }
 }

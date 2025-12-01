@@ -87,6 +87,12 @@ const issueLearningCredential = async (
     };
 
     const credential = await issueFlatCredential(claims, issuerJwk, x5c);
+
+    // Log SD-JWT header for verification
+    const headerBase64 = credential.split(".")[0];
+    const header = JSON.parse(Buffer.from(headerBase64, "base64url").toString());
+    console.log("SD-JWT Header:", JSON.stringify(header));
+
     return { ok: true, payload: credential };
   } else {
     const error = { status: 500, error: "No keypair exists" };
