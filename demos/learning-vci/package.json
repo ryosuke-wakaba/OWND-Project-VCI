@@ -1,7 +1,7 @@
 {
   "name": "learning-vci",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "dist/index.js",
   "type": "module",
   "license": "MIT",
   "dependencies": {
@@ -54,7 +54,8 @@
   },
   "scripts": {
     "build": "npm run fix && tsc -p tsconfig.json",
-    "start": "nodemon",
+    "start": "node dist/index.js",
+    "dev": "nodemon --exec 'tsc -p tsconfig.json && node dist/index.js' --ext ts --watch src",
     "test": "mocha --exit",
     "lint": "eslint  --ext .js --config .eslintrc.cjs",
     "lint:prettier": "prettier --check ./src ./tests",

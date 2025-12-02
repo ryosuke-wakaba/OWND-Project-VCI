@@ -79,10 +79,13 @@ ngrok http 3001
 ### 3. ビルド・起動
 
 ```bash
-# ビルド
+# ビルド（lint/prettier含む）
 npm run build
 
 # 起動
+npm run start
+
+# 開発モード（ホットリロード）
 npm run dev
 ```
 
