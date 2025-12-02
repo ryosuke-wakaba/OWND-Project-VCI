@@ -12,6 +12,11 @@ const init = () => {
 
   commonAdminRoutes.setupCommonRoute(router);
 
+  // Admin Index
+  router.get("/admin", auth(basicAuthOpts()), async (ctx: Koa.Context) => {
+    await routesHandler.handleAdminIndex(ctx);
+  });
+
   // Learner Management UI Routes
   router.get(
     "/admin/learners",
@@ -67,6 +72,15 @@ const init = () => {
     "/admin/learners/:learnerNo/offer",
     auth(basicAuthOpts()),
     async (ctx: Koa.Context) => {
+      await routesHandler.handleLearnerCredentialOfferForm(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/learners/:learnerNo/offer",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
       await routesHandler.handleLearnerCredentialOfferDisplay(ctx);
     },
   );
@@ -77,6 +91,70 @@ const init = () => {
     koaBody(),
     async (ctx: Koa.Context) => {
       await routesHandler.handleLearnerCredentialOffer(ctx);
+    },
+  );
+
+  // Key Management UI Routes
+  router.get("/admin/keys", auth(basicAuthOpts()), async (ctx: Koa.Context) => {
+    await routesHandler.handleKeysList(ctx);
+  });
+
+  router.get(
+    "/admin/keys/new",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleKeyNewForm(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/keys/new",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleKeyNew(ctx);
+    },
+  );
+
+  router.get(
+    "/admin/keys/import",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleKeyImportForm(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/keys/import",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleKeyImport(ctx);
+    },
+  );
+
+  router.get(
+    "/admin/keys/:kid/detail",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleKeyDetail(ctx);
+    },
+  );
+
+  router.get(
+    "/admin/keys/:kid/certificate",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleKeyCertificateForm(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/keys/:kid/certificate",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleKeyCertificateIssue(ctx);
     },
   );
 

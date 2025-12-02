@@ -102,7 +102,9 @@ export interface Learner {
 }
 export type NewLearner = Omit<Learner, "id">;
 
-export const registerLearner = async (newLearner: NewLearner): Promise<void> => {
+export const registerLearner = async (
+  newLearner: NewLearner,
+): Promise<void> => {
   const db = await store.openDb();
   const sql = `
     INSERT INTO ${TBL_NM_LEARNERS}

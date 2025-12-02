@@ -186,6 +186,27 @@ export const getLatestKeyPair = async () => {
   }
 };
 
+export interface KeyPairWithCert extends ECKeyPair {
+  x509cert?: string;
+}
+
+export const getAllKeyPairs = async (): Promise<KeyPairWithCert[]> => {
+  try {
+    const db = await store.openDb();
+
+    const sql = `
+      SELECT pairs.kid, pairs.kty, pairs.crv, pairs.x, pairs.y, pairs.createdAt, pairs.revokedAt, cert.x509cert
+      FROM ${TBL_NM_EC_KEY_PAIRS} AS pairs
+      LEFT JOIN ${TBL_NM_EC_KEY_X509_CERTIFICATE} AS cert ON pairs.kid = cert.kid
+      ORDER BY pairs.createdAt DESC;
+    `;
+    return await db.all<KeyPairWithCert[]>(sql);
+  } catch (err) {
+    console.error(err);
+    throw new Error("Failed to get all key pairs.");
+  }
+};
+
 export default {
   createDb,
   destroyDb,
@@ -193,6 +214,7 @@ export default {
   getEcKeyPair,
   insertEcKeyX509Certificate,
   getLatestKeyPair,
+  getAllKeyPairs,
   revokeECKeyPair,
   getX509Chain,
 };

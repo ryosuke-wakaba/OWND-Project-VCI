@@ -1,0 +1,173 @@
+<h2>キーペア詳細</h2>
+
+<div class="detail-card">
+  <h3>基本情報</h3>
+  <table class="detail-table">
+    <tr>
+      <th>キーID</th>
+      <td><%= key.kid %></td>
+    </tr>
+    <tr>
+      <th>鍵タイプ</th>
+      <td><%= key.kty %></td>
+    </tr>
+    <tr>
+      <th>楕円曲線</th>
+      <td><%= key.crv %></td>
+    </tr>
+    <tr>
+      <th>作成日</th>
+      <td><%= new Date(key.createdAt).toLocaleString('ja-JP') %></td>
+    </tr>
+    <tr>
+      <th>状態</th>
+      <td>
+        <% if (key.revokedAt) { %>
+          <span class="badge badge-danger">失効 (<%= new Date(key.revokedAt).toLocaleString('ja-JP') %>)</span>
+        <% } else { %>
+          <span class="badge badge-success">有効</span>
+        <% } %>
+      </td>
+    </tr>
+  </table>
+
+  <h3>公開鍵 (JWK)</h3>
+  <pre class="code-block"><%= JSON.stringify({ kty: key.kty, crv: key.crv, x: key.x, y: key.y }, null, 2) %></pre>
+</div>
+
+<% if (x509Chain && x509Chain.length > 0) { %>
+<div class="detail-card">
+  <h3>X.509証明書</h3>
+
+  <% if (certInfo) { %>
+  <h4>証明書情報</h4>
+  <table class="detail-table">
+    <tr>
+      <th>Subject (CN)</th>
+      <td><%= certInfo.subject.commonName %></td>
+    </tr>
+    <tr>
+      <th>Subject (O)</th>
+      <td><%= certInfo.subject.organizationName %></td>
+    </tr>
+    <% if (certInfo.subject.organizationalUnitName) { %>
+    <tr>
+      <th>Subject (OU)</th>
+      <td><%= certInfo.subject.organizationalUnitName %></td>
+    </tr>
+    <% } %>
+    <% if (certInfo.subject.countryName) { %>
+    <tr>
+      <th>Subject (C)</th>
+      <td><%= certInfo.subject.countryName %></td>
+    </tr>
+    <% } %>
+    <tr>
+      <th>Issuer (CN)</th>
+      <td><%= certInfo.issuer.commonName %></td>
+    </tr>
+    <tr>
+      <th>Issuer (O)</th>
+      <td><%= certInfo.issuer.organizationName %></td>
+    </tr>
+    <tr>
+      <th>Serial Number</th>
+      <td class="serial"><%= certInfo.serialNumber %></td>
+    </tr>
+    <tr>
+      <th>有効期間</th>
+      <td>
+        <%= new Date(certInfo.notBefore).toLocaleString('ja-JP') %>
+        〜
+        <%= new Date(certInfo.notAfter).toLocaleString('ja-JP') %>
+      </td>
+    </tr>
+  </table>
+  <% } %>
+
+  <h4>証明書チェーン (PEM)</h4>
+  <% x509Chain.forEach(function(cert, index) { %>
+    <p><strong>証明書 <%= index + 1 %></strong></p>
+    <pre class="code-block">-----BEGIN CERTIFICATE-----
+<%= cert.match(/.{1,64}/g).join('\n') %>
+-----END CERTIFICATE-----</pre>
+  <% }); %>
+</div>
+<% } else { %>
+<div class="detail-card">
+  <h3>X.509証明書</h3>
+  <p class="text-muted">証明書は登録されていません。</p>
+  <% if (!key.revokedAt) { %>
+  <a href="/admin/keys/<%= key.kid %>/certificate" class="btn btn-primary">証明書を発行</a>
+  <% } %>
+</div>
+<% } %>
+
+<div class="toolbar">
+  <a href="/admin/keys" class="btn btn-secondary">一覧に戻る</a>
+</div>
+
+<style>
+.detail-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.detail-card h3 {
+  margin-top: 0;
+  border-bottom: 1px solid #dee2e6;
+  padding-bottom: 0.5rem;
+}
+.detail-card h4 {
+  margin-top: 1rem;
+  font-size: 1rem;
+  color: #495057;
+}
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.detail-table th {
+  text-align: left;
+  width: 150px;
+  padding: 0.5rem 0;
+  color: #6c757d;
+  font-weight: normal;
+}
+.detail-table td {
+  padding: 0.5rem 0;
+}
+.detail-table td.serial {
+  font-family: monospace;
+  font-size: 0.85em;
+  word-break: break-all;
+}
+.code-block {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  padding: 1rem;
+  overflow-x: auto;
+  font-size: 0.85em;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.text-muted {
+  color: #6c757d;
+}
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  font-size: 0.85em;
+  border-radius: 0.25em;
+}
+.badge-success {
+  background-color: #28a745;
+  color: white;
+}
+.badge-danger {
+  background-color: #dc3545;
+  color: white;
+}
+</style>

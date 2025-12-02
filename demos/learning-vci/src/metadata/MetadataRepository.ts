@@ -40,7 +40,8 @@ export class MetadataRepository implements IMetadataRepository {
 
   private buildDisplayInfo() {
     const issuerNameJa = process.env.ISSUER_NAME_JA || "教育機関";
-    const issuerNameEn = process.env.ISSUER_NAME_EN || "Educational Institution";
+    const issuerNameEn =
+      process.env.ISSUER_NAME_EN || "Educational Institution";
     const brandColor = process.env.BRAND_COLOR || "#1E3A5F";
 
     return [

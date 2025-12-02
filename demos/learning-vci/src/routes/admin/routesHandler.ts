@@ -10,6 +10,13 @@ import {
   generateRandomString,
 } from "ownd-vci/dist/utils/randomStringUtils.js";
 import { generatePreAuthCredentialOffer } from "ownd-vci/dist/oid4vci/CredentialOffer.js";
+import keys from "ownd-vci-common/dist/keys.js";
+import keyStore from "ownd-vci-common/dist/store/keyStore.js";
+import {
+  getCertificatesInfo,
+  CERT_PEM_PREAMBLE,
+  CERT_PEM_POSTAMBLE,
+} from "@ownd-project/ts-toolbox";
 
 import store, { NewLearner } from "../../store.js";
 
@@ -138,17 +145,19 @@ export type GenerateCredentialOfferResult = {
 
 const credentialOfferForLearner = async (
   learnerNo: string,
+  signingKeyKid?: string,
 ): Promise<Result<GenerateCredentialOfferResult, NotSuccessResult>> => {
   console.log("=== Credential Offer Generation Started ===");
   console.log("Learner No:", learnerNo);
+  console.log("Signing Key:", signingKeyKid || "(latest)");
 
   const learner = await store.getLearnerByNo(learnerNo);
   if (!learner) {
-    console.log("❌ Learner not found:", learnerNo);
+    console.log("Learner not found:", learnerNo);
     return { ok: false, error: { type: "NOT_FOUND" } };
   }
 
-  console.log("✅ Learner found:", learner.familyName, learner.givenName);
+  console.log("Learner found:", learner.familyName, learner.givenName);
 
   const code = generateRandomString();
   const expiresIn = Number(process.env.VCI_PRE_AUTH_CODE_EXPIRES_IN || "86400");
@@ -158,7 +167,12 @@ const credentialOfferForLearner = async (
   console.log("TX Code:", txCode);
   console.log("Expires in:", expiresIn, "seconds");
 
-  await store.addPreAuthCode(code, expiresIn, txCode, String(learner.id));
+  // Store subject as JSON with learner ID and optional signing key
+  const subjectInfo = signingKeyKid
+    ? JSON.stringify({ learnerId: String(learner.id), signingKeyKid })
+    : String(learner.id);
+
+  await store.addPreAuthCode(code, expiresIn, txCode, subjectInfo);
 
   const credentialOfferUrl = generatePreAuthCredentialOffer(
     process.env.CREDENTIAL_ISSUER || "",
@@ -167,7 +181,7 @@ const credentialOfferForLearner = async (
     {},
   );
 
-  console.log("✅ Credential Offer URL generated");
+  console.log("Credential Offer URL generated");
   console.log("=== Credential Offer Generation Completed ===\n");
 
   const payload = {
@@ -273,10 +287,46 @@ export async function handleLearnerDelete(ctx: Koa.Context) {
   }
 }
 
+export async function handleLearnerCredentialOfferForm(ctx: Koa.Context) {
+  try {
+    const { learnerNo } = ctx.params;
+    const learner = await store.getLearnerByNo(learnerNo);
+    if (!learner) {
+      ctx.status = 404;
+      ctx.body = { error: "Learner not found" };
+      return;
+    }
+
+    // Get available signing keys
+    const keysResult = await keys.getAllKeys();
+    const availableKeys = keysResult.ok
+      ? keysResult.payload
+          .filter((k) => !k.revokedAt)
+          .map((k, index) => ({
+            ...k,
+            isLatest: index === 0, // First (most recent) key
+          }))
+      : [];
+
+    await ctx.render("admin/learner-offer", {
+      title: "クレデンシャル発行準備",
+      learner,
+      availableKeys,
+      layout: "layout",
+    });
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to load offer form" };
+  }
+}
+
 export async function handleLearnerCredentialOfferDisplay(ctx: Koa.Context) {
   try {
     const { learnerNo } = ctx.params;
-    const result = await credentialOfferForLearner(learnerNo);
+    const signingKeyKid = ctx.request.body?.signingKeyKid;
+
+    const result = await credentialOfferForLearner(learnerNo, signingKeyKid);
 
     if (result.ok) {
       const expiresInSeconds = parseInt(
@@ -306,7 +356,228 @@ export async function handleLearnerCredentialOfferDisplay(ctx: Koa.Context) {
   }
 }
 
+// Key Management UI Handlers
+export async function handleKeysList(ctx: Koa.Context) {
+  try {
+    const result = await keys.getAllKeys();
+    if (result.ok) {
+      await ctx.render("admin/keys", {
+        title: "キーペア一覧",
+        keys: result.payload,
+        layout: "layout",
+      });
+    } else {
+      ctx.status = 500;
+      ctx.body = { error: "Failed to load keys" };
+    }
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to load keys" };
+  }
+}
+
+export async function handleKeyNewForm(ctx: Koa.Context) {
+  await ctx.render("admin/key-new", {
+    title: "キーペア生成",
+    layout: "layout",
+  });
+}
+
+export async function handleKeyNew(ctx: Koa.Context) {
+  if (!ctx.request.body) {
+    ctx.body = { status: "error", message: "Invalid data received!" };
+    ctx.status = 400;
+    return;
+  }
+  const { kid, curve } = ctx.request.body;
+  const result = await keys.genKey(kid, curve || "P-256");
+  if (result.ok) {
+    ctx.redirect("/admin/keys");
+  } else {
+    handleNotSuccessResult(result.error, ctx);
+  }
+}
+
+export async function handleKeyDetail(ctx: Koa.Context) {
+  try {
+    const { kid } = ctx.params;
+    const keyPair = await keyStore.getEcKeyPair(kid);
+    if (!keyPair) {
+      ctx.status = 404;
+      ctx.body = { error: "Key not found" };
+      return;
+    }
+
+    const x509Chain = await keyStore.getX509Chain(kid);
+    let certInfo = null;
+    if (x509Chain && x509Chain.length > 0) {
+      try {
+        const certPem =
+          CERT_PEM_PREAMBLE + "\n" + x509Chain[0] + "\n" + CERT_PEM_POSTAMBLE;
+        const infos = getCertificatesInfo([certPem]);
+        if (infos.length > 0) {
+          certInfo = infos[0];
+        }
+      } catch (e) {
+        console.error("Failed to parse certificate:", e);
+      }
+    }
+
+    await ctx.render("admin/key-detail", {
+      title: "キーペア詳細",
+      key: keyPair,
+      x509Chain,
+      certInfo,
+      layout: "layout",
+    });
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to load key detail" };
+  }
+}
+
+export async function handleKeyCertificateForm(ctx: Koa.Context) {
+  try {
+    const { kid } = ctx.params;
+    const keyPair = await keyStore.getEcKeyPair(kid);
+    if (!keyPair) {
+      ctx.status = 404;
+      ctx.body = { error: "Key not found" };
+      return;
+    }
+
+    // Get all keys with certificates for issuer selection
+    const allKeysResult = await keys.getAllKeys();
+    const rootKeys = allKeysResult.ok
+      ? allKeysResult.payload.filter((k) => k.hasCertificate && !k.revokedAt)
+      : [];
+
+    await ctx.render("admin/key-certificate", {
+      title: "証明書発行",
+      key: keyPair,
+      rootKeys,
+      layout: "layout",
+    });
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to load certificate form" };
+  }
+}
+
+export async function handleKeyCertificateIssue(ctx: Koa.Context) {
+  try {
+    const { kid } = ctx.params;
+    const { subject, certType, issuerKid } = ctx.request.body;
+
+    // Generate CSR
+    const csrResult = await keys.createCsr(kid, subject);
+    if (!csrResult.ok) {
+      handleNotSuccessResult(csrResult.error, ctx);
+      return;
+    }
+
+    let certResult;
+    if (certType === "self") {
+      // Self-signed certificate
+      certResult = await keys.createSelfCert(kid, csrResult.payload.csr);
+    } else {
+      // Leaf certificate signed by issuer
+      certResult = await keys.signLeafCert({
+        csr: csrResult.payload.csr,
+        issuerKid,
+      });
+    }
+
+    if (!certResult.ok) {
+      handleNotSuccessResult(certResult.error, ctx);
+      return;
+    }
+
+    // Register the certificate
+    const cert = certResult.payload.cert;
+    let certificates = [cert];
+
+    // If leaf cert, include issuer chain
+    if (certType === "leaf" && issuerKid) {
+      const issuerChain = await keyStore.getX509Chain(issuerKid);
+      if (issuerChain && issuerChain.length > 0) {
+        certificates = [cert, ...issuerChain];
+      }
+    }
+
+    const registerResult = await keys.registerCert(kid, certificates);
+    if (!registerResult.ok) {
+      handleNotSuccessResult(registerResult.error, ctx);
+      return;
+    }
+
+    ctx.redirect(`/admin/keys/${encodeURIComponent(kid)}/detail`);
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to issue certificate" };
+  }
+}
+
+export async function handleKeyImportForm(ctx: Koa.Context) {
+  await ctx.render("admin/key-import", {
+    title: "キーペアインポート",
+    layout: "layout",
+  });
+}
+
+export async function handleKeyImport(ctx: Koa.Context) {
+  try {
+    if (!ctx.request.body) {
+      ctx.body = { status: "error", message: "Invalid data received!" };
+      ctx.status = 400;
+      return;
+    }
+
+    const { kid, privateKeyPem, certificatesPem } = ctx.request.body;
+
+    // Parse certificates if provided
+    let certificates: string[] | undefined;
+    if (certificatesPem && certificatesPem.trim()) {
+      // Split multiple certificates and extract base64 content
+      const certMatches = certificatesPem.match(
+        /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g,
+      );
+      if (certMatches) {
+        certificates = certMatches.map((cert: string) =>
+          cert
+            .replace(/-----BEGIN CERTIFICATE-----/, "")
+            .replace(/-----END CERTIFICATE-----/, "")
+            .replace(/\s/g, ""),
+        );
+      }
+    }
+
+    const result = await keys.importKey({ kid, privateKeyPem, certificates });
+    if (result.ok) {
+      ctx.redirect("/admin/keys");
+    } else {
+      handleNotSuccessResult(result.error, ctx);
+    }
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to import key" };
+  }
+}
+
+export async function handleAdminIndex(ctx: Koa.Context) {
+  await ctx.render("admin/index", {
+    title: "管理メニュー",
+    layout: "layout",
+  });
+}
+
 export default {
+  handleAdminIndex,
   handleNewLearner,
   handleLearnerCredentialOffer,
   handleLearnersList,
@@ -314,5 +585,15 @@ export default {
   handleLearnerEditForm,
   handleLearnerUpdate,
   handleLearnerDelete,
+  handleLearnerCredentialOfferForm,
   handleLearnerCredentialOfferDisplay,
+  // Key management
+  handleKeysList,
+  handleKeyNewForm,
+  handleKeyNew,
+  handleKeyDetail,
+  handleKeyCertificateForm,
+  handleKeyCertificateIssue,
+  handleKeyImportForm,
+  handleKeyImport,
 };

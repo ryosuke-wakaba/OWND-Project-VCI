@@ -1,0 +1,136 @@
+<h2>クレデンシャル発行準備</h2>
+
+<div class="info-card">
+  <h3>学習者情報</h3>
+  <table class="detail-table">
+    <tr>
+      <th>学習者番号</th>
+      <td><%= learner.learnerNo %></td>
+    </tr>
+    <tr>
+      <th>氏名</th>
+      <td><%= learner.familyName %> <%= learner.givenName %></td>
+    </tr>
+    <tr>
+      <th>コースタイトル</th>
+      <td><%= learner.achievementTitle %></td>
+    </tr>
+  </table>
+</div>
+
+<form action="/admin/learners/<%= learner.learnerNo %>/offer" method="POST" class="form-card">
+  <div class="form-group">
+    <label for="signingKeyKid">署名鍵 <span class="required">*</span></label>
+    <select id="signingKeyKid" name="signingKeyKid" required>
+      <option value="">選択してください</option>
+      <% availableKeys.forEach(function(key) { %>
+        <option value="<%= key.kid %>" <%= key.isLatest ? 'selected' : '' %>>
+          <%= key.kid %>
+          (<%= key.crv %>,
+          <%= key.hasCertificate ? 'x5c方式' : 'jwk方式' %>)
+          <% if (key.isLatest) { %>[最新]<% } %>
+        </option>
+      <% }); %>
+    </select>
+    <small class="form-text">
+      <strong>x5c方式:</strong> 証明書チェーンをヘッダーに含めます（証明書が登録されている鍵）<br>
+      <strong>jwk方式:</strong> 公開鍵をヘッダーに含めます（証明書がない鍵）
+    </small>
+  </div>
+
+  <% if (availableKeys.length === 0) { %>
+  <div class="alert alert-warning">
+    <p>利用可能な署名鍵がありません。先に<a href="/admin/keys/new">キーペアを生成</a>してください。</p>
+  </div>
+  <% } %>
+
+  <div class="form-actions">
+    <a href="/admin/learners" class="btn btn-secondary">キャンセル</a>
+    <button type="submit" class="btn btn-primary" <%= availableKeys.length === 0 ? 'disabled' : '' %>>発行</button>
+  </div>
+</form>
+
+<style>
+.info-card {
+  background: #e7f3ff;
+  border: 1px solid #b8daff;
+  border-radius: 8px;
+  padding: 1.5rem;
+  margin-bottom: 1.5rem;
+}
+.info-card h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+}
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.detail-table th {
+  text-align: left;
+  width: 150px;
+  padding: 0.5rem 0;
+  color: #6c757d;
+  font-weight: normal;
+}
+.detail-table td {
+  padding: 0.5rem 0;
+}
+.form-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 600px;
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+.form-group select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+.form-group select:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+.form-text {
+  display: block;
+  margin-top: 0.5rem;
+  font-size: 0.85em;
+  color: #6c757d;
+  line-height: 1.5;
+}
+.required {
+  color: #dc3545;
+}
+.form-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+.alert {
+  padding: 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+.alert-warning {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  color: #856404;
+}
+.alert a {
+  color: #533f03;
+  font-weight: 500;
+}
+</style>

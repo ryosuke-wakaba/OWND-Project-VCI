@@ -3,6 +3,16 @@ import Koa from "koa";
 import keys from "../../keys.js";
 import { handleNotSuccessResult } from "../common.js";
 
+export async function handleGetAllKeys(ctx: Koa.Context) {
+  const result = await keys.getAllKeys();
+  if (result.ok) {
+    ctx.body = { status: "success", payload: result.payload };
+    ctx.status = 200;
+  } else {
+    handleNotSuccessResult(result.error, ctx);
+  }
+}
+
 export async function handleNewKey(ctx: Koa.Context) {
   if (!ctx.request.body) {
     ctx.body = { status: "error", message: "Invalid data received!" };
@@ -53,6 +63,22 @@ export async function handleSignSelfCert(ctx: Koa.Context) {
     handleNotSuccessResult(result.error, ctx);
   }
 }
+
+export async function handleSignLeafCert(ctx: Koa.Context) {
+  const { kid } = ctx.params;
+  const { csr, issuerKid, validityDays } = ctx.request.body;
+  const result = await keys.signLeafCert({
+    csr,
+    issuerKid: issuerKid || kid,
+    validityDays,
+  });
+  if (result.ok) {
+    ctx.body = { status: "success", payload: result.payload };
+    ctx.status = 200;
+  } else {
+    handleNotSuccessResult(result.error, ctx);
+  }
+}
 export async function handleRegisterCert(ctx: Koa.Context) {
   const { kid } = ctx.params;
   const certificates = ctx.request.body.certificates || [];
@@ -73,6 +99,22 @@ export async function handleGetKey(ctx: Koa.Context) {
   if (result.ok) {
     ctx.body = { status: "success", payload: result.payload };
     ctx.status = 200;
+  } else {
+    handleNotSuccessResult(result.error, ctx);
+  }
+}
+
+export async function handleImportKey(ctx: Koa.Context) {
+  if (!ctx.request.body) {
+    ctx.body = { status: "error", message: "Invalid data received!" };
+    ctx.status = 400;
+    return;
+  }
+  const { kid, privateKeyPem, certificates } = ctx.request.body;
+  const result = await keys.importKey({ kid, privateKeyPem, certificates });
+  if (result.ok) {
+    ctx.body = { status: "success", message: "Key imported successfully!" };
+    ctx.status = 201;
   } else {
     handleNotSuccessResult(result.error, ctx);
   }

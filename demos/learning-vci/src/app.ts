@@ -9,7 +9,9 @@ import adminRoutes from "./routes/admin/routes.js";
 import vciRoutes from "./routes/vci/routes.js";
 
 const __filename = fileURLToPath(import.meta.url);
-const __dirname = dirname(__filename).replace(/\/dist(\/.*)?$/, "").replace(/\/src(\/.*)?$/, "");
+const __dirname = dirname(__filename)
+  .replace(/\/dist(\/.*)?$/, "")
+  .replace(/\/src(\/.*)?$/, "");
 console.log("file:", __filename);
 console.log("dir:", __dirname);
 

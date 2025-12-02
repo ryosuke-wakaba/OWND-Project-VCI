@@ -1,4 +1,5 @@
 import { CRV, newPrivateJwk, PublicJwk } from "elliptic-jwk";
+import keyutil from "js-crypto-key-utils";
 
 import { NotSuccessResult } from "./routes/common.js";
 import { UNIQUE_CONSTRAINT_FAILED } from "./store.js";
@@ -8,10 +9,12 @@ import {
   generateCsr,
   trimmer,
   generateRootCertificate,
+  generateCertificate,
   CERT_PEM_POSTAMBLE,
   CERT_PEM_PREAMBLE,
   checkEcdsaKeyEquality,
   ellipticJwkToPem,
+  getCertificatesInfo,
 } from "@ownd-project/ts-toolbox";
 import { addSeconds, getCurrentUTCDate } from "ownd-vci/dist/utils/datetime.js";
 
@@ -111,6 +114,43 @@ export const genKey = async (
     return UNKNOWN_ERROR;
   }
 };
+export interface KeyInfo {
+  kid: string;
+  kty: string;
+  crv: string;
+  x: string;
+  y: string;
+  createdAt: string;
+  revokedAt: string | null;
+  hasCertificate: boolean;
+}
+
+export const getAllKeys = async (): Promise<
+  Result<KeyInfo[], NotSuccessResult>
+> => {
+  try {
+    const data = await keyStore.getAllKeyPairs();
+    const keys: KeyInfo[] = data.map((row) => ({
+      kid: row.kid,
+      kty: row.kty,
+      crv: row.crv,
+      x: row.x,
+      y: row.y || "",
+      createdAt: row.createdAt,
+      revokedAt: row.revokedAt || null,
+      hasCertificate: !!row.x509cert,
+    }));
+    return { ok: true, payload: keys };
+  } catch (err) {
+    console.error(err);
+    if (err instanceof Error) {
+      const { name, message } = err;
+      return toInternalError(name, message);
+    }
+    return UNKNOWN_ERROR;
+  }
+};
+
 export const getKey = async (
   keyId: string,
 ): Promise<Result<PublicJwk, NotSuccessResult>> => {
@@ -334,11 +374,207 @@ export const registerCert = async (
   }
 };
 
+interface SignLeafCertParams {
+  csr: string;
+  issuerKid: string;
+  validityDays?: number;
+}
+
+export const signLeafCert = async (
+  params: SignLeafCertParams,
+): Promise<Result<X509Cert, NotSuccessResult>> => {
+  const { csr, issuerKid, validityDays = 365 } = params;
+
+  if (!csr || !issuerKid) {
+    return INVALID_PARAMETER_ERROR;
+  }
+
+  try {
+    // Get issuer key pair
+    const issuerData = await keyStore.getEcKeyPair(issuerKid);
+    if (!issuerData) {
+      return NOT_FOUND_ERROR;
+    }
+
+    const { kty, crv, x, y, d, revokedAt } = issuerData;
+    if (revokedAt) {
+      return GONE_ERROR;
+    }
+
+    if (crv !== "secp256k1" && crv !== "P-256") {
+      return toUnsupportedCurveError(
+        "Currently, curve secp256k1,P-256 is supported for signing certificates.",
+      );
+    }
+
+    // Check if issuer has a certificate (must be a CA)
+    const issuerCertChain = await keyStore.getX509Chain(issuerKid);
+    if (!issuerCertChain || issuerCertChain.length === 0) {
+      return INVALID_PARAMETER_ERROR;
+    }
+
+    // Get issuer subject name from certificate
+    const issuerCertPem =
+      CERT_PEM_PREAMBLE + "\n" + issuerCertChain[0] + "\n" + CERT_PEM_POSTAMBLE;
+    const certInfo = getCertificatesInfo([issuerCertPem]);
+    if (certInfo.length === 0) {
+      return toInternalError("Certificate parsing", "Failed to parse issuer certificate");
+    }
+
+    // Convert subject object to DN string format
+    const subjectObj = certInfo[0].subject;
+    const dnParts: string[] = [];
+    if (subjectObj.countryName) dnParts.push(`/C=${subjectObj.countryName}`);
+    if (subjectObj.stateOrProvinceName) dnParts.push(`/ST=${subjectObj.stateOrProvinceName}`);
+    if (subjectObj.localityName) dnParts.push(`/L=${subjectObj.localityName}`);
+    if (subjectObj.organizationName) dnParts.push(`/O=${subjectObj.organizationName}`);
+    if (subjectObj.organizationalUnitName) dnParts.push(`/OU=${subjectObj.organizationalUnitName}`);
+    if (subjectObj.commonName) dnParts.push(`/CN=${subjectObj.commonName}`);
+    const issuerSubject = dnParts.join("");
+
+    // Convert issuer key to PEM
+    const jwkPair = { kty, crv, x, y, d };
+    const { privateKey } = await ellipticJwkToPem(jwkPair);
+
+    // Generate leaf certificate
+    const notBefore = getCurrentUTCDate();
+    const notAfter = addSeconds(notBefore, 86400 * validityDays);
+    const cert = generateCertificate(
+      csr,
+      issuerSubject,
+      notBefore,
+      notAfter,
+      "SHA256withECDSA",
+      privateKey,
+    );
+
+    const payload = {
+      cert: trimmer(cert),
+    };
+    return { ok: true, payload };
+  } catch (err) {
+    console.error(err);
+    if (err instanceof Error) {
+      const { name, message } = err;
+      return toInternalError(name, message);
+    }
+    return UNKNOWN_ERROR;
+  }
+};
+
+interface ImportKeyParams {
+  kid: string;
+  privateKeyPem: string;
+  certificates?: string[];
+}
+
+const normalizeCurve = (crv: string): string => {
+  switch (crv) {
+    case "P-256K":
+      return "secp256k1";
+    case "P-256":
+      return "P-256";
+    default:
+      return crv;
+  }
+};
+
+export const importKey = async (
+  params: ImportKeyParams,
+): Promise<Result<number, NotSuccessResult>> => {
+  const { kid, privateKeyPem, certificates } = params;
+
+  if (!kid || !privateKeyPem) {
+    return INVALID_PARAMETER_ERROR;
+  }
+
+  try {
+    // Convert PEM to JWK using js-crypto-key-utils
+    const keyObj = new keyutil.Key("pem", privateKeyPem);
+    const jwk = (await keyObj.export("jwk")) as {
+      kty: string;
+      crv: string;
+      x: string;
+      y?: string;
+      d: string;
+    };
+
+    if (jwk.kty !== "EC") {
+      return INVALID_PARAMETER_ERROR;
+    }
+
+    const crv = normalizeCurve(jwk.crv);
+    if (crv !== "P-256" && crv !== "secp256k1") {
+      return toUnsupportedCurveError(
+        "Currently, curve P-256 and secp256k1 are supported for key import.",
+      );
+    }
+
+    // Verify certificate matches key if provided
+    if (certificates && certificates.length > 0) {
+      const jwkPair = {
+        kty: jwk.kty,
+        crv,
+        x: jwk.x,
+        y: jwk.y,
+        d: jwk.d,
+      };
+      const { publicKey } = await ellipticJwkToPem(jwkPair);
+      const endCertificate = certificates[0];
+      const certWithMarker =
+        CERT_PEM_PREAMBLE + "\n" + endCertificate + "\n" + CERT_PEM_POSTAMBLE;
+      if (!checkEcdsaKeyEquality(certWithMarker, publicKey)) {
+        return {
+          ok: false,
+          error: {
+            type: "KEY_DOES_NOT_MATCH",
+            message:
+              "The key of the certificate does not match the private key",
+          },
+        };
+      }
+    }
+
+    // Insert key pair
+    const ret = await keyStore.insertECKeyPair({
+      kid,
+      kty: jwk.kty,
+      crv,
+      x: jwk.x,
+      y: jwk.y || "",
+      d: jwk.d,
+    });
+
+    // Insert certificate if provided
+    if (certificates && certificates.length > 0) {
+      await keyStore.insertEcKeyX509Certificate(
+        kid,
+        JSON.stringify(certificates),
+      );
+    }
+
+    return { ok: true, payload: ret.lastID! };
+  } catch (err) {
+    console.error(err);
+    if (err instanceof Error) {
+      const { name, message } = err;
+      if (message === UNIQUE_CONSTRAINT_FAILED) {
+        return DUPLICATED_ERROR;
+      }
+      return toInternalError(name, message);
+    }
+    return UNKNOWN_ERROR;
+  }
+};
+
 export default {
   genKey,
+  getAllKeys,
   getKey,
+  importKey,
   revokeKey,
   createCsr,
   createSelfCert,
+  signLeafCert,
   registerCert,
 };

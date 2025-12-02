@@ -1,0 +1,63 @@
+<h2>管理メニュー</h2>
+
+<div class="admin-menu">
+  <a href="/admin/learners" class="menu-card">
+    <div class="menu-icon">👥</div>
+    <div class="menu-content">
+      <h3>学習者管理</h3>
+      <p>学習者の登録・編集・クレデンシャル発行</p>
+    </div>
+  </a>
+
+  <a href="/admin/keys" class="menu-card">
+    <div class="menu-icon">🔑</div>
+    <div class="menu-content">
+      <h3>キーペア管理</h3>
+      <p>署名鍵の生成・インポート・証明書発行</p>
+    </div>
+  </a>
+</div>
+
+<style>
+.admin-menu {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  max-width: 800px;
+}
+
+.menu-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-decoration: none;
+  color: inherit;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.menu-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.menu-icon {
+  font-size: 2.5rem;
+  flex-shrink: 0;
+}
+
+.menu-content h3 {
+  margin: 0 0 0.5rem 0;
+  color: #1e293b;
+  font-size: 1.25rem;
+}
+
+.menu-content p {
+  margin: 0;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+</style>

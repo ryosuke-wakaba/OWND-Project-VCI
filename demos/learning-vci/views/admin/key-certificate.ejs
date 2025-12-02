@@ -1,0 +1,141 @@
+<h2>証明書発行</h2>
+
+<div class="info-card">
+  <p><strong>対象キー:</strong> <%= key.kid %> (<%= key.crv %>)</p>
+</div>
+
+<form action="/admin/keys/<%= key.kid %>/certificate" method="POST" class="form-card">
+  <div class="form-group">
+    <label for="subject">Subject (DN形式) <span class="required">*</span></label>
+    <input type="text" id="subject" name="subject" required
+           placeholder="/C=JP/ST=Tokyo/O=Example Corp/CN=example.com">
+    <small class="form-text">例: /C=JP/ST=Tokyo/O=組織名/CN=コモンネーム</small>
+  </div>
+
+  <div class="form-group">
+    <label>証明書タイプ <span class="required">*</span></label>
+    <div class="radio-group">
+      <label class="radio-label">
+        <input type="radio" name="certType" value="self" checked onchange="toggleIssuerSelect()">
+        <span>自己署名証明書（ルート証明書）</span>
+      </label>
+      <label class="radio-label">
+        <input type="radio" name="certType" value="leaf" onchange="toggleIssuerSelect()"
+               <% if (rootKeys.length === 0) { %>disabled<% } %>>
+        <span>リーフ証明書（既存のルートCAで署名）</span>
+        <% if (rootKeys.length === 0) { %>
+        <small class="text-muted">（証明書を持つキーがありません）</small>
+        <% } %>
+      </label>
+    </div>
+  </div>
+
+  <div class="form-group" id="issuerSelectGroup" style="display: none;">
+    <label for="issuerKid">発行元ルート証明書 <span class="required">*</span></label>
+    <select id="issuerKid" name="issuerKid">
+      <option value="">選択してください</option>
+      <% rootKeys.forEach(function(rootKey) { %>
+        <option value="<%= rootKey.kid %>"><%= rootKey.kid %> (<%= rootKey.crv %>)</option>
+      <% }); %>
+    </select>
+  </div>
+
+  <div class="form-actions">
+    <a href="/admin/keys/<%= key.kid %>/detail" class="btn btn-secondary">キャンセル</a>
+    <button type="submit" class="btn btn-primary">発行</button>
+  </div>
+</form>
+
+<script>
+function toggleIssuerSelect() {
+  const certType = document.querySelector('input[name="certType"]:checked').value;
+  const issuerGroup = document.getElementById('issuerSelectGroup');
+  const issuerSelect = document.getElementById('issuerKid');
+
+  if (certType === 'leaf') {
+    issuerGroup.style.display = 'block';
+    issuerSelect.required = true;
+  } else {
+    issuerGroup.style.display = 'none';
+    issuerSelect.required = false;
+  }
+}
+</script>
+
+<style>
+.info-card {
+  background: #e7f3ff;
+  border: 1px solid #b8daff;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+}
+.form-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 600px;
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+.form-group input[type="text"],
+.form-group select {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+.form-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85em;
+  color: #6c757d;
+}
+.required {
+  color: #dc3545;
+}
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.radio-label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-weight: normal;
+}
+.radio-label input[type="radio"] {
+  margin-top: 0.25rem;
+}
+.radio-label span {
+  flex: 1;
+}
+.radio-label input:disabled + span {
+  color: #6c757d;
+}
+.text-muted {
+  color: #6c757d;
+  font-size: 0.85em;
+}
+.form-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+</style>

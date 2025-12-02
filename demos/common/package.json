@@ -8,6 +8,8 @@
     "./dist/*": "./dist/*"
   },
   "dependencies": {
+    "jose": "^6.1.2",
+    "js-crypto-key-utils": "^1.0.7",
     "ownd-vci": "file:../../",
     "sqlite": "^5.0.1",
     "sqlite3": "^5.1.6"
