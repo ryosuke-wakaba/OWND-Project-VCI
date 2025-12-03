@@ -167,12 +167,14 @@ const credentialOfferForLearner = async (
   console.log("TX Code:", txCode);
   console.log("Expires in:", expiresIn, "seconds");
 
-  // Store subject as JSON with learner ID and optional signing key
-  const subjectInfo = signingKeyKid
-    ? JSON.stringify({ learnerId: String(learner.id), signingKeyKid })
-    : String(learner.id);
-
-  await store.addPreAuthCode(code, expiresIn, txCode, subjectInfo);
+  // Store learner ID as sub, signing key kid stored separately in metadata
+  await store.addPreAuthCode(
+    code,
+    expiresIn,
+    txCode,
+    String(learner.id),
+    signingKeyKid,
+  );
 
   const credentialOfferUrl = generatePreAuthCredentialOffer(
     process.env.CREDENTIAL_ISSUER || "",
@@ -410,17 +412,17 @@ export async function handleKeyDetail(ctx: Koa.Context) {
     }
 
     const x509Chain = await keyStore.getX509Chain(kid);
-    let certInfo = null;
+    let certInfos: ReturnType<typeof getCertificatesInfo> = [];
     if (x509Chain && x509Chain.length > 0) {
       try {
-        const certPem =
-          CERT_PEM_PREAMBLE + "\n" + x509Chain[0] + "\n" + CERT_PEM_POSTAMBLE;
-        const infos = getCertificatesInfo([certPem]);
-        if (infos.length > 0) {
-          certInfo = infos[0];
-        }
+        // Parse all certificates in the chain
+        const certPems = x509Chain.map(
+          (cert: string) =>
+            CERT_PEM_PREAMBLE + "\n" + cert + "\n" + CERT_PEM_POSTAMBLE,
+        );
+        certInfos = getCertificatesInfo(certPems);
       } catch (e) {
-        console.error("Failed to parse certificate:", e);
+        console.error("Failed to parse certificates:", e);
       }
     }
 
@@ -428,7 +430,7 @@ export async function handleKeyDetail(ctx: Koa.Context) {
       title: "キーペア詳細",
       key: keyPair,
       x509Chain,
-      certInfo,
+      certInfos,
       layout: "layout",
     });
   } catch (err) {
@@ -472,8 +474,9 @@ export async function handleKeyCertificateIssue(ctx: Koa.Context) {
     const { kid } = ctx.params;
     const { subject, certType, issuerKid } = ctx.request.body;
 
-    // Generate CSR
-    const csrResult = await keys.createCsr(kid, subject);
+    // Generate CSR (use CA extensions for self-signed root certificates)
+    const isCA = certType === "self";
+    const csrResult = await keys.createCsr(kid, subject, isCA);
     if (!csrResult.ok) {
       handleNotSuccessResult(csrResult.error, ctx);
       return;

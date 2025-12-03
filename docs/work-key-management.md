@@ -143,6 +143,37 @@ header: { alg: "ES256", jwk: { kty, crv, x, y } }
 
 ---
 
+## 既知の課題
+
+### 署名鍵選択機能の制約（暫定対応中）
+
+**問題:**
+クレデンシャル発行時に選択した署名鍵が正確に使用されない場合がある。
+
+**原因:**
+VCIプロトコルのアーキテクチャ上の制約により、credential発行関数 (`issueLearningCredential`) は `sub` (学習者ID) のみを受け取る。アクセストークンや認可コードIDは渡されないため、`auth_code_metadata` テーブルから正確な `signingKeyKid` を特定できない。
+
+```
+VCIプロトコルフロー:
+Credential Offer → Pre-Auth Code → Access Token → Credential発行
+                   (sub+metadata)   (sub継承)       (subのみ受取)
+```
+
+**暫定対応:**
+- `getLatestSigningKeyKidForLearner(learnerId)` 関数を追加
+- 該当学習者の最新の `auth_code` に紐づく `signingKeyKid` を使用
+- ファイル: `demos/learning-vci/src/store.ts:318-338`
+
+**制限事項:**
+- 同一学習者に対して複数のクレデンシャルオファーが並行して存在する場合、最新のオファーの署名鍵が使用される
+- 古いオファーでクレデンシャルを発行すると、意図しない署名鍵が使用される可能性がある
+
+**恒久対応案:**
+1. VCIライブラリの修正: `issueSdJwtVcCredential` に `authorized_code_id` または `access_token` コンテキストを渡す
+2. または、`accessTokenStateProvider` を拡張して、credential発行時に追加のコンテキストを提供する
+
+---
+
 ## 参考資料
 - [common.md](./demos/common.md) - 共通モジュール仕様
 - [learning-vci.md](./demos/learning-vci.md) - Learning VCI仕様

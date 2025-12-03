@@ -6,28 +6,15 @@ import keyStore from "ownd-vci-common/dist/store/keyStore.js";
 import { issueFlatCredential } from "@ownd-project/ts-toolbox";
 import { ErrorPayload, Result } from "ownd-vci/dist/types.js";
 
-interface SubjectInfo {
-  learnerId: string;
-  signingKeyKid?: string;
-}
-
-const parseSubject = (sub: string): SubjectInfo => {
-  try {
-    const parsed = JSON.parse(sub);
-    if (typeof parsed === "object" && parsed.learnerId) {
-      return parsed;
-    }
-  } catch {
-    // Legacy format: sub is just the learner ID
-  }
-  return { learnerId: sub };
-};
-
 const issueLearningCredential = async (
   sub: string,
   jwk: jose.JWK,
 ): Promise<Result<string, ErrorPayload>> => {
-  const { learnerId, signingKeyKid } = parseSubject(sub);
+  // sub is the learner ID (e.g., "4")
+  const learnerId = sub;
+
+  // 暫定対応: 学習者の最新のauth_codeに紐づくsigningKeyKidを取得
+  const signingKeyKid = await store.getLatestSigningKeyKidForLearner(learnerId);
 
   const learner = await store.getLearnerById(learnerId);
   if (!learner) {
@@ -66,7 +53,9 @@ const issueLearningCredential = async (
   }
 
   // Parse x5c if available, otherwise use empty array for jwk mode
-  const x5c: string[] = x509cert ? JSON.parse(x509cert) : [];
+  // Only include leaf certificate in x5c (first element of chain) for credential issuance
+  const certChain: string[] = x509cert ? JSON.parse(x509cert) : [];
+  const x5c: string[] = certChain.length > 0 ? [certChain[0]] : [];
 
   const privateJwk = keyPair as unknown as PrivateJwk;
   const issuerJwk: PrivateJwk = {

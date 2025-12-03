@@ -1,3 +1,7 @@
+<nav class="breadcrumb">
+  <a href="/admin">トップ</a> &gt; <a href="/admin/keys">キーペア管理</a> &gt; <span>詳細</span>
+</nav>
+
 <h2>キーペア詳細</h2>
 
 <div class="detail-card">
@@ -37,60 +41,60 @@
 
 <% if (x509Chain && x509Chain.length > 0) { %>
 <div class="detail-card">
-  <h3>X.509証明書</h3>
+  <h3>X.509証明書チェーン</h3>
 
-  <% if (certInfo) { %>
-  <h4>証明書情報</h4>
-  <table class="detail-table">
-    <tr>
-      <th>Subject (CN)</th>
-      <td><%= certInfo.subject.commonName %></td>
-    </tr>
-    <tr>
-      <th>Subject (O)</th>
-      <td><%= certInfo.subject.organizationName %></td>
-    </tr>
-    <% if (certInfo.subject.organizationalUnitName) { %>
-    <tr>
-      <th>Subject (OU)</th>
-      <td><%= certInfo.subject.organizationalUnitName %></td>
-    </tr>
-    <% } %>
-    <% if (certInfo.subject.countryName) { %>
-    <tr>
-      <th>Subject (C)</th>
-      <td><%= certInfo.subject.countryName %></td>
-    </tr>
-    <% } %>
-    <tr>
-      <th>Issuer (CN)</th>
-      <td><%= certInfo.issuer.commonName %></td>
-    </tr>
-    <tr>
-      <th>Issuer (O)</th>
-      <td><%= certInfo.issuer.organizationName %></td>
-    </tr>
-    <tr>
-      <th>Serial Number</th>
-      <td class="serial"><%= certInfo.serialNumber %></td>
-    </tr>
-    <tr>
-      <th>有効期間</th>
-      <td>
-        <%= new Date(certInfo.notBefore).toLocaleString('ja-JP') %>
-        〜
-        <%= new Date(certInfo.notAfter).toLocaleString('ja-JP') %>
-      </td>
-    </tr>
-  </table>
-  <% } %>
-
-  <h4>証明書チェーン (PEM)</h4>
   <% x509Chain.forEach(function(cert, index) { %>
-    <p><strong>証明書 <%= index + 1 %></strong></p>
-    <pre class="code-block">-----BEGIN CERTIFICATE-----
+  <div class="cert-item">
+    <h4>証明書 <%= index + 1 %><% if (index === 0) { %> (End Entity)<% } else if (index === x509Chain.length - 1) { %> (Root)<% } else { %> (Intermediate)<% } %></h4>
+
+    <% if (certInfos && certInfos[index]) { %>
+    <% var info = certInfos[index]; %>
+    <table class="detail-table cert-info-table">
+      <tr>
+        <th>Subject</th>
+        <td>
+          <% if (info.subject.commonName) { %>CN=<%= info.subject.commonName %><% } %>
+          <% if (info.subject.organizationalUnitName) { %>, OU=<%= info.subject.organizationalUnitName %><% } %>
+          <% if (info.subject.organizationName) { %>, O=<%= info.subject.organizationName %><% } %>
+          <% if (info.subject.countryName) { %>, C=<%= info.subject.countryName %><% } %>
+        </td>
+      </tr>
+      <tr>
+        <th>Issuer</th>
+        <td>
+          <% if (info.issuer.commonName) { %>CN=<%= info.issuer.commonName %><% } %>
+          <% if (info.issuer.organizationalUnitName) { %>, OU=<%= info.issuer.organizationalUnitName %><% } %>
+          <% if (info.issuer.organizationName) { %>, O=<%= info.issuer.organizationName %><% } %>
+          <% if (info.issuer.countryName) { %>, C=<%= info.issuer.countryName %><% } %>
+        </td>
+      </tr>
+      <tr>
+        <th>Serial Number</th>
+        <td class="serial"><%= info.serialNumber %></td>
+      </tr>
+      <tr>
+        <th>有効期間</th>
+        <td>
+          <%= new Date(info.notBefore).toLocaleString('ja-JP') %>
+          〜
+          <%= new Date(info.notAfter).toLocaleString('ja-JP') %>
+        </td>
+      </tr>
+    </table>
+    <% } %>
+
+    <details class="cert-pem-details">
+      <summary>PEM形式を表示</summary>
+      <div class="pem-container">
+        <button type="button" class="copy-btn" onclick="copyPem(this)" title="コピー">
+          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
+        </button>
+        <pre class="code-block pem-content">-----BEGIN CERTIFICATE-----
 <%= cert.match(/.{1,64}/g).join('\n') %>
 -----END CERTIFICATE-----</pre>
+      </div>
+    </details>
+  </div>
   <% }); %>
 </div>
 <% } else { %>
@@ -170,4 +174,94 @@
   background-color: #dc3545;
   color: white;
 }
+.cert-item {
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 6px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+.cert-item h4 {
+  margin: 0 0 0.75rem 0;
+  font-size: 0.95rem;
+  color: #495057;
+}
+.cert-info-table {
+  margin-bottom: 0.75rem;
+}
+.cert-info-table th {
+  width: 120px;
+  font-size: 0.85em;
+}
+.cert-info-table td {
+  font-size: 0.85em;
+}
+.cert-pem-details {
+  margin-top: 0.5rem;
+}
+.cert-pem-details summary {
+  cursor: pointer;
+  color: #3b82f6;
+  font-size: 0.85em;
+}
+.cert-pem-details summary:hover {
+  text-decoration: underline;
+}
+.cert-pem-details .code-block {
+  margin-top: 0.5rem;
+}
+.pem-container {
+  position: relative;
+  margin-top: 0.5rem;
+}
+.copy-btn {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.4rem;
+  background: #fff;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  cursor: pointer;
+  color: #6c757d;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+.copy-btn:hover {
+  background: #f8f9fa;
+  color: #495057;
+  border-color: #adb5bd;
+}
+.copy-btn.copied {
+  background: #28a745;
+  color: white;
+  border-color: #28a745;
+}
+.pem-content {
+  margin: 0;
+  padding-right: 3rem;
+}
 </style>
+
+<script>
+function copyPem(button) {
+  const container = button.closest('.pem-container');
+  const preElement = container.querySelector('.pem-content');
+  const text = preElement.textContent;
+
+  navigator.clipboard.writeText(text).then(function() {
+    button.classList.add('copied');
+    button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>';
+
+    setTimeout(function() {
+      button.classList.remove('copied');
+      button.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
+    }, 2000);
+  }).catch(function(err) {
+    console.error('Failed to copy:', err);
+    alert('コピーに失敗しました');
+  });
+}
+</script>

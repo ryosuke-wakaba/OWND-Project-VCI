@@ -54,6 +54,7 @@ subject ||..|{ auth_codes_subject_rel
 export const TBL_NM_AUTH_CODES = "auth_codes";
 export const TBL_NM_ACCESS_TOKENS = "access_tokens";
 export const TBL_NM_C_NONCES = "c_nonces";
+export const TBL_NM_AUTH_CODE_METADATA = "auth_code_metadata";
 
 const DDL_AUTH_CODES = `
   CREATE TABLE ${TBL_NM_AUTH_CODES} (
@@ -87,10 +88,21 @@ const DDL_C_NONCES = `
   )
 `.trim();
 
+const DDL_AUTH_CODE_METADATA = `
+  CREATE TABLE ${TBL_NM_AUTH_CODE_METADATA} (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    authCodeId INTEGER UNIQUE,
+    signingKeyKid VARCHAR(255),
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (authCodeId) REFERENCES ${TBL_NM_AUTH_CODES}(id)
+  )
+`.trim();
+
 const DDL_MAP = {
   [TBL_NM_AUTH_CODES]: DDL_AUTH_CODES,
   [TBL_NM_ACCESS_TOKENS]: DDL_ACCESS_TOKENS,
   [TBL_NM_C_NONCES]: DDL_C_NONCES,
+  [TBL_NM_AUTH_CODE_METADATA]: DDL_AUTH_CODE_METADATA,
 };
 
 export const createDb = async () => {
@@ -305,6 +317,65 @@ export const refreshNonce = async (
   }
 };
 
+export interface AuthCodeMetadata {
+  id: number;
+  authCodeId: number;
+  signingKeyKid?: string;
+  createdAt: string;
+}
+
+export const addAuthCodeMetadata = async (
+  authCodeId: number,
+  signingKeyKid?: string,
+): Promise<number | undefined> => {
+  if (!signingKeyKid) {
+    return undefined;
+  }
+  try {
+    const db = await store.openDb();
+    const result = await db.run(
+      `INSERT INTO ${TBL_NM_AUTH_CODE_METADATA} (authCodeId, signingKeyKid) VALUES (?, ?)`,
+      authCodeId,
+      signingKeyKid,
+    );
+    return result.lastID;
+  } catch (err) {
+    handleError(err);
+  }
+};
+
+export const getAuthCodeMetadata = async (
+  authCodeId: number,
+): Promise<AuthCodeMetadata | undefined> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.get<AuthCodeMetadata>(
+      `SELECT * FROM ${TBL_NM_AUTH_CODE_METADATA} WHERE authCodeId = ?`,
+      authCodeId,
+    );
+    return result;
+  } catch (err) {
+    handleError(err);
+  }
+};
+
+export const getAuthCodeMetadataByCode = async (
+  code: string,
+): Promise<AuthCodeMetadata | undefined> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.get<AuthCodeMetadata>(
+      `SELECT m.* FROM ${TBL_NM_AUTH_CODE_METADATA} m
+       INNER JOIN ${TBL_NM_AUTH_CODES} a ON m.authCodeId = a.id
+       WHERE a.code = ?`,
+      code,
+    );
+    return result;
+  } catch (err) {
+    handleError(err);
+  }
+};
+
 export default {
   createDb,
   destroyDb,
@@ -316,4 +387,7 @@ export default {
   getCNonce,
   getAccessToken,
   refreshNonce,
+  addAuthCodeMetadata,
+  getAuthCodeMetadata,
+  getAuthCodeMetadataByCode,
 };

@@ -1,5 +1,5 @@
 import { CRV, newPrivateJwk, PublicJwk } from "elliptic-jwk";
-import keyutil from "js-crypto-key-utils";
+import crypto from "crypto";
 
 import { NotSuccessResult } from "./routes/common.js";
 import { UNIQUE_CONSTRAINT_FAILED } from "./store.js";
@@ -7,6 +7,7 @@ import keyStore from "./store/keyStore.js";
 import { NgResult, Result } from "ownd-vci/dist/types.js";
 import {
   generateCsr,
+  generateRootCaCsr,
   trimmer,
   generateRootCertificate,
   generateCertificate,
@@ -224,6 +225,7 @@ interface X509Cert {
 export const createCsr = async (
   keyId: string,
   subject: string,
+  isCA: boolean = false,
 ): Promise<Result<Csr, NotSuccessResult>> => {
   if (!keyId || !subject) {
     return INVALID_PARAMETER_ERROR;
@@ -247,13 +249,12 @@ export const createCsr = async (
       d,
     };
     const { publicKey, privateKey } = await ellipticJwkToPem(jwkPair);
-    const csr = generateCsr(
-      subject,
-      publicKey,
-      privateKey,
-      "SHA256withECDSA",
-      [],
-    );
+
+    // Use generateRootCaCsr for CA certificates (includes Basic Constraints: CA:TRUE)
+    const csr = isCA
+      ? generateRootCaCsr(subject, publicKey, privateKey, "SHA256withECDSA")
+      : generateCsr(subject, publicKey, privateKey, "SHA256withECDSA", []);
+
     const payload = {
       csr: trimmer(csr),
     };
@@ -489,9 +490,13 @@ export const importKey = async (
   }
 
   try {
-    // Convert PEM to JWK using js-crypto-key-utils
-    const keyObj = new keyutil.Key("pem", privateKeyPem);
-    const jwk = (await keyObj.export("jwk")) as {
+    // Convert PEM to JWK using Node.js crypto module
+    const keyObject = crypto.createPrivateKey({
+      key: privateKeyPem,
+      format: "pem",
+    });
+
+    const jwk = keyObject.export({ format: "jwk" }) as {
       kty: string;
       crv: string;
       x: string;

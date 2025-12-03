@@ -169,6 +169,7 @@ export const addPreAuthCode = async (
   expiresIn: number,
   txCode: string,
   sub: string,
+  signingKeyKid?: string,
 ) => {
   try {
     const authCodeId = await authStore.addAuthCode(
@@ -179,6 +180,10 @@ export const addPreAuthCode = async (
       true,
       sub,
     );
+    // Store signing key kid in metadata if provided
+    if (authCodeId && signingKeyKid) {
+      await authStore.addAuthCodeMetadata(authCodeId, signingKeyKid);
+    }
     return authCodeId;
   } catch (err) {
     store.handleError(err);
@@ -217,7 +222,11 @@ export const getPreAuthCodeAndLearner = async (code: string) => {
       throw new Error("Learner not found for sub: " + storedAuthCode.sub);
     }
 
-    return { storedAuthCode, learner };
+    // Get signing key kid from metadata
+    const metadata = await authStore.getAuthCodeMetadataByCode(code);
+    const signingKeyKid = metadata?.signingKeyKid;
+
+    return { storedAuthCode, learner, signingKeyKid };
   } catch (err) {
     store.handleError(err);
   }
@@ -301,6 +310,33 @@ export const deleteLearner = async (id: number): Promise<void> => {
   }
 };
 
+/**
+ * 暫定対応: 学習者IDから最新のsigningKeyKidを取得
+ * VCIプロトコルの制約により、credential発行時にsubのみが渡されるため、
+ * 最新のauth_codeに紐づくメタデータを参照する
+ */
+export const getLatestSigningKeyKidForLearner = async (
+  learnerId: string,
+): Promise<string | undefined> => {
+  try {
+    const db = await store.openDb();
+    // 該当学習者の最新のauth_codeを取得し、そのメタデータからsigningKeyKidを取得
+    const result = await db.get<{ signingKeyKid: string }>(
+      `SELECT m.signingKeyKid
+       FROM auth_code_metadata m
+       INNER JOIN ${TBL_NM_AUTH_CODES} a ON m.authCodeId = a.id
+       WHERE a.sub = ?
+       ORDER BY a.createdAt DESC
+       LIMIT 1`,
+      [learnerId],
+    );
+    return result?.signingKeyKid;
+  } catch (err) {
+    console.error("Failed to get latest signing key kid:", err);
+    return undefined;
+  }
+};
+
 export default {
   createDb,
   destroyDb,
@@ -314,4 +350,5 @@ export default {
   getPreAuthCodeAndLearner,
   addAccessToken,
   getAccessToken,
+  getLatestSigningKeyKidForLearner,
 };
