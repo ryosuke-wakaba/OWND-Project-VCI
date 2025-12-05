@@ -184,24 +184,29 @@ tbody tr:last-child td {
   padding: 2.5rem;
   border-radius: 12px;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  max-width: 640px;
+  max-width: 720px;
 }
 
 .form-group {
-  margin-bottom: 1.75rem;
+  margin-bottom: 1.5rem;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  align-items: start;
+  gap: 1rem;
 }
 
 label {
-  display: block;
-  margin-bottom: 0.625rem;
   font-weight: 500;
   color: #334155;
   font-size: 0.9375rem;
+  padding-top: 0.75rem;
+  text-align: left;
 }
 
 input[type="text"],
 input[type="email"],
 input[type="number"],
+input[type="date"],
 select,
 textarea {
   width: 100%;
@@ -232,7 +237,17 @@ textarea:hover {
   margin-top: 2.5rem;
   padding-top: 1.5rem;
   border-top: 2px solid #f1f5f9;
-  display: flex;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 1rem;
+}
+
+.form-actions::before {
+  content: '';
+}
+
+.form-actions > * {
+  display: inline-flex;
   gap: 1rem;
 }
 
@@ -315,6 +330,20 @@ textarea:hover {
 
   .form-container {
     padding: 1.5rem;
+  }
+
+  .form-group {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  label {
+    text-align: left;
+    padding-top: 0;
+  }
+
+  .form-actions {
+    padding-left: 0;
   }
 
   .toolbar {

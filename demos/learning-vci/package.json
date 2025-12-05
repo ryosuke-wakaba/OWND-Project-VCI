@@ -5,6 +5,7 @@
   "type": "module",
   "license": "MIT",
   "dependencies": {
+    "@koa/ejs": "^5.1.0",
     "@ladjs/koa-views": "^9.0.0",
     "@meeco/sd-jwt": "^0.0.2",
     "axios": "^1.5.1",
@@ -30,6 +31,7 @@
     "@types/chai": "^4.3.6",
     "@types/jsrsasign": "^10.5.13",
     "@types/koa": "^2.13.8",
+    "@types/koa__ejs": "^5.1.1",
     "@types/koa-basic-auth": "^2.0.4",
     "@types/koa-router": "^7.4.4",
     "@types/koa-static": "^4.0.2",

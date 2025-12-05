@@ -201,7 +201,6 @@ export async function handleLearnersList(ctx: Koa.Context) {
     await ctx.render("admin/learners", {
       title: "学習者一覧",
       learners,
-      layout: "layout",
     });
   } catch (err) {
     console.error(err);
@@ -213,7 +212,6 @@ export async function handleLearnersList(ctx: Koa.Context) {
 export async function handleLearnerNewForm(ctx: Koa.Context) {
   await ctx.render("admin/learner-new", {
     title: "学習者登録",
-    layout: "layout",
   });
 }
 
@@ -229,7 +227,6 @@ export async function handleLearnerEditForm(ctx: Koa.Context) {
     await ctx.render("admin/learner-edit", {
       title: "学習者編集",
       learner,
-      layout: "layout",
     });
   } catch (err) {
     console.error(err);
@@ -314,7 +311,6 @@ export async function handleLearnerCredentialOfferForm(ctx: Koa.Context) {
       title: "クレデンシャル発行準備",
       learner,
       availableKeys,
-      layout: "layout",
     });
   } catch (err) {
     console.error(err);
@@ -346,8 +342,7 @@ export async function handleLearnerCredentialOfferDisplay(ctx: Koa.Context) {
           timeZone: "Asia/Tokyo",
         }),
         expiresAtUTC: expiresAt.toISOString(),
-        layout: "layout",
-      });
+        });
     } else {
       handleNotSuccessResult(result.error, ctx);
     }
@@ -366,8 +361,7 @@ export async function handleKeysList(ctx: Koa.Context) {
       await ctx.render("admin/keys", {
         title: "キーペア一覧",
         keys: result.payload,
-        layout: "layout",
-      });
+        });
     } else {
       ctx.status = 500;
       ctx.body = { error: "Failed to load keys" };
@@ -382,7 +376,6 @@ export async function handleKeysList(ctx: Koa.Context) {
 export async function handleKeyNewForm(ctx: Koa.Context) {
   await ctx.render("admin/key-new", {
     title: "キーペア生成",
-    layout: "layout",
   });
 }
 
@@ -452,7 +445,6 @@ export async function handleKeyDetail(ctx: Koa.Context) {
       x509Chain,
       certInfos,
       certDescription,
-      layout: "layout",
     });
   } catch (err) {
     console.error(err);
@@ -481,7 +473,6 @@ export async function handleKeyCertificateForm(ctx: Koa.Context) {
       title: "証明書発行",
       key: keyPair,
       rootKeys,
-      layout: "layout",
     });
   } catch (err) {
     console.error(err);
@@ -549,7 +540,6 @@ export async function handleKeyCertificateIssue(ctx: Koa.Context) {
 export async function handleKeyImportForm(ctx: Koa.Context) {
   await ctx.render("admin/key-import", {
     title: "キーペアインポート",
-    layout: "layout",
   });
 }
 
@@ -602,7 +592,6 @@ export async function handleKeyImport(ctx: Koa.Context) {
 export async function handleAdminIndex(ctx: Koa.Context) {
   await ctx.render("admin/index", {
     title: "管理メニュー",
-    layout: "layout",
   });
 }
 
