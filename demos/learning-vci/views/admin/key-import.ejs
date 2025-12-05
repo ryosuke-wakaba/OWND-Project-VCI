@@ -32,6 +32,12 @@
     <small class="form-text">リーフ証明書から順に、証明書チェーンをPEM形式で入力してください（複数可）</small>
   </div>
 
+  <div class="form-group">
+    <label for="certDescription">証明書の説明</label>
+    <input type="text" id="certDescription" name="certDescription" placeholder="例: 本番用署名証明書">
+    <small class="form-text">証明書をインポートする場合、その説明を入力してください（任意）</small>
+  </div>
+
   <div class="form-actions">
     <a href="/admin/keys" class="btn btn-secondary">キャンセル</a>
     <button type="submit" class="btn btn-primary">インポート</button>

@@ -24,6 +24,7 @@ entity x509_certificates {
   * kid number <<FK>>
   --
   * x509cert string
+  * description string
   * createdAt datetime
 }
 
@@ -51,6 +52,7 @@ const DDL_EC_KEY_X509_CERTIFICATE = `
   CREATE TABLE ${TBL_NM_EC_KEY_X509_CERTIFICATE} (
     kid VARCHAR(80),
     x509cert VARCHAR(8192),
+    description VARCHAR(255) DEFAULT NULL,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (kid) references ${TBL_NM_EC_KEY_PAIRS}(kid)
   )
@@ -104,13 +106,15 @@ export const insertECKeyPair = async (
 export const insertEcKeyX509Certificate = async (
   kid: string,
   x509cert: string,
+  description?: string,
 ) => {
   try {
     const db = await store.openDb();
     return await db.run(
-      `INSERT INTO ${TBL_NM_EC_KEY_X509_CERTIFICATE} (kid, x509cert) VALUES (?, ?)`,
+      `INSERT INTO ${TBL_NM_EC_KEY_X509_CERTIFICATE} (kid, x509cert, description) VALUES (?, ?, ?)`,
       kid,
       x509cert,
+      description || null,
     );
   } catch (err) {
     console.error(err);
@@ -140,6 +144,23 @@ export const revokeECKeyPair = async (kid: string) => {
   }
 };
 
+export const updateX509CertificateDescription = async (
+  kid: string,
+  description: string | null,
+) => {
+  try {
+    const db = await store.openDb();
+    return db.run(
+      `UPDATE ${TBL_NM_EC_KEY_X509_CERTIFICATE} SET description = ? WHERE kid = ?`,
+      description,
+      kid,
+    );
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
 export const getEcKeyPair = async (kid: string) => {
   try {
     const db = await store.openDb();
@@ -147,6 +168,31 @@ export const getEcKeyPair = async (kid: string) => {
       `SELECT rowid, kid, kty, crv, x, y, d, createdAt, revokedAt FROM ${TBL_NM_EC_KEY_PAIRS} WHERE kid = ? ORDER BY createdAt DESC, rowid DESC`,
       kid,
     );
+  } catch (err) {
+    console.error(err);
+    throw new Error("Failed to select data.");
+  }
+};
+
+export interface X509CertificateData {
+  x509cert: string;
+  description?: string;
+}
+
+export const getX509CertificateData = async (
+  kid: string,
+): Promise<X509CertificateData | null> => {
+  try {
+    const db = await store.openDb();
+    const row = await db.get<{ x509cert: string; description: string | null }>(
+      `SELECT x509cert, description FROM ${TBL_NM_EC_KEY_X509_CERTIFICATE} WHERE kid = ?`,
+      kid,
+    );
+    if (!row) return null;
+    return {
+      x509cert: row.x509cert,
+      description: row.description || undefined,
+    };
   } catch (err) {
     console.error(err);
     throw new Error("Failed to select data.");
@@ -188,6 +234,7 @@ export const getLatestKeyPair = async () => {
 
 export interface KeyPairWithCert extends ECKeyPair {
   x509cert?: string;
+  certDescription?: string;
 }
 
 export const getAllKeyPairs = async (): Promise<KeyPairWithCert[]> => {
@@ -195,7 +242,7 @@ export const getAllKeyPairs = async (): Promise<KeyPairWithCert[]> => {
     const db = await store.openDb();
 
     const sql = `
-      SELECT pairs.kid, pairs.kty, pairs.crv, pairs.x, pairs.y, pairs.createdAt, pairs.revokedAt, cert.x509cert
+      SELECT pairs.kid, pairs.kty, pairs.crv, pairs.x, pairs.y, pairs.createdAt, pairs.revokedAt, cert.x509cert, cert.description as certDescription
       FROM ${TBL_NM_EC_KEY_PAIRS} AS pairs
       LEFT JOIN ${TBL_NM_EC_KEY_X509_CERTIFICATE} AS cert ON pairs.kid = cert.kid
       ORDER BY pairs.createdAt DESC;
@@ -216,5 +263,7 @@ export default {
   getLatestKeyPair,
   getAllKeyPairs,
   revokeECKeyPair,
+  updateX509CertificateDescription,
   getX509Chain,
+  getX509CertificateData,
 };

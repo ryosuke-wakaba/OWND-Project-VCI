@@ -43,6 +43,14 @@
 <div class="detail-card">
   <h3>X.509証明書チェーン</h3>
 
+  <div class="cert-description-section">
+    <form action="/admin/keys/<%= key.kid %>/description" method="POST" class="description-form">
+      <label>説明:</label>
+      <input type="text" name="description" value="<%= certDescription || '' %>" placeholder="証明書の説明を入力">
+      <button type="submit" class="btn btn-primary btn-small">保存</button>
+    </form>
+  </div>
+
   <% x509Chain.forEach(function(cert, index) { %>
   <div class="cert-item">
     <h4>証明書 <%= index + 1 %><% if (index === 0) { %> (End Entity)<% } else if (index === x509Chain.length - 1) { %> (Root)<% } else { %> (Intermediate)<% } %></h4>
@@ -173,6 +181,33 @@
 .badge-danger {
   background-color: #dc3545;
   color: white;
+}
+.description-form {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.description-form input {
+  flex: 1;
+  padding: 0.375rem 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  max-width: 300px;
+}
+.description-form input:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.15rem rgba(0,123,255,.25);
+}
+.cert-description-section {
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #dee2e6;
+}
+.cert-description-section label {
+  margin-right: 0.5rem;
+  font-weight: 500;
 }
 .cert-item {
   background: #fff;

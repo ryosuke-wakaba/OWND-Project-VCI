@@ -25,3 +25,9 @@ demos/participation-cert-vci/dist
 launch.json
 
 docs/work.md
+tsconfig.build.tsbuildinfo
+tsconfig.build.tsbuildinfo
+tsconfig.build.tsbuildinfo
+demos/learning-vci/.env
+.vscode/settings.json
+demos/learning-vci/data/learning-vci.db

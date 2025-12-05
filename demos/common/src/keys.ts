@@ -124,6 +124,7 @@ export interface KeyInfo {
   createdAt: string;
   revokedAt: string | null;
   hasCertificate: boolean;
+  certDescription?: string;
 }
 
 export const getAllKeys = async (): Promise<
@@ -140,6 +141,7 @@ export const getAllKeys = async (): Promise<
       createdAt: row.createdAt,
       revokedAt: row.revokedAt || null,
       hasCertificate: !!row.x509cert,
+      certDescription: row.certDescription,
     }));
     return { ok: true, payload: keys };
   } catch (err) {
@@ -467,6 +469,7 @@ interface ImportKeyParams {
   kid: string;
   privateKeyPem: string;
   certificates?: string[];
+  certDescription?: string;
 }
 
 const normalizeCurve = (crv: string): string => {
@@ -483,7 +486,7 @@ const normalizeCurve = (crv: string): string => {
 export const importKey = async (
   params: ImportKeyParams,
 ): Promise<Result<number, NotSuccessResult>> => {
-  const { kid, privateKeyPem, certificates } = params;
+  const { kid, privateKeyPem, certificates, certDescription } = params;
 
   if (!kid || !privateKeyPem) {
     return INVALID_PARAMETER_ERROR;
@@ -555,6 +558,7 @@ export const importKey = async (
       await keyStore.insertEcKeyX509Certificate(
         kid,
         JSON.stringify(certificates),
+        certDescription,
       );
     }
 

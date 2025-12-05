@@ -19,14 +19,14 @@
         <th>キーID</th>
         <th>楕円曲線</th>
         <th>証明書</th>
+        <th>説明</th>
         <th>作成日</th>
-        <th>状態</th>
         <th>アクション</th>
       </tr>
     </thead>
     <tbody>
       <% keys.forEach(function(key) { %>
-        <tr class="<%= key.revokedAt ? 'revoked' : '' %>">
+        <tr>
           <td><%= key.kid %></td>
           <td><%= key.crv %></td>
           <td>
@@ -36,22 +36,13 @@
               <span class="badge badge-warning">なし</span>
             <% } %>
           </td>
+          <td><%= key.certDescription || '-' %></td>
           <td><%= new Date(key.createdAt).toLocaleString('ja-JP') %></td>
-          <td>
-            <% if (key.revokedAt) { %>
-              <span class="badge badge-danger">失効</span>
-            <% } else { %>
-              <span class="badge badge-success">有効</span>
-            <% } %>
-          </td>
           <td>
             <div class="actions">
               <a href="/admin/keys/<%= key.kid %>/detail" class="btn btn-secondary btn-small">詳細</a>
-              <% if (!key.revokedAt) { %>
-                <% if (!key.hasCertificate) { %>
-                  <a href="/admin/keys/<%= key.kid %>/certificate" class="btn btn-primary btn-small">証明書発行</a>
-                <% } %>
-                <button onclick="revokeKey('<%= key.kid %>')" class="btn btn-danger btn-small">失効</button>
+              <% if (!key.hasCertificate) { %>
+                <a href="/admin/keys/<%= key.kid %>/certificate" class="btn btn-primary btn-small">証明書発行</a>
               <% } %>
             </div>
           </td>
@@ -66,34 +57,7 @@
   </div>
 <% } %>
 
-<script>
-async function revokeKey(kid) {
-  if (!confirm('このキーペアを失効してもよろしいですか？\nこの操作は元に戻せません。')) {
-    return;
-  }
-
-  try {
-    const response = await fetch(`/admin/keys/${encodeURIComponent(kid)}/revoke`, {
-      method: 'POST',
-      credentials: 'include'
-    });
-
-    if (response.ok) {
-      location.reload();
-    } else {
-      alert('失効に失敗しました');
-    }
-  } catch (err) {
-    console.error(err);
-    alert('失効に失敗しました');
-  }
-}
-</script>
-
 <style>
-tr.revoked {
-  opacity: 0.6;
-}
 .badge {
   display: inline-block;
   padding: 0.25em 0.5em;

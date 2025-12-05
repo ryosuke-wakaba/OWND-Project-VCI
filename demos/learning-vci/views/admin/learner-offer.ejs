@@ -30,6 +30,7 @@
       <% availableKeys.forEach(function(key) { %>
         <option value="<%= key.kid %>" <%= key.isLatest ? 'selected' : '' %>>
           <%= key.kid %>
+          <% if (key.certDescription) { %>- <%= key.certDescription %><% } %>
           (<%= key.crv %>,
           <%= key.hasCertificate ? 'x5c方式' : 'jwk方式' %>)
           <% if (key.isLatest) { %>[最新]<% } %>

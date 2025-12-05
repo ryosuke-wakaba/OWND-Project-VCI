@@ -161,7 +161,7 @@ const credentialOfferForLearner = async (
 
   const code = generateRandomString();
   const expiresIn = Number(process.env.VCI_PRE_AUTH_CODE_EXPIRES_IN || "86400");
-  const txCode = generateRandomNumericString();
+  const txCode = generateRandomNumericString(6);
 
   console.log("Pre-authorized Code:", code.substring(0, 10) + "...");
   console.log("TX Code:", txCode);
@@ -401,6 +401,20 @@ export async function handleKeyNew(ctx: Koa.Context) {
   }
 }
 
+export async function handleCertDescriptionUpdate(ctx: Koa.Context) {
+  try {
+    const { kid } = ctx.params;
+    const { description } = ctx.request.body;
+
+    await keyStore.updateX509CertificateDescription(kid, description || null);
+    ctx.redirect(`/admin/keys/${encodeURIComponent(kid)}/detail`);
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to update description" };
+  }
+}
+
 export async function handleKeyDetail(ctx: Koa.Context) {
   try {
     const { kid } = ctx.params;
@@ -413,6 +427,8 @@ export async function handleKeyDetail(ctx: Koa.Context) {
 
     const x509Chain = await keyStore.getX509Chain(kid);
     let certInfos: ReturnType<typeof getCertificatesInfo> = [];
+    let certDescription: string | undefined;
+
     if (x509Chain && x509Chain.length > 0) {
       try {
         // Parse all certificates in the chain
@@ -424,6 +440,10 @@ export async function handleKeyDetail(ctx: Koa.Context) {
       } catch (e) {
         console.error("Failed to parse certificates:", e);
       }
+
+      // Get certificate description
+      const certData = await keyStore.getX509CertificateData(kid);
+      certDescription = certData?.description;
     }
 
     await ctx.render("admin/key-detail", {
@@ -431,6 +451,7 @@ export async function handleKeyDetail(ctx: Koa.Context) {
       key: keyPair,
       x509Chain,
       certInfos,
+      certDescription,
       layout: "layout",
     });
   } catch (err) {
@@ -540,7 +561,8 @@ export async function handleKeyImport(ctx: Koa.Context) {
       return;
     }
 
-    const { kid, privateKeyPem, certificatesPem } = ctx.request.body;
+    const { kid, privateKeyPem, certificatesPem, certDescription } =
+      ctx.request.body;
 
     // Parse certificates if provided
     let certificates: string[] | undefined;
@@ -559,7 +581,12 @@ export async function handleKeyImport(ctx: Koa.Context) {
       }
     }
 
-    const result = await keys.importKey({ kid, privateKeyPem, certificates });
+    const result = await keys.importKey({
+      kid,
+      privateKeyPem,
+      certificates,
+      certDescription: certDescription || undefined,
+    });
     if (result.ok) {
       ctx.redirect("/admin/keys");
     } else {
@@ -595,6 +622,7 @@ export default {
   handleKeyNewForm,
   handleKeyNew,
   handleKeyDetail,
+  handleCertDescriptionUpdate,
   handleKeyCertificateForm,
   handleKeyCertificateIssue,
   handleKeyImportForm,

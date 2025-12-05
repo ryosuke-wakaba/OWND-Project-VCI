@@ -141,6 +141,15 @@ const init = () => {
     },
   );
 
+  router.post(
+    "/admin/keys/:kid/description",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleCertDescriptionUpdate(ctx);
+    },
+  );
+
   router.get(
     "/admin/keys/:kid/certificate",
     auth(basicAuthOpts()),
