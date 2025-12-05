@@ -22,6 +22,12 @@ demos/participation-cert-vci/TEST_DB
 demos/participation-cert-vci/database.sqlite
 demos/participation-cert-vci/dist
 
+demos/learning-vci/.env
+demos/learning-vci/TEST_DB
+demos/learning-vci/database.sqlite
+demos/learning-vci/dist
+demos/learning-vci/data
+
 launch.json
 
 docs/work.md
