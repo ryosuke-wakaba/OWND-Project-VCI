@@ -8,6 +8,7 @@ cd /opt/app || exit 1
 #--------------------------------------------------------------
 echo "Building root ownd-vci library..."
 yarn install
+rm -f tsconfig.build.tsbuildinfo
 yarn build
 
 #--------------------------------------------------------------
@@ -16,6 +17,7 @@ yarn build
 echo "Building common module..."
 cd /opt/app/demos/common
 yarn install
+rm -f tsconfig.tsbuildinfo
 yarn build
 
 #--------------------------------------------------------------
