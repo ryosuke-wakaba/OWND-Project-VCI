@@ -3,7 +3,7 @@ name: Deploy to AWS (EUJP)
 on:
   push:
     branches:
-      - feature/eujp-codedeploy
+      - develop
 
 permissions:
   id-token: write
