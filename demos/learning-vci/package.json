@@ -62,5 +62,10 @@
     "fix": "npm run fix:eslint && npm run fix:prettier",
     "fix:eslint": "npm run lint --fix",
     "fix:prettier": "npm run lint:prettier --write"
+  },
+  "resolutions": {
+    "@types/koa": "^2.13.8",
+    "@types/koa-router": "^7.4.4",
+    "@types/koa-compose": "^3.2.5"
   }
 }
