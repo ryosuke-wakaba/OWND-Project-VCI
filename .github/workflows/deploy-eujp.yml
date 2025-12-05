@@ -1,0 +1,67 @@
+name: Deploy to AWS (EUJP)
+
+on:
+  push:
+    branches:
+      - develop
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'yarn'
+
+      - name: Install dependencies
+        run: yarn install --frozen-lockfile
+
+      - name: Install demos/common dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: demos/common
+
+      - name: Build root (ownd-vci)
+        run: |
+          npm run fix
+          npm run generate-json-schemas
+          rm -f tsconfig.build.tsbuildinfo
+          ./node_modules/.bin/tsc -p tsconfig.build.json
+
+      - name: Verify root build output
+        run: |
+          echo "=== Checking root dist/ ==="
+          ls -la dist/ || echo "dist/ not found"
+          ls -la dist/types.d.ts || echo "dist/types.d.ts not found"
+          ls -la dist/utils/localize.d.ts || echo "dist/utils/localize.d.ts not found"
+          ls -la dist/utils/localize.js || echo "dist/utils/localize.js not found"
+
+      - name: Build demos/common
+        run: npm run build
+        working-directory: demos/common
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: ${{ secrets.AWS_REGION }}
+
+      - name: Create source archive
+        run: |
+          zip -r source.zip . -x '.git/*' -x '.github/*' -x 'node_modules/*'
+
+      - name: Upload to S3
+        run: |
+          aws s3 cp source.zip s3://${{ secrets.S3_BUCKET }}/vci/source.zip
+
+      - name: Start CodePipeline
+        run: |
+          aws codepipeline start-pipeline-execution --name ${{ secrets.PIPELINE_NAME }}

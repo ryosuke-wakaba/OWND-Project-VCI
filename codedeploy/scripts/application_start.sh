@@ -1,18 +1,19 @@
 #!/bin/bash
-source /root/.bashrc
-nvm use 18
+set -e
 
-if [[ "$DEPLOYMENT_GROUP_NAME" =~ ^identity ]]; then
-cd /srv/demos/proxy-vci/ || exit
-pm2 start "yarn start" --name backend
+cd /opt/app/demos/learning-vci || exit 1
+
+# Load environment variables
+if [ -f /opt/app/demos/learning-vci/.env ]; then
+    set -a
+    source /opt/app/demos/learning-vci/.env
+    set +a
 fi
 
-if [[ "$DEPLOYMENT_GROUP_NAME" =~ ^event ]]; then
-cd /srv/demos/event-certificate-manager/ || exit
-pm2 start "yarn start" --name backend
-fi
+# Start application with pm2 as ec2-user with logs in /var/log/pm2
+sudo -u ec2-user bash -c 'cd /opt/app/demos/learning-vci && pm2 start yarn --name "issuer" --output /var/log/pm2/out.log --error /var/log/pm2/error.log -- start'
 
-if [[ "$DEPLOYMENT_GROUP_NAME" =~ ^employee ]]; then
-cd /srv/demos/employee-vci/ || exit
-pm2 start "yarn start" --name backend
-fi
+# Save pm2 process list
+sudo -u ec2-user pm2 save
+
+echo "Application started successfully"
