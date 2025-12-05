@@ -3,7 +3,8 @@ import { PrivateJwk } from "elliptic-jwk";
 
 import store from "../store.js";
 import keyStore from "ownd-vci-common/dist/store/keyStore.js";
-import { issueFlatCredential } from "@ownd-project/ts-toolbox";
+import { issueCredentialCore } from "@ownd-project/ts-toolbox";
+import { DisclosureFrame } from "@meeco/sd-jwt";
 import { ErrorPayload, Result } from "ownd-vci/dist/types.js";
 
 const issueLearningCredential = async (
@@ -119,8 +120,28 @@ const issueLearningCredential = async (
     exp,
   };
 
+  // SD: Always のクレームのみをselective disclosureに
+  // SD: Never のクレームはJWTペイロードに直接含める
+  // 参照: docs/demos/learning-vci.md, SD-JWT Draft-22
+  const selectivelyDisclosableClaims = [
+    "family_name",
+    "given_name",
+    "learning_outcomes",
+    "assessment_grade",
+  ];
+  const disclosureFrame: DisclosureFrame = {
+    _sd: selectivelyDisclosableClaims.filter(
+      (name) => name in claims,
+    ) as string[],
+  };
+
   // Issue credential with x5c (if available) or jwk mode (if no certificate)
-  const credential = await issueFlatCredential(claims, issuerJwk, x5c);
+  const credential = await issueCredentialCore(
+    claims,
+    disclosureFrame,
+    issuerJwk,
+    x5c,
+  );
 
   // Log SD-JWT header for verification
   const headerBase64 = credential.split(".")[0];
