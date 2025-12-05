@@ -60,9 +60,14 @@
     "dev": "nodemon --exec 'tsc -p tsconfig.json && node dist/index.js' --ext ts --watch src",
     "test": "mocha --exit",
     "lint": "eslint  --ext .js --config .eslintrc.cjs",
-    "lint:prettier": "prettier --check ./src ./tests",
+    "lint:prettier": "prettier --check ./src",
     "fix": "npm run fix:eslint && npm run fix:prettier",
     "fix:eslint": "npm run lint --fix",
     "fix:prettier": "npm run lint:prettier --write"
+  },
+  "resolutions": {
+    "@types/koa": "^2.13.8",
+    "@types/koa-router": "^7.4.4",
+    "@types/koa-compose": "^3.2.5"
   }
 }

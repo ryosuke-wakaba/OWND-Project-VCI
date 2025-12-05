@@ -1,8 +1,9 @@
 #!/bin/bash
-source /root/.bashrc
-. ~/.nvm/nvm.sh
-nvm use 18
-# pm2のプロセスが存在するか確認
-if pm2 list | grep -qE "backend"; then
-    pm2 delete all
+
+# Stop application gracefully
+if sudo -u ec2-user pm2 list | grep -q "issuer"; then
+    sudo -u ec2-user pm2 stop issuer || true
+    sudo -u ec2-user pm2 delete issuer || true
 fi
+
+echo "Application stopped"
