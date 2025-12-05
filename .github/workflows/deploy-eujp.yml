@@ -33,6 +33,7 @@ jobs:
         run: |
           npm run fix
           npm run generate-json-schemas
+          rm -f tsconfig.build.tsbuildinfo
           ./node_modules/.bin/tsc -p tsconfig.build.json
 
       - name: Verify root build output
