@@ -342,7 +342,7 @@ export async function handleLearnerCredentialOfferDisplay(ctx: Koa.Context) {
           timeZone: "Asia/Tokyo",
         }),
         expiresAtUTC: expiresAt.toISOString(),
-        });
+      });
     } else {
       handleNotSuccessResult(result.error, ctx);
     }
@@ -361,7 +361,7 @@ export async function handleKeysList(ctx: Koa.Context) {
       await ctx.render("admin/keys", {
         title: "キーペア一覧",
         keys: result.payload,
-        });
+      });
     } else {
       ctx.status = 500;
       ctx.body = { error: "Failed to load keys" };
