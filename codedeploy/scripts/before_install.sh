@@ -14,5 +14,9 @@ if ! pm2 describe pm2-logrotate > /dev/null 2>&1; then
     pm2 set pm2-logrotate:retain 7
 fi
 
+# Create persistent data directory for SQLite database (outside /opt/app/)
+mkdir -p /var/lib/ownd-vci
+chown ec2-user:ec2-user /var/lib/ownd-vci
+
 # Clean up old deployment
 rm -rf /opt/app/* 2>/dev/null || true
