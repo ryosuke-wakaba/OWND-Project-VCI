@@ -42,35 +42,6 @@ REGION=$(curl -s -H "X-aws-ec2-metadata-token: $TOKEN" http://169.254.169.254/la
 echo "AWS Region: $REGION"
 
 #--------------------------------------------------------------
-# Download Certificates from S3
-#--------------------------------------------------------------
-echo "Downloading certificates from S3..."
-
-# S3 bucket for certificates (set via environment or default)
-CERTIFICATES_BUCKET="${CERTIFICATES_BUCKET:-ownd-eujp-experiment-certificates}"
-CERTIFICATES_PREFIX="${CERTIFICATES_PREFIX:-issuer}"
-
-# Create certificates directory
-mkdir -p /opt/app/demos/learning-vci/certs
-
-# Download certificates from S3
-aws s3 cp "s3://${CERTIFICATES_BUCKET}/${CERTIFICATES_PREFIX}/" /opt/app/demos/learning-vci/certs/ \
-  --recursive \
-  --region "$REGION" || echo "No certificates found in S3 (may be optional)"
-
-# List downloaded certificates
-if [ -d /opt/app/demos/learning-vci/certs ]; then
-  echo "Certificates directory contents:"
-  ls -la /opt/app/demos/learning-vci/certs/
-fi
-
-# Set proper ownership and permissions for certificates
-chown -R ec2-user:ec2-user /opt/app/demos/learning-vci/certs
-chmod 600 /opt/app/demos/learning-vci/certs/*.key 2>/dev/null || true
-chmod 600 /opt/app/demos/learning-vci/certs/*.pem 2>/dev/null || true
-chmod 644 /opt/app/demos/learning-vci/certs/*.cer 2>/dev/null || true
-
-#--------------------------------------------------------------
 # Generate .env from SSM Parameter Store
 #--------------------------------------------------------------
 echo "Generating .env from SSM Parameter Store..."
