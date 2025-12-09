@@ -1,9 +1,6 @@
 #!/bin/bash
 
-# Stop application gracefully
-if sudo -u ec2-user pm2 list | grep -q "issuer"; then
-    sudo -u ec2-user pm2 stop issuer || true
-    sudo -u ec2-user pm2 delete issuer || true
-fi
+# Stop all pm2 processes gracefully
+sudo -u ec2-user pm2 delete all || true
 
 echo "Application stopped"
