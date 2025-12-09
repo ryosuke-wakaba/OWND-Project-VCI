@@ -102,6 +102,18 @@
 -----END CERTIFICATE-----</pre>
       </div>
     </details>
+
+    <% if (!key.revokedAt) { %>
+    <div class="cert-actions">
+      <% if (index === 0) { %>
+      <a href="/admin/keys/<%= key.kid %>/add-parent-cert" class="btn btn-secondary btn-small">上位証明書を追加</a>
+      <% } else { %>
+      <form action="/admin/keys/<%= key.kid %>/remove-cert/<%= index %>" method="POST" style="display: inline;" onsubmit="return confirm('この証明書を削除しますか？');">
+        <button type="submit" class="btn btn-danger btn-small">この証明書を削除</button>
+      </form>
+      <% } %>
+    </div>
+    <% } %>
   </div>
   <% }); %>
 </div>
@@ -182,6 +194,15 @@
   background-color: #dc3545;
   color: white;
 }
+.btn-danger {
+  background-color: #dc3545;
+  color: white;
+  border-color: #dc3545;
+}
+.btn-danger:hover {
+  background-color: #c82333;
+  border-color: #bd2130;
+}
 .description-form {
   display: flex;
   gap: 0.5rem;
@@ -244,6 +265,11 @@
 }
 .cert-pem-details .code-block {
   margin-top: 0.5rem;
+}
+.cert-actions {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed #dee2e6;
 }
 .pem-container {
   position: relative;

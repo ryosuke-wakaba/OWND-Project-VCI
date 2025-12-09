@@ -10,7 +10,11 @@ import {
   generateRandomString,
 } from "ownd-vci/dist/utils/randomStringUtils.js";
 import { generatePreAuthCredentialOffer } from "ownd-vci/dist/oid4vci/CredentialOffer.js";
-import keys from "ownd-vci-common/dist/keys.js";
+import keys, {
+  appendCertificateChain,
+  removeParentCertificates,
+  removeCertificateAtIndex,
+} from "ownd-vci-common/dist/keys.js";
 import keyStore from "ownd-vci-common/dist/store/keyStore.js";
 import {
   getCertificatesInfo,
@@ -342,7 +346,7 @@ export async function handleLearnerCredentialOfferDisplay(ctx: Koa.Context) {
           timeZone: "Asia/Tokyo",
         }),
         expiresAtUTC: expiresAt.toISOString(),
-        });
+      });
     } else {
       handleNotSuccessResult(result.error, ctx);
     }
@@ -361,7 +365,7 @@ export async function handleKeysList(ctx: Koa.Context) {
       await ctx.render("admin/keys", {
         title: "キーペア一覧",
         keys: result.payload,
-        });
+      });
     } else {
       ctx.status = 500;
       ctx.body = { error: "Failed to load keys" };
@@ -595,6 +599,132 @@ export async function handleAdminIndex(ctx: Koa.Context) {
   });
 }
 
+export async function handleAddParentCertForm(ctx: Koa.Context) {
+  try {
+    const { kid } = ctx.params;
+    const keyPair = await keyStore.getEcKeyPair(kid);
+    if (!keyPair) {
+      ctx.status = 404;
+      ctx.body = { error: "Key not found" };
+      return;
+    }
+
+    const x509Chain = await keyStore.getX509Chain(kid);
+    if (!x509Chain || x509Chain.length === 0) {
+      ctx.status = 400;
+      ctx.body = { error: "No certificate registered for this key" };
+      return;
+    }
+
+    // Get leaf certificate info
+    let leafCertInfo = null;
+    try {
+      const leafPem =
+        CERT_PEM_PREAMBLE + "\n" + x509Chain[0] + "\n" + CERT_PEM_POSTAMBLE;
+      const certInfos = getCertificatesInfo([leafPem]);
+      if (certInfos.length > 0) {
+        leafCertInfo = certInfos[0];
+      }
+    } catch (e) {
+      console.error("Failed to parse leaf certificate:", e);
+    }
+
+    await ctx.render("admin/add-parent-cert", {
+      title: "上位証明書追加",
+      key: keyPair,
+      currentChainLength: x509Chain.length,
+      leafCertInfo,
+    });
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to load form" };
+  }
+}
+
+export async function handleAddParentCert(ctx: Koa.Context) {
+  try {
+    const { kid } = ctx.params;
+    const { certificatesPem } = ctx.request.body;
+
+    if (!certificatesPem || !certificatesPem.trim()) {
+      ctx.status = 400;
+      ctx.body = { error: "Certificate is required" };
+      return;
+    }
+
+    // Parse certificates from PEM
+    const certMatches = certificatesPem.match(
+      /-----BEGIN CERTIFICATE-----[\s\S]*?-----END CERTIFICATE-----/g,
+    );
+    if (!certMatches || certMatches.length === 0) {
+      ctx.status = 400;
+      ctx.body = { error: "No valid certificates found in input" };
+      return;
+    }
+
+    // Extract base64 content from each certificate
+    const certificates = certMatches.map((cert: string) =>
+      cert
+        .replace(/-----BEGIN CERTIFICATE-----/, "")
+        .replace(/-----END CERTIFICATE-----/, "")
+        .replace(/\s/g, ""),
+    );
+
+    const result = await appendCertificateChain({ kid, certificates });
+    if (result.ok) {
+      ctx.redirect(`/admin/keys/${encodeURIComponent(kid)}/detail`);
+    } else {
+      handleNotSuccessResult(result.error, ctx);
+    }
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to add parent certificates" };
+  }
+}
+
+export async function handleRemoveParentCerts(ctx: Koa.Context) {
+  try {
+    const { kid } = ctx.params;
+
+    const result = await removeParentCertificates(kid);
+    if (result.ok) {
+      ctx.redirect(`/admin/keys/${encodeURIComponent(kid)}/detail`);
+    } else {
+      handleNotSuccessResult(result.error, ctx);
+    }
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to remove parent certificates" };
+  }
+}
+
+export async function handleRemoveCert(ctx: Koa.Context) {
+  try {
+    const { kid, index } = ctx.params;
+    const certIndex = parseInt(index, 10);
+
+    if (isNaN(certIndex) || certIndex < 1) {
+      ctx.status = 400;
+      ctx.body = { error: "Invalid certificate index" };
+      return;
+    }
+
+    const result = await removeCertificateAtIndex(kid, certIndex);
+    if (result.ok) {
+      ctx.redirect(`/admin/keys/${encodeURIComponent(kid)}/detail`);
+    } else {
+      handleNotSuccessResult(result.error, ctx);
+    }
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to remove certificate" };
+  }
+}
+
 export default {
   handleAdminIndex,
   handleNewLearner,
@@ -616,4 +746,8 @@ export default {
   handleKeyCertificateIssue,
   handleKeyImportForm,
   handleKeyImport,
+  handleAddParentCertForm,
+  handleAddParentCert,
+  handleRemoveParentCerts,
+  handleRemoveCert,
 };

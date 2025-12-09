@@ -167,6 +167,39 @@ const init = () => {
     },
   );
 
+  router.get(
+    "/admin/keys/:kid/add-parent-cert",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleAddParentCertForm(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/keys/:kid/add-parent-cert",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleAddParentCert(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/keys/:kid/remove-parent-certs",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleRemoveParentCerts(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/keys/:kid/remove-cert/:index",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleRemoveCert(ctx);
+    },
+  );
+
   return router;
 };
 

@@ -1,0 +1,162 @@
+<nav class="breadcrumb">
+  <a href="/admin">トップ</a> &gt; <a href="/admin/keys">キーペア管理</a> &gt; <a href="/admin/keys/<%= key.kid %>/detail">詳細</a> &gt; <span>上位証明書追加</span>
+</nav>
+
+<h2>上位証明書の追加</h2>
+
+<div class="info-card">
+  <h3>対象キー</h3>
+  <table class="detail-table">
+    <tr>
+      <th>キーID</th>
+      <td><%= key.kid %></td>
+    </tr>
+    <tr>
+      <th>現在のチェーン長</th>
+      <td><%= currentChainLength %> 証明書</td>
+    </tr>
+    <% if (leafCertInfo) { %>
+    <tr>
+      <th>リーフ証明書 Subject</th>
+      <td>
+        <% if (leafCertInfo.subject.commonName) { %>CN=<%= leafCertInfo.subject.commonName %><% } %>
+        <% if (leafCertInfo.subject.organizationName) { %>, O=<%= leafCertInfo.subject.organizationName %><% } %>
+      </td>
+    </tr>
+    <tr>
+      <th>リーフ証明書 Issuer</th>
+      <td>
+        <% if (leafCertInfo.issuer.commonName) { %>CN=<%= leafCertInfo.issuer.commonName %><% } %>
+        <% if (leafCertInfo.issuer.organizationName) { %>, O=<%= leafCertInfo.issuer.organizationName %><% } %>
+      </td>
+    </tr>
+    <% } %>
+  </table>
+</div>
+
+<form action="/admin/keys/<%= key.kid %>/add-parent-cert" method="POST" class="form-card">
+  <div class="form-group">
+    <label for="certificatesPem">上位証明書 (PEM形式) <span class="required">*</span></label>
+    <textarea id="certificatesPem" name="certificatesPem" required rows="12"
+              placeholder="-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----
+-----BEGIN CERTIFICATE-----
+...
+-----END CERTIFICATE-----"></textarea>
+    <small class="form-text">中間証明書→ルート証明書の順にPEM形式で入力してください（複数可）</small>
+  </div>
+
+  <div class="form-actions">
+    <a href="/admin/keys/<%= key.kid %>/detail" class="btn btn-secondary">キャンセル</a>
+    <button type="submit" class="btn btn-primary">追加</button>
+  </div>
+</form>
+
+<div class="help-card">
+  <h3>ヘルプ</h3>
+  <p>既存のリーフ証明書に対して、上位の証明書チェーンを追加できます。</p>
+  <ul>
+    <li><strong>入力順序:</strong> 中間証明書（リーフに近い順）→ ルート証明書</li>
+    <li><strong>形式:</strong> <code>-----BEGIN CERTIFICATE-----</code> 形式のPEM</li>
+    <li>複数の証明書を連続して貼り付けることができます</li>
+  </ul>
+</div>
+
+<style>
+.info-card {
+  background: #e7f3ff;
+  border: 1px solid #b6d4fe;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-bottom: 1.5rem;
+  max-width: 700px;
+}
+.info-card h3 {
+  margin-top: 0;
+  font-size: 1rem;
+  color: #084298;
+}
+.detail-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.detail-table th {
+  text-align: left;
+  width: 180px;
+  padding: 0.4rem 0;
+  color: #0a58ca;
+  font-weight: normal;
+  font-size: 0.9em;
+}
+.detail-table td {
+  padding: 0.4rem 0;
+  font-size: 0.9em;
+}
+.form-card {
+  background: #f8f9fa;
+  border-radius: 8px;
+  padding: 1.5rem;
+  max-width: 700px;
+}
+.form-group {
+  margin-bottom: 1rem;
+}
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+}
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-family: monospace;
+  font-size: 0.9rem;
+}
+.form-group textarea:focus {
+  outline: none;
+  border-color: #80bdff;
+  box-shadow: 0 0 0 0.2rem rgba(0,123,255,.25);
+}
+.form-text {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: 0.85em;
+  color: #6c757d;
+}
+.required {
+  color: #dc3545;
+}
+.form-actions {
+  margin-top: 1.5rem;
+  display: flex;
+  gap: 0.5rem;
+  justify-content: flex-end;
+}
+.help-card {
+  background: #fff3cd;
+  border: 1px solid #ffeeba;
+  border-radius: 8px;
+  padding: 1rem 1.5rem;
+  margin-top: 1.5rem;
+  max-width: 700px;
+}
+.help-card h3 {
+  margin-top: 0;
+  font-size: 1rem;
+  color: #856404;
+}
+.help-card p, .help-card ul {
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+  color: #856404;
+}
+.help-card code {
+  background: rgba(0,0,0,0.1);
+  padding: 0.1rem 0.3rem;
+  border-radius: 3px;
+  font-size: 0.85em;
+}
+</style>

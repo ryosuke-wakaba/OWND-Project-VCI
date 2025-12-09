@@ -576,6 +576,118 @@ export const importKey = async (
   }
 };
 
+interface AppendCertificateChainParams {
+  kid: string;
+  certificates: string[];
+}
+
+export const appendCertificateChain = async (
+  params: AppendCertificateChainParams,
+): Promise<Result<{ chainLength: number }, NotSuccessResult>> => {
+  const { kid, certificates } = params;
+
+  if (!kid || certificates.length === 0) {
+    return INVALID_PARAMETER_ERROR;
+  }
+
+  try {
+    // Get existing certificate chain
+    const existingChain = await keyStore.getX509Chain(kid);
+    if (!existingChain || existingChain.length === 0) {
+      return NOT_FOUND_ERROR;
+    }
+
+    // Append new certificates to the chain
+    const newChain = [...existingChain, ...certificates];
+
+    // Update the certificate chain
+    await keyStore.updateX509Certificate(kid, JSON.stringify(newChain));
+
+    return { ok: true, payload: { chainLength: newChain.length } };
+  } catch (err) {
+    console.error(err);
+    if (err instanceof Error) {
+      const { name, message } = err;
+      return toInternalError(name, message);
+    }
+    return UNKNOWN_ERROR;
+  }
+};
+
+export const removeParentCertificates = async (
+  kid: string,
+): Promise<Result<{ chainLength: number }, NotSuccessResult>> => {
+  if (!kid) {
+    return INVALID_PARAMETER_ERROR;
+  }
+
+  try {
+    // Get existing certificate chain
+    const existingChain = await keyStore.getX509Chain(kid);
+    if (!existingChain || existingChain.length === 0) {
+      return NOT_FOUND_ERROR;
+    }
+
+    if (existingChain.length === 1) {
+      // Only leaf certificate exists, nothing to remove
+      return { ok: true, payload: { chainLength: 1 } };
+    }
+
+    // Keep only the first certificate (leaf/end-entity)
+    const newChain = [existingChain[0]];
+
+    // Update the certificate chain
+    await keyStore.updateX509Certificate(kid, JSON.stringify(newChain));
+
+    return { ok: true, payload: { chainLength: newChain.length } };
+  } catch (err) {
+    console.error(err);
+    if (err instanceof Error) {
+      const { name, message } = err;
+      return toInternalError(name, message);
+    }
+    return UNKNOWN_ERROR;
+  }
+};
+
+export const removeCertificateAtIndex = async (
+  kid: string,
+  index: number,
+): Promise<Result<{ chainLength: number }, NotSuccessResult>> => {
+  if (!kid || index < 1) {
+    // index 0 is the leaf certificate and cannot be removed
+    return INVALID_PARAMETER_ERROR;
+  }
+
+  try {
+    // Get existing certificate chain
+    const existingChain = await keyStore.getX509Chain(kid);
+    if (!existingChain || existingChain.length === 0) {
+      return NOT_FOUND_ERROR;
+    }
+
+    if (index >= existingChain.length) {
+      return INVALID_PARAMETER_ERROR;
+    }
+
+    // Remove the certificate at the specified index and all certificates after it
+    // (because removing an intermediate cert invalidates all certs above it in the chain)
+    const newChain = existingChain.slice(0, index);
+
+    // Update the certificate chain
+    await keyStore.updateX509Certificate(kid, JSON.stringify(newChain));
+
+    return { ok: true, payload: { chainLength: newChain.length } };
+  } catch (err) {
+    console.error(err);
+    if (err instanceof Error) {
+      const { name, message } = err;
+      return toInternalError(name, message);
+    }
+    return UNKNOWN_ERROR;
+  }
+};
+
 export default {
   genKey,
   getAllKeys,
@@ -586,4 +698,7 @@ export default {
   createSelfCert,
   signLeafCert,
   registerCert,
+  appendCertificateChain,
+  removeParentCertificates,
+  removeCertificateAtIndex,
 };
