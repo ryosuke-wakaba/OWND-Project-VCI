@@ -161,6 +161,20 @@ export const updateX509CertificateDescription = async (
   }
 };
 
+export const updateX509Certificate = async (kid: string, x509cert: string) => {
+  try {
+    const db = await store.openDb();
+    return db.run(
+      `UPDATE ${TBL_NM_EC_KEY_X509_CERTIFICATE} SET x509cert = ? WHERE kid = ?`,
+      x509cert,
+      kid,
+    );
+  } catch (err) {
+    console.error(err);
+    throw err;
+  }
+};
+
 export const getEcKeyPair = async (kid: string) => {
   try {
     const db = await store.openDb();
@@ -264,6 +278,7 @@ export default {
   getAllKeyPairs,
   revokeECKeyPair,
   updateX509CertificateDescription,
+  updateX509Certificate,
   getX509Chain,
   getX509CertificateData,
 };
