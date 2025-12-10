@@ -100,44 +100,7 @@ Basic認証:
 
 ---
 
-## 実装状況
-
-### Phase 1: プロジェクト構造作成 ✅
-- [x] `demos/learning-vci/` ディレクトリ作成
-- [x] `package.json` 作成
-- [x] `tsconfig.json` 作成
-- [x] 基本ディレクトリ構造作成
-
-### Phase 2: データモデル実装 ✅
-- [x] `src/store.ts` - 学習者データストア
-- [x] DDL定義（learners テーブル）
-
-### Phase 3: メタデータ実装 ✅
-- [x] `src/metadata/credentialConfigs.ts` - Learning Credential設定
-- [x] `src/metadata/MetadataRepository.ts` - メタデータリポジトリ
-
-### Phase 4: Credential発行ロジック ✅
-- [x] `src/logic/learningCredential.ts` - クレデンシャル発行
-- [x] `src/logic/vciConfigProvider.ts` - VCI設定
-- [x] `src/logic/credentialsConfigProvider.ts` - クレデンシャル設定
-- [x] `src/logic/nonceConfigProvider.ts` - Nonce設定
-
-### Phase 5: ルーティング ✅
-- [x] `src/routes/vci/routes.ts` - VCIエンドポイント
-- [x] `src/routes/admin/routes.ts` - 管理API
-- [x] `src/routes/admin/routesHandler.ts` - 管理APIハンドラ
-
-### Phase 6: アプリケーション統合 ✅
-- [x] `src/app.ts` - Koaアプリ
-- [x] `src/index.ts` - エントリポイント
-- [x] 環境変数設定（`.env.sample`）
-
-### Phase 7: テスト・動作確認 ✅
-- [x] TypeScriptコンパイル確認
-
----
-
-## ファイル構成（予定）
+## ファイル構成
 
 ```
 demos/learning-vci/
@@ -145,24 +108,38 @@ demos/learning-vci/
 ├── tsconfig.json
 ├── .env.sample
 ├── src/
-│   ├── index.ts
-│   ├── app.ts
-│   ├── store.ts
+│   ├── index.ts                 # エントリポイント
+│   ├── app.ts                   # Koaアプリケーション設定
+│   ├── store.ts                 # 学習者データストア
 │   ├── logic/
-│   │   ├── learningCredential.ts
-│   │   ├── vciConfigProvider.ts
-│   │   ├── credentialsConfigProvider.ts
-│   │   └── nonceConfigProvider.ts
+│   │   ├── learningCredential.ts      # クレデンシャル発行ロジック
+│   │   ├── vciConfigProvider.ts       # VCI設定プロバイダ
+│   │   ├── credentialsConfigProvider.ts # クレデンシャル設定
+│   │   └── nonceConfigProvider.ts     # Nonce設定
 │   ├── metadata/
-│   │   ├── credentialConfigs.ts
-│   │   └── MetadataRepository.ts
+│   │   ├── credentialConfigs.ts       # Learning Credential定義
+│   │   └── MetadataRepository.ts      # メタデータリポジトリ
 │   └── routes/
 │       ├── vci/
-│       │   └── routes.ts
+│       │   └── routes.ts              # VCIエンドポイント
 │       └── admin/
-│           ├── routes.ts
-│           └── routesHandler.ts
-└── tests/
+│           ├── routes.ts              # 管理画面ルート定義
+│           └── routesHandler.ts       # 管理画面ハンドラ
+└── views/
+    ├── layout.ejs                     # 共通レイアウト
+    └── admin/
+        ├── index.ejs                  # 管理画面トップ
+        ├── learners.ejs               # 学習者一覧
+        ├── learner-new.ejs            # 学習者新規登録
+        ├── learner-edit.ejs           # 学習者編集
+        ├── learner-offer.ejs          # Credential Offer生成
+        ├── credential-offer.ejs       # Credential Offer表示（QRコード）
+        ├── keys.ejs                   # キーペア一覧
+        ├── key-new.ejs                # キーペア新規登録
+        ├── key-detail.ejs             # キーペア詳細
+        ├── key-import.ejs             # キーペアインポート
+        ├── key-certificate.ejs        # 証明書発行
+        └── add-parent-cert.ejs        # 上位証明書追加
 ```
 
 ---
@@ -172,3 +149,91 @@ demos/learning-vci/
 - [Learning Credential移行ガイド](/Users/ryousuke/repositories/ownd/ipa2025/OWND-Project-VP/docs/archive/learning-credential-migration.md)
 - [employee-vci](./employee-vci.md)
 - EUDI-Wallet-NiScy_JP EU pilot_v0.10.docx
+
+---
+
+## キーペア管理機能
+
+### 概要
+管理画面からIssuerキーペア（署名鍵）を管理し、クレデンシャル発行時に署名鍵を選択できる。
+
+### 管理画面
+
+| パス | 画面 | 説明 |
+|------|------|------|
+| `/admin/keys` | 鍵一覧 | 登録済み鍵ペアの一覧表示 |
+| `/admin/keys/new` | 鍵新規登録 | EC鍵ペアの生成（P-256/secp256k1） |
+| `/admin/keys/import` | 鍵インポート | PEM形式の秘密鍵+証明書のインポート |
+| `/admin/keys/:kid` | 鍵詳細 | 鍵情報、証明書チェーン、説明の表示・編集 |
+| `/admin/keys/:kid/certificate` | 証明書発行 | 自己署名証明書またはリーフ証明書の発行 |
+| `/admin/keys/:kid/add-parent-cert` | 上位証明書追加 | 証明書チェーンへの上位証明書追加 |
+
+### 証明書チェーン表示
+
+キーペア詳細画面では、証明書チェーンを階層的に表示する。
+
+| 位置 | ラベル | 説明 |
+|------|--------|------|
+| 先頭 | End Entity | 対象キーの証明書 |
+| 中間 | Intermediate | 中間証明書（存在する場合） |
+| 末尾 | Root | ルート証明書 |
+
+上位証明書は**リーフ証明書として発行した場合**のみ表示される。自己署名証明書の場合は単一証明書のみ。
+
+### 上位証明書の追加機能
+
+外部からインポートしたリーフ証明書に対して、後から上位証明書（中間証明書・ルート証明書）を追加できる。
+
+**画面**: `/admin/keys/:kid/add-parent-cert`
+
+**入力**: 上位証明書のPEM形式テキスト（複数証明書対応、中間証明書→ルート証明書の順で入力）
+
+**処理**:
+1. 既存の証明書チェーンを取得
+2. 入力された上位証明書をパース
+3. 既存チェーン + 新規上位証明書でチェーンを更新
+
+使用関数: `appendCertificateChain` (keys.ts)
+
+### 署名鍵選択機能
+
+クレデンシャル発行時に、使用する署名鍵を選択できる。
+
+**選択画面**: `/admin/learners/:id/offer`（Credential Offer生成画面）
+
+**署名鍵の決定ロジック**:
+1. 証明書がある鍵 → `x5c`方式（証明書チェーンをヘッダーに含む）
+2. 証明書がない鍵 → `jwk`方式（公開鍵をヘッダーに含む）
+
+**データフロー**:
+```
+Offer生成 → auth_code + auth_code_metadata(signingKeyKid)
+         → Access Token発行
+         → Credential発行（signingKeyKidを参照）
+```
+
+### 既知の制約
+
+VCIプロトコルのアーキテクチャ上、credential発行関数は`sub`（学習者ID）のみを受け取る。そのため、同一学習者に対して複数のオファーが並行して存在する場合、最新のオファーの署名鍵が使用される。
+
+**暫定対応**: `getLatestSigningKeyKidForLearner(learnerId)` 関数で最新の署名鍵を取得。
+
+---
+
+## マイグレーション
+
+既存DBを使用している場合、以下のSQLを実行する必要がある:
+
+```sql
+-- 証明書の説明カラム追加
+ALTER TABLE ec_key_x509_certificate ADD COLUMN description VARCHAR(255) DEFAULT NULL;
+
+-- 署名鍵選択用メタデータテーブル追加
+CREATE TABLE auth_code_metadata (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  authCodeId INTEGER UNIQUE,
+  signingKeyKid VARCHAR(255),
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  FOREIGN KEY (authCodeId) REFERENCES auth_codes(id)
+);
+```

@@ -11,6 +11,7 @@
 - [`src/store.ts`](../../demos/common/src/store.ts) - SQLiteベースのストア
 - [`src/store/keyStore.ts`](../../demos/common/src/store/keyStore.ts) - 署名鍵管理
 - [`src/store/authStore.ts`](../../demos/common/src/store/authStore.ts) - 認可・認証データ管理
+- [`src/keys.ts`](../../demos/common/src/keys.ts) - 鍵・証明書操作ロジック
 - [`src/routes/admin/`](../../demos/common/src/routes/admin/) - 管理API共通実装
 - [`src/routes/common.ts`](../../demos/common/src/routes/common.ts) - 共通ルーティング
 
@@ -18,7 +19,9 @@
 
 ## データモデル
 
-### ER図
+### 鍵管理（keyStore）
+
+#### ER図
 
 ```
 ┌─────────────────────┐
@@ -35,19 +38,20 @@
 └──────────┬──────────┘
            │ 1
            │
-           │ 0..*
+           │ 0..1
 ┌──────────▼──────────┐
 │ec_key_x509_certificate│
 ├─────────────────────┤
 │   kid (FK)          │
 │   x509cert          │
+│   description       │
 │   createdAt         │
 └─────────────────────┘
 ```
 
-### テーブル定義
+#### テーブル定義
 
-#### ec_key_pairs
+##### ec_key_pairs
 署名用EC鍵ペアを格納。
 
 | カラム | 型 | 説明 |
@@ -61,25 +65,30 @@
 | createdAt | DATETIME | 作成日時 |
 | revokedAt | DATETIME | 失効日時（NULL=有効） |
 
-#### ec_key_x509_certificate
+##### ec_key_x509_certificate
 鍵に紐づくX.509証明書チェーン。
 
 | カラム | 型 | 説明 |
 |--------|------|------|
 | kid | VARCHAR(80) | 鍵識別子（FK → ec_key_pairs） |
 | x509cert | VARCHAR(8192) | 証明書チェーン（JSON配列） |
+| description | VARCHAR(255) | 証明書の説明（NULL許可） |
 | createdAt | DATETIME | 作成日時 |
 
-### 主要操作
+#### 主要操作（keyStore）
 
 | 関数 | 説明 |
 |------|------|
 | `insertECKeyPair` | 鍵ペアを登録 |
 | `getEcKeyPair` | kidで鍵ペアを取得 |
 | `getLatestKeyPair` | 最新の有効な鍵ペア（+証明書）を取得 |
+| `getAllKeyPairs` | 全鍵ペア一覧を取得（証明書情報含む） |
 | `revokeECKeyPair` | 鍵ペアを失効 |
-| `insertEcKeyX509Certificate` | X.509証明書を登録 |
+| `insertEcKeyX509Certificate` | X.509証明書を登録（description対応） |
 | `getX509Chain` | 証明書チェーンを取得 |
+| `getX509CertificateData` | 証明書データと説明を取得 |
+| `updateX509Certificate` | 証明書チェーンを更新 |
+| `updateX509CertificateDescription` | 証明書の説明を更新 |
 
 ---
 
@@ -102,16 +111,16 @@
 │   usedAt            │
 └──────────┬──────────┘
            │ 1
-           │
-           │ 0..1
-┌──────────▼──────────┐
-│   access_tokens     │
-├─────────────────────┤
-│ * id (PK)           │
-│   token (UNIQUE)    │
-│   expiresIn         │
-│   authorized_code_id│
-│   createdAt         │
+           ├──────────────────┐
+           │ 0..1             │ 0..1
+┌──────────▼──────────┐  ┌────▼────────────────┐
+│   access_tokens     │  │  auth_code_metadata │
+├─────────────────────┤  ├─────────────────────┤
+│ * id (PK)           │  │ * id (PK)           │
+│   token (UNIQUE)    │  │   authCodeId (FK)   │
+│   expiresIn         │  │   signingKeyKid     │
+│   authorized_code_id│  │   createdAt         │
+│   createdAt         │  └─────────────────────┘
 └─────────────────────┘
 
 ┌─────────────────────┐
@@ -152,6 +161,16 @@ Access Tokenを格納。
 | authorized_code_id | INTEGER | FK → auth_codes.id |
 | createdAt | DATETIME | 作成日時 |
 
+##### auth_code_metadata
+認可コードに紐づくメタデータ（署名鍵の指定など）を格納。
+
+| カラム | 型 | 説明 |
+|--------|------|------|
+| id | INTEGER | 主キー（自動採番） |
+| authCodeId | INTEGER | 認可コードID（FK → auth_codes.id, UNIQUE） |
+| signingKeyKid | VARCHAR(255) | 署名鍵の識別子 |
+| createdAt | DATETIME | 作成日時 |
+
 ##### c_nonces
 c_nonce（Client Nonce）を格納。
 
@@ -162,7 +181,7 @@ c_nonce（Client Nonce）を格納。
 | expired_in | INTEGER | 有効期限（秒） |
 | createdAt | DATETIME | 作成日時（Unix timestamp） |
 
-#### 主要操作
+#### 主要操作（authStore）
 
 | 関数 | 説明 |
 |------|------|
@@ -174,6 +193,66 @@ c_nonce（Client Nonce）を格納。
 | `addCNonce` | c_nonceを登録 |
 | `getCNonce` | c_nonceを取得 |
 | `refreshNonce` | 新しいc_nonceを発行 |
+| `addAuthCodeMetadata` | 認可コードメタデータ（署名鍵指定）を登録 |
+| `getAuthCodeMetadata` | 認可コードIDでメタデータを取得 |
+| `getAuthCodeMetadataByCode` | 認可コードでメタデータを取得 |
+
+---
+
+## 鍵・証明書操作ロジック（keys.ts）
+
+ビジネスロジックを提供する関数群。keyStoreをラップし、バリデーションや証明書操作を行う。
+
+### 主要関数
+
+| 関数 | 説明 |
+|------|------|
+| `genKey` | 新規EC鍵ペアを生成 |
+| `getAllKeys` | 全鍵情報を取得（証明書有無、説明含む） |
+| `getKey` | kidで公開鍵を取得 |
+| `importKey` | PEM形式の秘密鍵+証明書をインポート |
+| `revokeKey` | 鍵を失効 |
+| `createCsr` | CSRを生成（CA用/通常用） |
+| `createSelfCert` | 自己署名証明書を作成 |
+| `signLeafCert` | リーフ証明書を発行（CA鍵で署名） |
+| `registerCert` | 証明書チェーンを登録 |
+| `appendCertificateChain` | 既存チェーンに上位証明書を追加 |
+| `removeParentCertificates` | 上位証明書をすべて削除（リーフのみ残す） |
+| `removeCertificateAtIndex` | 指定インデックス以降の証明書を削除 |
+
+### 証明書チェーン操作
+
+#### appendCertificateChain
+
+既存の証明書チェーンに上位証明書（中間証明書・ルート証明書）を追加する。
+
+```typescript
+appendCertificateChain({
+  kid: string,           // 鍵識別子
+  certificates: string[] // 追加する上位証明書（Base64形式）
+}): Promise<Result<{ chainLength: number }, NotSuccessResult>>
+```
+
+**ユースケース**: 外部からインポートしたリーフ証明書に、後から上位証明書を追加する場合。
+
+#### removeParentCertificates
+
+証明書チェーンからリーフ証明書以外を削除する。
+
+```typescript
+removeParentCertificates(kid: string): Promise<Result<{ chainLength: number }, NotSuccessResult>>
+```
+
+#### removeCertificateAtIndex
+
+指定インデックス以降の証明書を削除する（インデックス0のリーフ証明書は削除不可）。
+
+```typescript
+removeCertificateAtIndex(
+  kid: string,
+  index: number  // 1以上
+): Promise<Result<{ chainLength: number }, NotSuccessResult>>
+```
 
 ---
 
