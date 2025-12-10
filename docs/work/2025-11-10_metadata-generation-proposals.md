@@ -1,5 +1,20 @@
 # OpenID Credential Issuer Metadata 生成方式の提案
 
+> **実装進捗状況** (2025-12-10 更新)
+>
+> | 方式 | 実装状況 |
+> |------|---------|
+> | **提案1: TypeScript定義オブジェクト方式** | ✅ employee-vci, learning-vci で実装済み |
+> | 提案2: 環境変数+テンプレート方式 | ❌ 未実装 |
+> | 提案3: データベース駆動方式 | ❌ 未実装 |
+> | 提案4: ハイブリッド方式 | ❌ 未実装 |
+> | 提案5: ビルド時生成方式 | ❌ 未実装 |
+>
+> **備考**: 推奨方式である「TypeScript定義オブジェクト方式」が employee-vci と learning-vci で採用済み。
+> event-certificate-manager, participation-cert-vci, proxy-vci は旧方式（JSONファイル読み込み）のまま。
+
+---
+
 ## 現在の方式（ファイル読み込み方式）
 
 ### 実装
@@ -612,6 +627,27 @@ for (const env of environments) {
 ---
 
 ## 移行計画例（提案1への移行）
+
+> **進捗状況** (2025-12-10 更新)
+>
+> | Phase | 状況 | 備考 |
+> |-------|------|------|
+> | Phase 1: 準備 | ✅ 完了 | `src/metadata/IMetadataRepository.ts` 作成済み |
+> | Phase 2: 実装 | ✅ 部分完了 | employee-vci, learning-vci で実装済み |
+> | Phase 3: テスト | ✅ 部分完了 | 実装済みデモでテスト済み |
+> | Phase 4: 切り替え | ⚠️ 部分完了 | 一部デモは旧方式のまま |
+>
+> **実装済みファイル**:
+> - `src/metadata/IMetadataRepository.ts` - インターフェース定義
+> - `demos/employee-vci/src/metadata/MetadataRepository.ts` - 実装
+> - `demos/employee-vci/src/metadata/credentialConfigs.ts` - クレデンシャル設定
+> - `demos/learning-vci/src/metadata/MetadataRepository.ts` - 実装
+> - `demos/learning-vci/src/metadata/credentialConfigs.ts` - クレデンシャル設定
+>
+> **未移行デモ**:
+> - event-certificate-manager（JSONファイル方式）
+> - participation-cert-vci（JSONファイル方式）
+> - proxy-vci（JSONファイル方式）
 
 ### Phase 1: 準備
 ```bash

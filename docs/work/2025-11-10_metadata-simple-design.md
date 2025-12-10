@@ -1,5 +1,28 @@
 # メタデータ生成のシンプル設計
 
+> **実装進捗状況** (2025-12-10 更新)
+>
+> このシンプル設計が**採用され、実装が完了**しています。
+>
+> | タスク | 状況 | 備考 |
+> |-------|------|------|
+> | Step 1: インターフェース定義 | ✅ 完了 | `src/metadata/IMetadataRepository.ts` |
+> | Step 2: employee-vci固有実装 | ✅ 完了 | `demos/employee-vci/src/metadata/` |
+> | Step 3: commonルートハンドラ更新 | ✅ 完了 | `demos/common/src/routes/vci/routesHandler.ts` |
+> | Step 4: employee-vci側ルート設定更新 | ✅ 完了 | `demos/employee-vci/src/routes/vci/routes.ts` |
+> | Step 5: 既存JSONファイル削除 | ✅ 完了 | employee-vci, learning-vci では削除済み |
+> | Step 6: テスト | ✅ 完了 | テスト通過 |
+>
+> **追加実装**:
+> - learning-vci でも同様に実装済み
+>
+> **未移行デモ** (旧JSONファイル方式のまま):
+> - event-certificate-manager
+> - participation-cert-vci
+> - proxy-vci
+
+---
+
 ## 設計方針
 
 - **src/**: 汎用的なインターフェースとユーティリティのみ
@@ -518,28 +541,36 @@ demos/
 ## 移行タスク
 
 ### Step 1: インターフェース定義（src/）
-- `src/metadata/IMetadataRepository.ts` 作成
+- ✅ `src/metadata/IMetadataRepository.ts` 作成 → **完了**
 
 ### Step 2: employee-vci固有実装
-- `demos/employee-vci/src/metadata/credentialConfigs.ts` 作成
-- `demos/employee-vci/src/metadata/MetadataRepository.ts` 作成
+- ✅ `demos/employee-vci/src/metadata/credentialConfigs.ts` 作成 → **完了**
+- ✅ `demos/employee-vci/src/metadata/MetadataRepository.ts` 作成 → **完了**
 
 ### Step 3: commonルートハンドラ更新
-- `demos/common/src/routes/vci/routesHandler.ts` 更新
-- `demos/common/src/routes/vci/routes.ts` 更新
+- ✅ `demos/common/src/routes/vci/routesHandler.ts` 更新 → **完了**
+- ✅ `demos/common/src/routes/vci/routes.ts` 更新 → **完了**
 
 ### Step 4: employee-vci側のルート設定更新
-- `demos/employee-vci/src/routes/vci/routes.ts` 更新
+- ✅ `demos/employee-vci/src/routes/vci/routes.ts` 更新 → **完了**
 
 ### Step 5: 既存のJSONファイル削除
-- `demos/employee-vci/metadata/dev/credential_issuer_metadata.json` 削除
-- `demos/employee-vci/metadata/prod/credential_issuer_metadata.json` 削除
+- ✅ `demos/employee-vci/metadata/` 削除 → **完了**
 
 ### Step 6: テスト
-- 既存テストの実行
-- 新規ユニットテスト追加
+- ✅ 既存テストの実行 → **完了**
+- ⚠️ 新規ユニットテスト追加 → **一部完了**
 
 **想定工数**: 半日〜1日
+
+---
+
+## 追加で実装したデモ
+
+### learning-vci
+- ✅ `demos/learning-vci/src/metadata/credentialConfigs.ts` 作成
+- ✅ `demos/learning-vci/src/metadata/MetadataRepository.ts` 作成
+- ✅ `demos/learning-vci/src/routes/vci/routes.ts` 更新
 
 ---
 
