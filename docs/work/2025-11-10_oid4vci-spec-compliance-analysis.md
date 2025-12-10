@@ -1,5 +1,20 @@
 # OID4VCI仕様準拠性分析
 
+> **実装進捗状況** (2025-12-10 更新)
+>
+> | 優先度 | 項目 | 状況 |
+> |--------|------|------|
+> | **高** | `nonce_endpoint` の追加 | ✅ 実装済み |
+> | **高** | `scope` を HAIP準拠時に必須化 | ✅ 実装済み |
+> | **高** | `cryptographic_binding_methods_supported` を必須化 | ✅ 実装済み |
+> | **高** | `credential_signing_alg_values_supported` を必須化 | ✅ 実装済み |
+> | **中** | `IssuerDisplay` に `background_color` / `text_color` 追加 | ✅ 実装済み |
+> | **低** | Signed Metadata 実装 | ❌ 未実装 |
+>
+> **結論**: HAIP準拠に必要な重要項目は全て実装済み。
+
+---
+
 ## 概要
 
 このドキュメントは、OWND-Project-VCIの現行実装と最新のOID4VCI仕様（v1.0 / HAIP draft-04）との差異を分析したものです。
@@ -181,27 +196,29 @@ export interface CredentialResponseEncryption {
 
 ### 優先度: 高（HAIP準拠に必須）
 
-1. ✅ **`nonce_endpoint`の追加**
-   - BaseIssuerMetadataに追加
-   - MetadataRepositoryで設定
+1. ✅ **`nonce_endpoint`の追加** → **実装済み**
+   - BaseIssuerMetadataに追加 → `src/oid4vci/types/protocol.types.ts`
+   - MetadataRepositoryで設定 → `demos/employee-vci/src/metadata/MetadataRepository.ts`
 
-2. ✅ **`scope`をHAIP準拠時は必須に**
-   - HAIP用の型定義を作成するか、既存の型定義を修正
+2. ✅ **`scope`をHAIP準拠時は必須に** → **実装済み**
+   - 型定義に含まれている → `protocol.types.ts`
+   - 各credentialConfigsで設定 → `demos/*/src/metadata/credentialConfigs.ts`
 
-3. ✅ **`cryptographic_binding_methods_supported`と`credential_signing_alg_values_supported`を必須に**
-   - オプショナル（?）を削除
+3. ✅ **`cryptographic_binding_methods_supported`と`credential_signing_alg_values_supported`を必須に** → **実装済み**
+   - 型定義で必須フィールドとして定義
 
 ### 優先度: 中
 
 4. ⚠️ **`token_endpoint`の追加**
    - 将来的にAuthorization Serverを分離する場合に必要
+   - 現状は未実装（Authorization Serverが同一サーバーのため）
 
-5. ⚠️ **`IssuerDisplay`への`background_color`/`text_color`追加**
-   - 現在の実装で既に使用しているため、型定義に含めるべき
+5. ✅ **`IssuerDisplay`への`background_color`/`text_color`追加** → **実装済み**
+   - 型定義に追加済み → `protocol.types.ts`
 
 ### 優先度: 低
 
-6. 📝 **Signed Metadata実装**
+6. 📝 **Signed Metadata実装** → **未実装**
    - 高セキュリティ要件のエコシステムで必要
    - 現時点では優先度低
 
@@ -229,14 +246,14 @@ export interface CredentialResponseEncryption {
 
 ## 7. まとめ
 
-### 7.1 重大な差異
+### 7.1 重大な差異 → **全て解消済み**
 
-1. **`nonce_endpoint`が未実装** - HAIPでkey binding使用時に必須
-2. **型定義と仕様の必須/オプショナルが不一致** - `cryptographic_binding_methods_supported`等
+1. ~~**`nonce_endpoint`が未実装**~~ → ✅ **実装済み**
+2. ~~**型定義と仕様の必須/オプショナルが不一致**~~ → ✅ **修正済み**
 
-### 7.2 軽微な差異
+### 7.2 軽微な差異 → **全て解消済み**
 
-1. `IssuerDisplay`の型定義に`background_color`/`text_color`が含まれていない（実装では使用中）
+1. ~~`IssuerDisplay`の型定義に`background_color`/`text_color`が含まれていない~~ → ✅ **追加済み**
 
 ### 7.3 注意事項
 
@@ -244,9 +261,17 @@ export interface CredentialResponseEncryption {
    - OID4VCI 1.0の仕様では、`token_endpoint`はOAuth 2.0 Authorization Server Metadata (RFC 8414)の一部
    - Walletは`authorization_servers`パラメータからAuthorization Server Metadataを取得し、そこから`token_endpoint`を発見する
 
-### 7.4 次のステップ
+### 7.4 次のステップ → **完了**
 
-1. 型定義の修正（protocol.types.ts）
-2. MetadataRepositoryへの`nonce_endpoint`追加
-3. テストの更新
-4. ドキュメントの更新
+1. ✅ 型定義の修正（protocol.types.ts）
+2. ✅ MetadataRepositoryへの`nonce_endpoint`追加
+3. ✅ テストの更新
+4. ✅ ドキュメントの更新
+
+### 7.5 残タスク
+
+1. ❌ Signed Metadata実装（優先度：低）
+2. ⚠️ 旧方式（JSONファイル）を使用しているデモの移行
+   - event-certificate-manager
+   - participation-cert-vci
+   - proxy-vci

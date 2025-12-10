@@ -1,5 +1,26 @@
 # メタデータ生成のRepository パターン設計
 
+> **実装進捗状況** (2025-12-10 更新)
+>
+> | コンポーネント | 状況 | 実装ファイル |
+> |---------------|------|-------------|
+> | IMetadataRepository インターフェース | ✅ 実装済み | `src/metadata/IMetadataRepository.ts` |
+> | HardcodedMetadataRepository | ✅ 実装済み | `demos/*/src/metadata/MetadataRepository.ts` |
+> | DbMetadataRepository | ❌ 未実装 | - |
+> | MetadataRepositoryFactory | ❌ 未実装（シンプル設計を採用） | - |
+> | MetadataService | ❌ 未実装（routesHandlerで直接処理） | - |
+>
+> **現在のPhase**: Phase 1（ハードコード実装）
+>
+> **採用デモ**:
+> - ✅ employee-vci
+> - ✅ learning-vci
+> - ❌ event-certificate-manager（JSONファイル方式）
+> - ❌ participation-cert-vci（JSONファイル方式）
+> - ❌ proxy-vci（JSONファイル方式）
+
+---
+
 ## 設計思想
 
 将来的なDB使用を想定しつつ、最初はハードコードで実装。データソースの抽象化により、実装の切り替えを容易にする。
@@ -515,11 +536,11 @@ BRAND_COLOR=#003289
 ```
 
 **実装タスク**:
-1. ✅ Repository インターフェース定義
-2. ✅ HardcodedMetadataRepository実装
-3. ✅ MetadataService実装
-4. ✅ Factory実装
-5. ✅ routesHandlerの更新
+1. ✅ Repository インターフェース定義 → **実装済み** (`src/metadata/IMetadataRepository.ts`)
+2. ✅ HardcodedMetadataRepository実装 → **実装済み** (`demos/employee-vci/src/metadata/MetadataRepository.ts` 等)
+3. ❌ MetadataService実装 → **未実装**（routesHandlerで直接処理する方式を採用）
+4. ❌ Factory実装 → **未実装**（シンプル設計を採用、必要時に直接書き換え）
+5. ✅ routesHandlerの更新 → **実装済み** (`demos/common/src/routes/vci/routesHandler.ts`)
 
 **所要時間**: 1-2日
 
