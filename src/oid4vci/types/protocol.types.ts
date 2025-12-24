@@ -105,8 +105,11 @@ export interface CredentialRequestJwtVcJsonLd extends CredentialRequestLdpVc {}
 
 export interface TokenResponse {
   access_token: string;
+  /** "Bearer" or "DPoP" */
   token_type: string;
   expires_in: number;
+  // Note: OID4VCI does not issue DPoP nonce from Token Endpoint.
+  // DPoP nonces are issued by the Nonce Endpoint via DPoP-Nonce header.
 }
 
 export interface NonceResponse {
@@ -120,6 +123,9 @@ export interface CredentialResponse {
 
   transaction_id?: string;
   notification_id?: string;
+
+  /** Additional HTTP headers to include in the response (e.g., DPoP-Nonce) - not serialized */
+  _headers?: Record<string, string>;
 }
 
 export interface CredentialResponseEncryption {

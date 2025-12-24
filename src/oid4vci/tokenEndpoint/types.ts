@@ -2,9 +2,29 @@ import { ErrorPayload, ErrorResponse, Result } from "../../types.js";
 import { TokenResponse } from "../types/protocol.types.js";
 import { Exists, NotExists, AuthorizedCode } from "../types/types.js";
 
+/**
+ * DPoP configuration for Token Endpoint
+ * Note: Token Endpoint does not issue nonces per OID4VCI spec.
+ * Nonces are issued by the Nonce Endpoint.
+ */
+export interface DpopConfig {
+  /** Enable DPoP support */
+  enabled: boolean;
+  /** Require DPoP for all token requests (default: false) */
+  required?: boolean;
+  /** Allowed signature algorithms */
+  allowedAlgorithms?: string[];
+  /** Tolerance for iat claim in seconds (default: 300) */
+  iatToleranceSeconds?: number;
+}
+
 export interface TokenIssuerConfig {
   authCodeStateProvider: AuthCodeStateProvider;
   accessTokenIssuer: AccessTokenIssuer;
+  /** DPoP configuration (optional) */
+  dpop?: DpopConfig;
+  /** HTTP URI for htu validation (required when dpop is enabled) */
+  tokenEndpointUrl?: string;
 }
 
 export type IssueResult = Result<TokenResponse, ErrorResponse>;
@@ -12,6 +32,15 @@ export type IssueResult = Result<TokenResponse, ErrorResponse>;
 export type AuthorizedCodeWithStoredData = AuthorizedCode & {
   storedData?: any;
 };
+
+/**
+ * Context for token issuance (DPoP binding, etc.)
+ */
+export interface TokenIssuanceContext {
+  /** DPoP JWK Thumbprint (jkt) - set when DPoP proof is valid */
+  dpopJkt?: string;
+}
+
 export interface PayloadAtExists {
   authorizedCode: AuthorizedCodeWithStoredData;
 }
@@ -41,6 +70,7 @@ export type AuthCodeStateProvider = (
  * AccessTokenIssuer is a function that takes the information of a pre-authorized code and issues an access token.
  *
  * @param preAuthorizedCode - The pre-authorized code used to issue the access token.
+ * @param context - Optional context for token issuance (DPoP binding, etc.)
  * @returns Promise<Result<TokenResponse, ErrorPayload>> -
  *           A promise that returns a TokenResponse upon successful token issuance,
  *           or a Result containing an ErrorPayload if the issuance fails.
@@ -51,5 +81,6 @@ export type AuthCodeStateProvider = (
  */
 export type AccessTokenIssuer = (
   authorizedCode: AuthorizedCodeWithStoredData,
+  context?: TokenIssuanceContext,
 ) => Promise<Result<TokenResponse, ErrorPayload>>;
 /* eslint-enable no-unused-vars */

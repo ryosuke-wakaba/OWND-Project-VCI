@@ -176,12 +176,21 @@ export async function handleNonce(
   }
 
   console.log("✅ Nonce Issued Successfully");
-  console.log("C_nonce:", result.payload.c_nonce);
-  console.log("C_nonce expires in:", result.payload.c_nonce_expires_in, "seconds");
+  console.log("C_nonce:", result.payload.payload.c_nonce);
+  console.log("C_nonce expires in:", result.payload.payload.c_nonce_expires_in, "seconds");
+
+  // Set DPoP-Nonce header if present
+  if (result.payload.headers) {
+    for (const [key, value] of Object.entries(result.payload.headers)) {
+      console.log(`Setting header ${key}:`, value);
+      ctx.set(key, value);
+    }
+  }
+
   console.log("=== Nonce Request Completed ===\n");
 
   // return nonce response
-  ctx.body = result.payload;
+  ctx.body = result.payload.payload;
   ctx.status = 200;
   ctx.set("Cache-Control", "no-store");
   ctx.set("Content-Type", "application/json");

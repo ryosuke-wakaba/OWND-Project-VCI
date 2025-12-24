@@ -3,9 +3,20 @@ import { NonceResponse } from "../types/protocol.types.js";
 
 export interface NonceIssuerConfig {
   nonceIssuer: NonceIssuer;
+  /** DPoP nonce provider (optional) - generates nonce for DPoP-Nonce header */
+  dpopNonceProvider?: () => Promise<string>;
 }
 
-export type IssueResult = Result<NonceResponse, ErrorResponse>;
+/**
+ * Extended NonceResponse with optional headers
+ */
+export interface NonceIssueResponse {
+  payload: NonceResponse;
+  /** Headers to include in the response (e.g., DPoP-Nonce) */
+  headers?: Record<string, string>;
+}
+
+export type IssueResult = Result<NonceIssueResponse, ErrorResponse>;
 
 /* eslint-disable no-unused-vars */
 /**

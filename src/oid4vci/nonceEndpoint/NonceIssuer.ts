@@ -1,4 +1,4 @@
-import { IssueResult, NonceIssuerConfig } from "./types.js";
+import { IssueResult, NonceIssuerConfig, NonceIssueResponse } from "./types.js";
 
 export class NonceIssuer {
   // eslint-disable-next-line no-unused-vars
@@ -7,7 +7,19 @@ export class NonceIssuer {
   async issue(): Promise<IssueResult> {
     const nonceResponse = await this.config.nonceIssuer();
     if (nonceResponse.ok) {
-      return { ok: true, payload: nonceResponse.payload };
+      const response: NonceIssueResponse = {
+        payload: nonceResponse.payload,
+      };
+
+      // Add DPoP-Nonce header if provider is configured
+      if (this.config.dpopNonceProvider) {
+        const dpopNonce = await this.config.dpopNonceProvider();
+        response.headers = {
+          "DPoP-Nonce": dpopNonce,
+        };
+      }
+
+      return { ok: true, payload: response };
     } else {
       const { ok, error } = nonceResponse;
       if (error.internalError) {

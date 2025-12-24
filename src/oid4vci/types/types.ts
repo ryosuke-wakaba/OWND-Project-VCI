@@ -24,6 +24,8 @@ export interface VCIAccessToken extends AccessToken {
   cNonce?: string;
   cNonceExpiresIn?: number;
   cNonceCreatedAt?: string;
+  /** DPoP JWK Thumbprint (jkt) - RFC9449 */
+  dpopJkt?: string;
 }
 
 export interface HttpRequest {

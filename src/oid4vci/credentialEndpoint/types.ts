@@ -17,6 +17,28 @@ export interface ValidAccessTokenState<T> {
     sub: string;
   };
   storedAccessToken: T;
+  /** DPoP JWK Thumbprint (jkt) - set when token was issued with DPoP binding */
+  dpopJkt?: string;
+}
+
+/**
+ * DPoP configuration for Credential Endpoint
+ */
+export interface CredentialDpopConfig {
+  /** Enable DPoP support */
+  enabled: boolean;
+  /** Require DPoP for all credential requests (default: false, follows token binding) */
+  required?: boolean;
+  /** Allowed signature algorithms */
+  allowedAlgorithms?: string[];
+  /** Tolerance for iat claim in seconds (default: 300) */
+  iatToleranceSeconds?: number;
+  /** Credential endpoint URL for htu validation */
+  credentialEndpointUrl: string;
+  /** Server nonce provider (optional) */
+  nonceProvider?: () => Promise<string>;
+  /** Server nonce validator (optional) */
+  nonceValidator?: (nonce: string) => Promise<boolean>;
 }
 
 export interface CredentialIssuerConfig<T> {
@@ -37,11 +59,15 @@ export interface CredentialIssuerConfig<T> {
       }
     | undefined
   >;
+  /** DPoP configuration (optional) */
+  dpop?: CredentialDpopConfig;
 }
 
 export interface ErrorPayloadWithStatusCode {
   status: number;
   payload: ErrorPayload;
+  /** Additional HTTP headers to include in the response (e.g., DPoP-Nonce) */
+  headers?: Record<string, string>;
 }
 
 export type IssueResult = Result<

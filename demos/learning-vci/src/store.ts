@@ -236,11 +236,13 @@ export const addAccessToken = async (
   accessToken: string,
   expiresIn: number,
   authorizedCodeId: number,
+  dpopJkt?: string,
 ) => {
   const accessTokenId = await authStore.addAccessToken(
     accessToken,
     expiresIn,
     authorizedCodeId,
+    dpopJkt,
   );
   await authStore.updateAuthCode(authorizedCodeId);
   return accessTokenId;

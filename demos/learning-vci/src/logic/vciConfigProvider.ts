@@ -5,6 +5,7 @@ import {
   AuthCodeStateProvider,
   AuthorizedCodeWithStoredData,
   TokenIssuerConfig,
+  TokenIssuanceContext,
 } from "ownd-vci/dist/oid4vci/tokenEndpoint/types.js";
 
 export const authCodeStateProvider: AuthCodeStateProvider = async (
@@ -31,18 +32,21 @@ export const authCodeStateProvider: AuthCodeStateProvider = async (
 
 export const accessTokenIssuer: AccessTokenIssuer = async (
   authorizedCode: AuthorizedCodeWithStoredData,
+  context?: TokenIssuanceContext,
 ) => {
   const newAccessToken = generateRandomString();
   const { needsProof } = authorizedCode;
 
   try {
     const expiresIn = Number(process.env.VCI_ACCESS_TOKEN_EXPIRES_IN);
-    let nonce = {};
+    const nonce = {};
 
+    // Store access token with optional DPoP binding
     await store.addAccessToken(
       newAccessToken,
       expiresIn,
       authorizedCode.storedData.id,
+      context?.dpopJkt,
     );
 
     if (needsProof) {
@@ -51,7 +55,7 @@ export const accessTokenIssuer: AccessTokenIssuer = async (
 
     const tokenResponse = {
       access_token: newAccessToken,
-      token_type: "bearer",
+      token_type: context?.dpopJkt ? "DPoP" : "Bearer",
       expires_in: expiresIn,
       ...nonce,
     };
@@ -65,9 +69,37 @@ export const accessTokenIssuer: AccessTokenIssuer = async (
   }
 };
 
+/**
+ * Check if DPoP is enabled via environment variable
+ */
+const isDpopEnabled = (): boolean => {
+  return process.env.DPOP_ENABLED === "true";
+};
+
+/**
+ * Get token endpoint URL from environment
+ */
+const getTokenEndpointUrl = (): string => {
+  const issuer = process.env.CREDENTIAL_ISSUER || "http://localhost:3001";
+  return `${issuer}/token`;
+};
+
 export const tokenConfigure = (): TokenIssuerConfig => {
-  return {
+  const config: TokenIssuerConfig = {
     authCodeStateProvider,
     accessTokenIssuer,
   };
+
+  // Add DPoP configuration if enabled
+  // Note: Token Endpoint does not issue nonces per OID4VCI spec.
+  // Nonces are issued by the Nonce Endpoint.
+  if (isDpopEnabled()) {
+    config.dpop = {
+      enabled: true,
+      required: process.env.DPOP_REQUIRED === "true",
+    };
+    config.tokenEndpointUrl = getTokenEndpointUrl();
+  }
+
+  return config;
 };

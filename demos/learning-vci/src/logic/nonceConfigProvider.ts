@@ -28,8 +28,22 @@ export const nonceIssuer: NonceIssuer = async () => {
   }
 };
 
+/**
+ * Check if DPoP is enabled via environment variable
+ */
+const isDpopEnabled = (): boolean => {
+  return process.env.DPOP_ENABLED === "true";
+};
+
 export const nonceConfigure = (): NonceIssuerConfig => {
-  return {
+  const config: NonceIssuerConfig = {
     nonceIssuer,
   };
+
+  // Add DPoP nonce provider if DPoP is enabled
+  if (isDpopEnabled()) {
+    config.dpopNonceProvider = async () => authStore.generateDpopNonce();
+  }
+
+  return config;
 };

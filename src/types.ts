@@ -19,6 +19,8 @@ export interface ErrorPayload {
 export interface ErrorResponse {
   status: number;
   payload: ErrorPayload;
+  /** Additional HTTP headers to include in the response (e.g., DPoP-Nonce) */
+  headers?: Record<string, string>;
 }
 
 export interface Message {
