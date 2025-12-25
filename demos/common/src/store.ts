@@ -59,6 +59,44 @@ const destroyDb = async (ddlMap: DDLMap) => {
   }
 };
 
+/**
+ * Check if a column exists in a table
+ */
+const checkIfColumnExists = async (
+  tableName: string,
+  columnName: string,
+): Promise<boolean> => {
+  try {
+    const db = await openDb();
+    const result = await db.all<{ name: string }[]>(
+      `PRAGMA table_info(${tableName})`,
+    );
+    return result.some((col) => col.name === columnName);
+  } catch (err) {
+    console.error(err);
+    return false;
+  }
+};
+
+/**
+ * Add a column to a table if it doesn't exist
+ */
+const addColumnIfNotExists = async (
+  tableName: string,
+  columnName: string,
+  columnDef: string,
+): Promise<void> => {
+  const exists = await checkIfColumnExists(tableName, columnName);
+  if (!exists) {
+    console.debug(`Adding column ${columnName} to table ${tableName}`);
+    const db = await openDb();
+    await db.exec(
+      `ALTER TABLE ${tableName} ADD COLUMN ${columnName} ${columnDef}`,
+    );
+    console.debug("done");
+  }
+};
+
 export const handleError = (err: any) => {
   console.error(err);
   if (err instanceof Error) {
@@ -79,4 +117,6 @@ export default {
   openDb,
   handleError,
   checkIfTableExists,
+  checkIfColumnExists,
+  addColumnIfNotExists,
 };

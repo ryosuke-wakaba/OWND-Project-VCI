@@ -36,13 +36,32 @@ export class CredentialIssuer<T> {
     invalid_request:
       - Credential Request was malformed. One or more of the parameters (i.e. format, proof) are missing or malformed.
      */
+
+    // Get DPoP header for DPoP authentication
+    const dpopHeader = this.config.dpop?.enabled
+      ? httpRequest.getHeader("DPoP")
+      : undefined;
+
     const authResult = await authenticate(
       httpRequest.getHeader("Authorization"),
       this.config.accessTokenStateProvider,
+      dpopHeader,
+      this.config.dpop,
     );
     if (!authResult.ok) {
       const { ok, error } = authResult;
-      return { ok, error: { status: 401, payload: error } };
+      // Include headers in error response if present (e.g., DPoP-Nonce)
+      return {
+        ok,
+        error: {
+          status: 401,
+          payload: {
+            error: error.error,
+            error_description: error.error_description,
+          },
+          headers: error.headers,
+        },
+      };
     }
 
     const credentialRequest = (() => {
@@ -94,7 +113,7 @@ export class CredentialIssuer<T> {
       return { ok: false, error: { status: 400, payload: error } };
     }
 
-    const { authorizedCode } = authResult.payload;
+    const { authorizedCode } = authResult.payload.tokenState;
 
     // Validate that sub is present
     if (!authorizedCode.sub) {

@@ -7,6 +7,17 @@ import { Proof } from "../types/protocol.types.js";
 
 const INVALID_PROOF = "invalid_proof";
 const INVALID_NONCE = "invalid_nonce";
+
+/**
+ * c_nonce検証用ログ出力
+ */
+function logCNonce(message: string, data?: unknown): void {
+  if (data !== undefined) {
+    console.log(`[c_nonce] ${message}:`, data);
+  } else {
+    console.log(`[c_nonce] ${message}`);
+  }
+}
 const isIatValid = (iat: any): boolean => {
   console.debug(`iat: ${iat}`);
   if (typeof iat !== "number") {
@@ -138,30 +149,50 @@ export const validateProof = async (
     }
 
     // Verify nonce
+    logCNonce("========== c_nonce Validation Started ==========");
+    logCNonce("Proof nonce", nonce || "(none)");
+
     if (!getCNonceFunc || !nonce) {
+      logCNonce(
+        "❌ Nonce validation failed: nonce not provided or getCNonceFunc not configured",
+      );
       const error = toError(INVALID_NONCE, "Failed to verify nonce");
       return { ok: false, error };
     }
 
     // Lookup nonce in database
+    logCNonce("[1] Looking up nonce in database");
     const storedNonce = await getCNonceFunc(nonce);
     if (!storedNonce) {
+      logCNonce("❌ Nonce not found in database");
       const error = toError(INVALID_NONCE, "Failed to verify nonce");
       return { ok: false, error };
     }
+    logCNonce("✓ Nonce found in database");
 
     const cNonce = storedNonce.nonce;
     const createdAt = storedNonce.createdAt;
     const expiresIn = storedNonce.expired_in;
 
+    logCNonce("[2] Checking nonce match");
+    logCNonce("Stored nonce", cNonce);
     if (nonce !== cNonce) {
+      logCNonce("❌ Nonce mismatch");
       const error = toError(INVALID_NONCE, "Failed to verify nonce");
       return { ok: false, error };
     }
+    logCNonce("✓ Nonce matches");
+
+    logCNonce("[3] Checking nonce expiration");
+    logCNonce("Created at", createdAt);
+    logCNonce("Expires in (seconds)", expiresIn);
     if (isExpired(new Date(createdAt), expiresIn)) {
+      logCNonce("❌ Nonce expired");
       const error = toError(INVALID_NONCE, "The c_nonce expired");
       return { ok: false, error };
     }
+    logCNonce("✓ Nonce not expired");
+    logCNonce("========== ✅ c_nonce Validation Success ==========");
     return {
       ok: true,
       payload: {

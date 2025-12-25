@@ -1,11 +1,9 @@
 import { AccessTokenStateProvider } from "ownd-vci/dist/oid4vci/credentialEndpoint/types.js";
-import authStore, {
-  StoredAccessToken,
-} from "../../../store/authStore.js";
+import authStore, { StoredAccessToken } from "../../../store/authStore.js";
 
-export const accessTokenStateProvider: AccessTokenStateProvider<StoredAccessToken> = async (
-  accessToken: string,
-) => {
+export const accessTokenStateProvider: AccessTokenStateProvider<
+  StoredAccessToken
+> = async (accessToken: string) => {
   const storedAccessToken = await authStore.getAccessToken(accessToken);
   if (!storedAccessToken) {
     return { exists: false };
@@ -21,6 +19,8 @@ export const accessTokenStateProvider: AccessTokenStateProvider<StoredAccessToke
     expiresIn: storedAccessToken.expiresIn,
     createdAt: new Date(storedAccessToken.createdAt),
     storedAccessToken,
+    // Include DPoP JWK Thumbprint for token binding verification
+    dpopJkt: storedAccessToken.dpopJkt,
   };
   return { exists: true, payload };
 };

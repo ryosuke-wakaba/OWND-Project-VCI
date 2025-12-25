@@ -42,7 +42,10 @@ describe("authenticate function", () => {
     if (!result.ok) {
       const { error, error_description } = result.error;
       assert.equal(error, INVALID_TOKEN);
-      assert.equal(error_description, "Invalid data received!");
+      assert.equal(
+        error_description,
+        "Invalid or missing Authorization header",
+      );
     } else {
       assert.fail("result.ok is true when it should be false");
     }
@@ -55,7 +58,10 @@ describe("authenticate function", () => {
     if (!result.ok) {
       const { error, error_description } = result.error;
       assert.equal(error, INVALID_TOKEN);
-      assert.equal(error_description, "Invalid data received!");
+      assert.equal(
+        error_description,
+        "Invalid or missing Authorization header",
+      );
     } else {
       assert.fail("result.ok is true when it should be false");
     }
@@ -133,7 +139,7 @@ describe("authenticate function", () => {
       accessTokenStateProvider,
     );
     if (result.ok) {
-      assert.deepEqual(result.payload, accessToken);
+      assert.deepEqual(result.payload.tokenState, accessToken);
     } else {
       assert.fail("result.ok is false when it should be true");
     }

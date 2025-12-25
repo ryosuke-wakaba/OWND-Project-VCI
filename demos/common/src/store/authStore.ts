@@ -75,6 +75,7 @@ const DDL_ACCESS_TOKENS = `
     token VARCHAR(2048) UNIQUE,
     expiresIn INTEGER,
     authorized_code_id INTEGER NOT NULL,
+    dpopJkt VARCHAR(255) DEFAULT NULL,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (authorized_code_id) REFERENCES ${TBL_NM_AUTH_CODES}(id)
   )
@@ -105,8 +106,22 @@ const DDL_MAP = {
   [TBL_NM_AUTH_CODE_METADATA]: DDL_AUTH_CODE_METADATA,
 };
 
+/**
+ * Run database migrations for schema changes
+ */
+const runMigrations = async () => {
+  // Migration: Add dpopJkt column to access_tokens table (DPoP support)
+  await store.addColumnIfNotExists(
+    TBL_NM_ACCESS_TOKENS,
+    "dpopJkt",
+    "VARCHAR(255) DEFAULT NULL",
+  );
+};
+
 export const createDb = async () => {
   await store.createDb(DDL_MAP);
+  // Run migrations for existing databases
+  await runMigrations();
 };
 export const destroyDb = async () => {
   await store.destroyDb(DDL_MAP);
@@ -180,15 +195,16 @@ export const addAccessToken = async (
   accessToken: string,
   expiresIn: number,
   authorizedCodeId: number,
-  // @ts-ignore
+  dpopJkt?: string,
 ): Promise<number | undefined> => {
   try {
     const db = await store.openDb();
     const result = await db.run(
-      `INSERT INTO ${TBL_NM_ACCESS_TOKENS} (token, expiresIn, authorized_code_id) VALUES (?, ?, ?)`,
+      `INSERT INTO ${TBL_NM_ACCESS_TOKENS} (token, expiresIn, authorized_code_id, dpopJkt) VALUES (?, ?, ?, ?)`,
       accessToken,
       expiresIn,
       authorizedCodeId,
+      dpopJkt || null,
     );
     return result.lastID; // アクセストークンのIDを返す
   } catch (err) {
@@ -239,6 +255,8 @@ export const getCNonce = async (
 
 export type StoredAccessToken = {
   authorizedCode: AuthorizedCode & Identifiable;
+  /** DPoP JWK Thumbprint (jkt) - set when token was issued with DPoP binding */
+  dpopJkt?: string;
 } & VCIAccessToken &
   Identifiable;
 
@@ -247,13 +265,16 @@ export const getAccessToken = async (
 ): Promise<StoredAccessToken | undefined> => {
   try {
     const db = await store.openDb();
-    const row = await db.get<VCIAccessToken & Identifiable & JoinedAuthCode>(
+    const row = await db.get<
+      VCIAccessToken & Identifiable & JoinedAuthCode & { dpopJkt?: string }
+    >(
       `
       SELECT
         a.id,
         a.token,
         a.expiresIn,
         a.authorized_code_id,
+        a.dpopJkt,
         p.code,
         p.expiresIn AS codeExpiresIn,
         p.createdAt AS codeCreatedAt,
@@ -273,6 +294,7 @@ export const getAccessToken = async (
     if (row) {
       return {
         ...row,
+        dpopJkt: row.dpopJkt || undefined,
         authorizedCode: {
           id: row.authorized_code_id,
           code: row.code,
@@ -376,6 +398,38 @@ export const getAuthCodeMetadataByCode = async (
   }
 };
 
+// ========================================
+// DPoP Nonce Management (uses c_nonces table)
+// ========================================
+
+const DPOP_NONCE_EXPIRES_IN = 300; // 5 minutes
+
+/**
+ * Generate a new DPoP nonce and store it
+ * @returns The generated nonce string
+ */
+export const generateDpopNonce = async (): Promise<string> => {
+  const nonce = crypto.randomUUID();
+  await addCNonce(nonce, DPOP_NONCE_EXPIRES_IN);
+  return nonce;
+};
+
+/**
+ * Validate a DPoP nonce
+ * @param nonce - The nonce to validate
+ * @returns true if the nonce is valid and not expired
+ */
+export const validateDpopNonce = async (nonce: string): Promise<boolean> => {
+  const stored = await getCNonce(nonce);
+  if (!stored) {
+    return false;
+  }
+
+  const now = Math.floor(Date.now() / 1000);
+  const expiresAt = stored.createdAt + stored.expired_in;
+  return now < expiresAt;
+};
+
 export default {
   createDb,
   destroyDb,
@@ -390,4 +444,6 @@ export default {
   addAuthCodeMetadata,
   getAuthCodeMetadata,
   getAuthCodeMetadataByCode,
+  generateDpopNonce,
+  validateDpopNonce,
 };

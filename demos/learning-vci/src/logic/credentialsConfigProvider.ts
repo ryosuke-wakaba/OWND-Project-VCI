@@ -1,8 +1,11 @@
-import { StoredAccessToken } from "ownd-vci-common/dist/store/authStore.js";
+import authStore, {
+  StoredAccessToken,
+} from "ownd-vci-common/dist/store/authStore.js";
 import {
   CredentialIssuerConfig,
   IssueSdJwtVcCredential,
   DecodedProofJwt,
+  CredentialDpopConfig,
 } from "ownd-vci/dist/oid4vci/credentialEndpoint/types.js";
 import {
   CredentialRequestVcSdJwt,
@@ -11,7 +14,6 @@ import {
 
 import learningCredential from "./learningCredential.js";
 import { accessTokenStateProvider } from "ownd-vci-common/dist/oid4vci/credentialEndpoint/defaults/accessToken.js";
-import authStore from "ownd-vci-common/dist/store/authStore.js";
 
 const issueSdJwtVcCredential: IssueSdJwtVcCredential = async (
   sub: string,
@@ -86,8 +88,42 @@ const getCNonceWrapper = async (nonce: string) => {
   };
 };
 
-export const configure = (): CredentialIssuerConfig<StoredAccessToken> => {
+/**
+ * Check if DPoP is enabled via environment variable
+ */
+const isDpopEnabled = (): boolean => {
+  return process.env.DPOP_ENABLED === "true";
+};
+
+/**
+ * Get credential endpoint URL from environment
+ */
+const getCredentialEndpointUrl = (): string => {
+  const issuer = process.env.CREDENTIAL_ISSUER || "http://localhost:3001";
+  return `${issuer}/credentials`;
+};
+
+/**
+ * Build DPoP configuration if enabled
+ *
+ * Note: DPoP nonces are issued only by the Nonce Endpoint per OID4VCI specification.
+ * Credential Endpoint validates nonces but does not issue new ones.
+ */
+const buildDpopConfig = (): CredentialDpopConfig | undefined => {
+  if (!isDpopEnabled()) {
+    return undefined;
+  }
+
   return {
+    enabled: true,
+    required: process.env.DPOP_REQUIRED === "true",
+    credentialEndpointUrl: getCredentialEndpointUrl(),
+    nonceValidator: async (nonce: string) => authStore.validateDpopNonce(nonce),
+  };
+};
+
+export const configure = (): CredentialIssuerConfig<StoredAccessToken> => {
+  const config: CredentialIssuerConfig<StoredAccessToken> = {
     credentialIssuer: process.env.CREDENTIAL_ISSUER || "",
     issuerMetadata: issuerMetadata,
     supportAnonymousAccess: true,
@@ -95,4 +131,12 @@ export const configure = (): CredentialIssuerConfig<StoredAccessToken> => {
     issuingExecutor: { sdJwtVc: issueSdJwtVcCredential },
     getCNonce: getCNonceWrapper,
   };
+
+  // Add DPoP configuration if enabled
+  const dpopConfig = buildDpopConfig();
+  if (dpopConfig) {
+    config.dpop = dpopConfig;
+  }
+
+  return config;
 };
