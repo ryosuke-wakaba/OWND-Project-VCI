@@ -378,21 +378,85 @@ describe("authenticate with DPoP", () => {
     });
   });
 
-  describe("DPoP nonce", () => {
-    it("should return dpop_nonce when nonceProvider is configured", async () => {
-      const testNonce = "server-generated-nonce";
+  describe("DPoP nonce validation", () => {
+    it("should return invalid_nonce when nonce validation fails", async () => {
       const dpopConfig: CredentialDpopConfig = {
         enabled: true,
         required: false,
         credentialEndpointUrl: CREDENTIAL_ENDPOINT_URL,
-        nonceProvider: async () => testNonce,
+        nonceValidator: async () => false, // Always reject nonce
       };
 
       const tokenState = createDpopTokenState(testDpopJkt);
       const provider = createAccessTokenStateProvider(tokenState);
 
       const accessToken = "valid-token";
+      // Create proof with nonce (required when nonceValidator is configured)
+      const dpopProof = await createDpopProof({
+        accessToken,
+        nonce: "invalid-nonce",
+      });
+
+      const result = await authenticate(
+        `DPoP ${accessToken}`,
+        provider,
+        dpopProof,
+        dpopConfig,
+      );
+
+      assert.isFalse(result.ok);
+      if (!result.ok) {
+        assert.equal(result.error.error, "invalid_nonce");
+        assert.include(result.error.error_description, "Nonce Endpoint");
+      }
+    });
+
+    it("should return invalid_nonce when nonce is missing but required", async () => {
+      const dpopConfig: CredentialDpopConfig = {
+        enabled: true,
+        required: false,
+        credentialEndpointUrl: CREDENTIAL_ENDPOINT_URL,
+        nonceValidator: async () => true, // Would accept if present
+      };
+
+      const tokenState = createDpopTokenState(testDpopJkt);
+      const provider = createAccessTokenStateProvider(tokenState);
+
+      const accessToken = "valid-token";
+      // Create proof WITHOUT nonce
       const dpopProof = await createDpopProof({ accessToken });
+
+      const result = await authenticate(
+        `DPoP ${accessToken}`,
+        provider,
+        dpopProof,
+        dpopConfig,
+      );
+
+      assert.isFalse(result.ok);
+      if (!result.ok) {
+        assert.equal(result.error.error, "invalid_nonce");
+        assert.include(result.error.error_description, "Nonce Endpoint");
+      }
+    });
+
+    it("should authenticate when nonce is valid", async () => {
+      const validNonce = "valid-server-nonce";
+      const dpopConfig: CredentialDpopConfig = {
+        enabled: true,
+        required: false,
+        credentialEndpointUrl: CREDENTIAL_ENDPOINT_URL,
+        nonceValidator: async (nonce) => nonce === validNonce,
+      };
+
+      const tokenState = createDpopTokenState(testDpopJkt);
+      const provider = createAccessTokenStateProvider(tokenState);
+
+      const accessToken = "valid-token";
+      const dpopProof = await createDpopProof({
+        accessToken,
+        nonce: validNonce,
+      });
 
       const result = await authenticate(
         `DPoP ${accessToken}`,
@@ -403,7 +467,7 @@ describe("authenticate with DPoP", () => {
 
       assert.isTrue(result.ok);
       if (result.ok) {
-        assert.equal(result.payload.dpopNonce, testNonce);
+        assert.deepEqual(result.payload.tokenState, tokenState);
       }
     });
   });

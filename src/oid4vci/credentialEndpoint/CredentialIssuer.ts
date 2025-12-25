@@ -64,9 +64,6 @@ export class CredentialIssuer<T> {
       };
     }
 
-    // Store DPoP nonce for response
-    const dpopNonce = authResult.payload.dpopNonce;
-
     const credentialRequest = (() => {
       try {
         return credentialRequestValidator(httpRequest.getBody());
@@ -178,21 +175,11 @@ export class CredentialIssuer<T> {
       return { ok, error };
     }
 
-    // Build response with optional DPoP nonce header
-    const response: {
-      credential: string;
-      _headers?: Record<string, string>;
-    } = {
-      credential: issueResult.payload,
-    };
-
-    if (dpopNonce) {
-      response._headers = { "DPoP-Nonce": dpopNonce };
-    }
-
     return {
       ok: true,
-      payload: response,
+      payload: {
+        credential: issueResult.payload,
+      },
     };
   }
 

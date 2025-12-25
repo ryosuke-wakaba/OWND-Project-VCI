@@ -105,6 +105,9 @@ const getCredentialEndpointUrl = (): string => {
 
 /**
  * Build DPoP configuration if enabled
+ *
+ * Note: DPoP nonces are issued only by the Nonce Endpoint per OID4VCI specification.
+ * Credential Endpoint validates nonces but does not issue new ones.
  */
 const buildDpopConfig = (): CredentialDpopConfig | undefined => {
   if (!isDpopEnabled()) {
@@ -115,7 +118,6 @@ const buildDpopConfig = (): CredentialDpopConfig | undefined => {
     enabled: true,
     required: process.env.DPOP_REQUIRED === "true",
     credentialEndpointUrl: getCredentialEndpointUrl(),
-    nonceProvider: async () => authStore.generateDpopNonce(),
     nonceValidator: async (nonce: string) => authStore.validateDpopNonce(nonce),
   };
 };

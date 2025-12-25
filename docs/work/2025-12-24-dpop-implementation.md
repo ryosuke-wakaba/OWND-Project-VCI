@@ -321,8 +321,10 @@ ALTER TABLE access_tokens ADD COLUMN dpopJkt VARCHAR(255) DEFAULT NULL;
 | エラー | 説明 | HTTPステータス |
 |--------|------|--------------|
 | `invalid_dpop_proof` | DPoP Proof検証失敗 | 400 |
-| `use_dpop_nonce` | dpop_nonceが必要 | 400 (WWW-Authenticate) |
+| `invalid_nonce` | DPoP nonce無効（Nonce Endpointから再取得が必要） | 400 |
 | `invalid_token` | トークン無効（binding不一致含む） | 401 |
+
+**Note**: OID4VCI仕様に従い、Credential EndpointはDPoP-Nonceヘッダーを返しません。クライアントはNonce Endpointから新しいnonceを取得する必要があります。
 
 ---
 
@@ -362,6 +364,7 @@ config.dpop = {
 config.tokenEndpointUrl = getTokenEndpointUrl();
 
 // Credential Endpoint (credentialsConfigProvider.ts)
+// ※ nonceの検証のみ行う（発行はNonce Endpointのみ）
 config.dpop = {
   enabled: true,
   required: process.env.DPOP_REQUIRED === "true",
@@ -370,6 +373,7 @@ config.dpop = {
 };
 
 // Nonce Endpoint (nonceConfigProvider.ts)
+// ※ DPoP-NonceはNonce Endpointのみが発行する
 config.dpopNonceProvider = async () => authStore.generateDpopNonce();
 ```
 

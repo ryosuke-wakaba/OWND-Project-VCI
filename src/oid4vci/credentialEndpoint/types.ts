@@ -23,6 +23,9 @@ export interface ValidAccessTokenState<T> {
 
 /**
  * DPoP configuration for Credential Endpoint
+ *
+ * Note: DPoP nonces are issued only by the Nonce Endpoint per OID4VCI specification.
+ * Credential Endpoint validates nonces but does not issue new ones.
  */
 export interface CredentialDpopConfig {
   /** Enable DPoP support */
@@ -35,9 +38,7 @@ export interface CredentialDpopConfig {
   iatToleranceSeconds?: number;
   /** Credential endpoint URL for htu validation */
   credentialEndpointUrl: string;
-  /** Server nonce provider (optional) */
-  nonceProvider?: () => Promise<string>;
-  /** Server nonce validator (optional) */
+  /** Server nonce validator - validates nonce issued by Nonce Endpoint */
   nonceValidator?: (nonce: string) => Promise<boolean>;
 }
 

@@ -15,12 +15,10 @@ const INVALID_TOKEN = "invalid_token";
 const INVALID_DPOP_PROOF = "invalid_dpop_proof";
 
 /**
- * Authentication result with optional DPoP nonce header
+ * Authentication result
  */
 export interface AuthenticateResult<T> {
   tokenState: ValidAccessTokenState<T>;
-  /** DPoP nonce to include in response header (if nonce rotation is enabled) */
-  dpopNonce?: string;
 }
 
 /**
@@ -106,7 +104,6 @@ export const authenticate = async <T>(
   }
 
   const storedDpopJkt = tokenState.payload.dpopJkt;
-  let dpopNonce: string | undefined;
 
   // DPoP validation
   if (dpopConfig?.enabled) {
@@ -160,18 +157,12 @@ export const authenticate = async <T>(
       );
 
       if (!dpopResult.valid) {
-        // Check if we need to provide a new nonce
-        if (
-          dpopResult.errorCode === "use_dpop_nonce" &&
-          dpopConfig.nonceProvider
-        ) {
-          const newNonce = await dpopConfig.nonceProvider();
+        // Nonce errors: return invalid_nonce - client should get new nonce from Nonce Endpoint
+        if (dpopResult.errorCode === "use_dpop_nonce") {
           const error: AuthErrorPayload = {
-            error: "use_dpop_nonce",
-            error_description: dpopResult.errorDescription,
-            headers: {
-              "DPoP-Nonce": newNonce,
-            },
+            error: "invalid_nonce",
+            error_description:
+              "Invalid or missing DPoP nonce. Please obtain a new nonce from the Nonce Endpoint.",
           };
           return { ok: false, error };
         }
@@ -181,11 +172,6 @@ export const authenticate = async <T>(
           error_description: dpopResult.errorDescription,
         };
         return { ok: false, error };
-      }
-
-      // Generate new nonce for response if provider is configured
-      if (dpopConfig.nonceProvider) {
-        dpopNonce = await dpopConfig.nonceProvider();
       }
     }
   } else {
@@ -203,7 +189,6 @@ export const authenticate = async <T>(
     ok: true,
     payload: {
       tokenState: tokenState.payload,
-      dpopNonce,
     },
   };
 };
