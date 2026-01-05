@@ -95,9 +95,15 @@ interface SignMetadataResult {
   payload: object;
 }
 
+interface SignMetadataOptions {
+  /** Include full certificate chain in x5c header. Default: false (leaf only) */
+  includeFullChain?: boolean;
+}
+
 async function signMetadata(
   metadata: IssuerMetadata,
   kid: string,
+  options?: SignMetadataOptions,
 ): Promise<Result<SignMetadataResult, ErrorPayload>>
 ```
 
@@ -106,7 +112,9 @@ async function signMetadata(
 1. 鍵ペアを取得（`keyStore.getEcKeyPair(kid)`）
 2. 証明書チェーンを取得（`keyStore.getX509Chain(kid)`）
 3. JOSEヘッダー構築
-   - 証明書あり: `x5c`にBase64エンコードした証明書チェーン
+   - 証明書あり: `x5c`に証明書を設定
+     - `includeFullChain: false`（デフォルト）: リーフ証明書のみ
+     - `includeFullChain: true`: 全証明書チェーン
    - 証明書なし: `jwk`に公開鍵
 4. JWSペイロード構築
    - `sub`: Credential Issuer Identifier
@@ -200,6 +208,7 @@ if (signedMetadata) {
 | `src/routes/admin/routesHandler.ts` | メタデータ管理ハンドラ追加 |
 | `views/admin/index.ejs` | メニューにメタデータ管理追加 |
 | `views/admin/metadata.ejs` | メタデータ管理画面（新規） |
+| `tests/signedMetadata.test.ts` | ユニットテスト（新規） |
 
 ---
 
@@ -219,7 +228,51 @@ CREATE TABLE signed_metadata (
 
 ---
 
-## テスト項目
+## テスト
+
+**ファイル**: `demos/learning-vci/tests/signedMetadata.test.ts`
+
+### JWT Structure (3件)
+
+| テスト | 内容 |
+|--------|------|
+| typ header | `openidvci-issuer-metadata+jwt` が設定されること |
+| sub claim | `credential_issuer` と一致すること |
+| iat claim | 発行時刻が正しく設定されること |
+
+### Header Mode Branching (5件)
+
+| テスト | 内容 |
+|--------|------|
+| jwk mode | 証明書なしの場合 `jwk` ヘッダーが設定されること |
+| x5c mode | 証明書ありの場合 `x5c` ヘッダーが設定されること |
+| leaf only | デフォルトでリーフ証明書のみ含まれること |
+| full chain | `includeFullChain` オプションで全チェーンが含まれること |
+| exclusivity | `jwk` と `x5c` が同時に設定されないこと |
+
+### Signature Verification (2件)
+
+| テスト | 内容 |
+|--------|------|
+| ES256 | P-256曲線での署名・検証 |
+| ES256K | secp256k1曲線での署名・検証 |
+
+### Metadata Payload (1件)
+
+| テスト | 内容 |
+|--------|------|
+| top-level claims | メタデータ全パラメータがトップレベルクレームとして含まれること |
+
+### Endpoint Response Format (4件)
+
+| テスト | 内容 |
+|--------|------|
+| JWT Content-Type | 署名あり時 `application/jwt` |
+| JSON Content-Type | 署名なし時 `application/json` |
+| JWT format | JWT文字列が3パート構成であること |
+| JSON format | JSONオブジェクトが正しい構造であること |
+
+### 手動テスト項目
 
 1. 署名鍵選択（証明書あり/なし）
 2. メタデータ署名実行

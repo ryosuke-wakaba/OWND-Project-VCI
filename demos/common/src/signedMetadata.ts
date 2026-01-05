@@ -13,17 +13,25 @@ export interface SignMetadataResult {
   payload: object;
 }
 
+export interface SignMetadataOptions {
+  /** Include full certificate chain in x5c header. Default: false (leaf only) */
+  includeFullChain?: boolean;
+}
+
 /**
  * Sign issuer metadata according to OID4VCI Section 12.2.3
  *
  * @param metadata - The issuer metadata to sign
  * @param kid - The key identifier to use for signing
+ * @param options - Signing options
  * @returns The signed metadata JWT and payload
  */
 export const signMetadata = async (
   metadata: IssuerMetadata,
   kid: string,
+  options: SignMetadataOptions = {},
 ): Promise<Result<SignMetadataResult, ErrorPayload>> => {
+  const { includeFullChain = false } = options;
   // 1. Get key pair
   const keyPair = await keyStore.getEcKeyPair(kid);
   if (!keyPair) {
@@ -61,8 +69,8 @@ export const signMetadata = async (
   };
 
   if (hasCertificate) {
-    // x5c mode: include certificate chain
-    header.x5c = certChain;
+    // x5c mode: include certificate (leaf only or full chain)
+    header.x5c = includeFullChain ? certChain : [certChain[0]];
   } else {
     // jwk mode: include public key
     const publicJwk: jose.JWK = {
@@ -100,7 +108,12 @@ export const signMetadata = async (
 
   console.log("Signed metadata created:");
   console.log("  - Key ID:", kid);
-  console.log("  - Mode:", hasCertificate ? "x5c (certificate)" : "jwk (public key)");
+  console.log(
+    "  - Mode:",
+    hasCertificate
+      ? `x5c (${includeFullChain ? "full chain" : "leaf only"})`
+      : "jwk (public key)",
+  );
   console.log("  - Algorithm:", alg);
 
   return {

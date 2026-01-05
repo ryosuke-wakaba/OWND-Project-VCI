@@ -764,7 +764,7 @@ export async function handleMetadataIndex(ctx: Koa.Context) {
 
 export async function handleMetadataSign(ctx: Koa.Context) {
   try {
-    const { signingKeyKid } = ctx.request.body;
+    const { signingKeyKid, includeFullChain } = ctx.request.body;
 
     if (!signingKeyKid) {
       ctx.status = 400;
@@ -777,8 +777,10 @@ export async function handleMetadataSign(ctx: Koa.Context) {
     const metadataRepository = new MetadataRepository(credentialIssuer);
     const metadata = await metadataRepository.getIssuerMetadata();
 
-    // Sign metadata
-    const result = await signedMetadata.signMetadata(metadata, signingKeyKid);
+    // Sign metadata with options
+    const result = await signedMetadata.signMetadata(metadata, signingKeyKid, {
+      includeFullChain: includeFullChain === "true",
+    });
 
     if (result.ok) {
       ctx.redirect("/admin/metadata");
