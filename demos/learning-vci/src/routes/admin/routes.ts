@@ -200,6 +200,32 @@ const init = () => {
     },
   );
 
+  // Metadata Management UI Routes
+  router.get(
+    "/admin/metadata",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleMetadataIndex(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/metadata/sign",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleMetadataSign(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/metadata/:id/revoke",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleMetadataRevoke(ctx);
+    },
+  );
+
   return router;
 };
 

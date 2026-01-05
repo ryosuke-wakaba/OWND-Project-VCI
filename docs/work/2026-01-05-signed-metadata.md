@@ -31,23 +31,23 @@ OID4VCI仕様のSigned Metadata（署名付きメタデータ）機能を実装�
 
 ### Phase 1: データモデル
 
-- [ ] `signed_metadata`テーブル作成
-- [ ] authStoreに操作関数追加
+- [x] `signed_metadata`テーブル作成
+- [x] authStoreに操作関数追加
 
 ### Phase 2: 署名ロジック
 
-- [ ] `signMetadata`関数実装
-- [ ] JOSEヘッダー分岐（x5c/jwk）
+- [x] `signMetadata`関数実装
+- [x] JOSEヘッダー分岐（x5c/jwk）
 
 ### Phase 3: UI
 
-- [ ] `/admin/metadata` 画面作成
-- [ ] 管理画面トップにメニュー追加
+- [x] `/admin/metadata` 画面作成
+- [x] 管理画面トップにメニュー追加
 
 ### Phase 4: エンドポイント
 
-- [ ] メタデータエンドポイント更新
-- [ ] Content-Type対応
+- [x] メタデータエンドポイント更新
+- [x] Content-Type対応
 
 ---
 

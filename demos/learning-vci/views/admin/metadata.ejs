@@ -1,0 +1,197 @@
+<nav class="breadcrumb">
+  <a href="/admin">トップ</a> &gt; <span>メタデータ管理</span>
+</nav>
+
+<h2>メタデータ管理</h2>
+
+<div class="section">
+  <h3>現在のメタデータ</h3>
+  <pre class="metadata-display"><%= metadata %></pre>
+</div>
+
+<div class="section">
+  <h3>署名</h3>
+  <form action="/admin/metadata/sign" method="POST" onsubmit="return confirmSign()">
+    <div class="form-group">
+      <label for="signingKeyKid">署名鍵を選択:</label>
+      <% if (availableKeys && availableKeys.length > 0) { %>
+        <select name="signingKeyKid" id="signingKeyKid" required>
+          <% availableKeys.forEach(function(key, index) { %>
+            <option value="<%= key.kid %>">
+              <%= key.kid %> (<%= key.crv %>)
+              <% if (key.hasCertificate) { %>- 証明書あり<% } %>
+              <% if (index === 0) { %> [最新]<% } %>
+            </option>
+          <% }); %>
+        </select>
+        <button type="submit" class="btn btn-primary">署名を実行</button>
+      <% } else { %>
+        <p class="empty-message">利用可能な署名鍵がありません。<a href="/admin/keys/new">キーペアを生成</a>してください。</p>
+      <% } %>
+    </div>
+  </form>
+</div>
+
+<div class="section">
+  <h3>署名履歴</h3>
+  <% if (signedMetadataHistory && signedMetadataHistory.length > 0) { %>
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th>
+          <th>署名鍵</th>
+          <th>作成日時</th>
+          <th>状態</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% signedMetadataHistory.forEach(function(item) { %>
+          <tr>
+            <td><%= item.id %></td>
+            <td><%= item.signingKeyKid || '-' %></td>
+            <td><%= new Date(item.createdAt).toLocaleString('ja-JP') %></td>
+            <td>
+              <% if (!item.revokedAt) { %>
+                <span class="badge badge-success">有効</span>
+              <% } else { %>
+                <span class="badge badge-secondary">無効</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (!item.revokedAt) { %>
+                <form action="/admin/metadata/<%= item.id %>/revoke" method="POST" style="display:inline" onsubmit="return confirm('この署名付きメタデータを無効化しますか？')">
+                  <button type="submit" class="btn btn-danger btn-small">無効化</button>
+                </form>
+              <% } else { %>
+                -
+              <% } %>
+            </td>
+          </tr>
+        <% }); %>
+      </tbody>
+    </table>
+  <% } else { %>
+    <div class="empty-state">
+      <p>署名履歴がありません</p>
+    </div>
+  <% } %>
+</div>
+
+<% if (activeSignedMetadata) { %>
+<div class="section">
+  <h3>有効な署名付きメタデータ (JWT)</h3>
+  <details>
+    <summary>JWTを表示</summary>
+    <pre class="jwt-display"><%= activeSignedMetadata.jwt %></pre>
+  </details>
+</div>
+<% } %>
+
+<script>
+function confirmSign() {
+  return confirm('メタデータに署名を実行しますか？\n\n既存の署名付きメタデータは無効化されます。');
+}
+</script>
+
+<style>
+.section {
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.section h3 {
+  margin-top: 0;
+  margin-bottom: 1rem;
+  color: #1e293b;
+  font-size: 1.1rem;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 0.5rem;
+}
+
+.metadata-display {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.jwt-display {
+  background: #f8fafc;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  word-break: break-all;
+  white-space: pre-wrap;
+}
+
+.form-group {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.form-group label {
+  font-weight: 500;
+}
+
+.form-group select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  font-size: 1rem;
+  min-width: 300px;
+}
+
+.empty-message {
+  color: #64748b;
+  margin: 0;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #64748b;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25em 0.5em;
+  font-size: 0.85em;
+  border-radius: 0.25em;
+}
+
+.badge-success {
+  background-color: #28a745;
+  color: white;
+}
+
+.badge-secondary {
+  background-color: #6c757d;
+  color: white;
+}
+
+details {
+  margin-top: 0.5rem;
+}
+
+details summary {
+  cursor: pointer;
+  color: #3b82f6;
+  font-size: 0.9rem;
+}
+
+details summary:hover {
+  text-decoration: underline;
+}
+</style>

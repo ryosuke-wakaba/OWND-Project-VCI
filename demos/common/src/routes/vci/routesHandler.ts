@@ -4,6 +4,7 @@ import { TokenIssuerConfig } from "ownd-vci/dist/oid4vci/tokenEndpoint/types.js"
 import { TokenIssuer } from "ownd-vci/dist/oid4vci/tokenEndpoint/TokenIssuer.js";
 import { CredentialIssuerConfig } from "ownd-vci/dist/oid4vci/credentialEndpoint/types.js";
 import { StoredAccessToken } from "../../store/authStore.js";
+import authStore from "../../store/authStore.js";
 import { CredentialIssuer } from "ownd-vci/dist/oid4vci/credentialEndpoint/CredentialIssuer.js";
 import { NonceIssuerConfig } from "ownd-vci/dist/oid4vci/nonceEndpoint/types.js";
 import { NonceIssuer } from "ownd-vci/dist/oid4vci/nonceEndpoint/NonceIssuer.js";
@@ -13,6 +14,9 @@ import { IMetadataRepository } from "ownd-vci/dist/metadata/IMetadataRepository.
 
 /**
  * Issuer Metadataを返すハンドラ
+ *
+ * 有効な署名付きメタデータが存在する場合はJWT形式で返却し、
+ * 存在しない場合はJSON形式で返却する。
  *
  * @param ctx - Koaコンテキスト
  * @param metadataRepository - メタデータリポジトリ実装（各demoから注入）
@@ -25,9 +29,20 @@ export async function handleIssueMetadata(
   availableLocales: string[],
   defaultLocale: string,
 ) {
-  const needsLocalization = process.env.RESOLVE_ACCEPT_LANGUAGE === "true";
-
   try {
+    // Check for active signed metadata first
+    const signedMetadata = await authStore.getActiveSignedMetadata();
+    if (signedMetadata) {
+      console.debug("Returning signed metadata JWT");
+      ctx.body = signedMetadata.jwt;
+      ctx.status = 200;
+      ctx.set("Content-Type", "application/jwt");
+      return;
+    }
+
+    // No signed metadata, return JSON
+    const needsLocalization = process.env.RESOLVE_ACCEPT_LANGUAGE === "true";
+
     // リポジトリから取得
     const originalMetadataJson = await metadataRepository.getIssuerMetadata();
     console.debug("Issuer Metadata:", JSON.stringify(originalMetadataJson));
