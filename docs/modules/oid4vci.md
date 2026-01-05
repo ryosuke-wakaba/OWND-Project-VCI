@@ -95,6 +95,26 @@ generatePreAuthCredentialOffer(
 ): string
 ```
 
+#### モジュール連携シーケンス
+
+```mermaid
+sequenceDiagram
+    participant Admin as 管理画面
+    participant Handler as routesHandler.ts<br/>(アプリケーション)
+    participant Store as store.ts<br/>(アプリケーション)
+    participant Lib as CredentialOffer.ts<br/>(ownd-vci)
+
+    Admin->>Handler: Credential Offer生成リクエスト
+    Handler->>Handler: generateRandomString()<br/>Pre-authorized code生成
+    Handler->>Handler: generateRandomNumericString()<br/>TX Code (PIN) 生成
+    Handler->>Store: addPreAuthCode(code, expiresIn, txCode, subjectId)
+    Store-->>Handler: 保存完了
+    Handler->>Lib: generatePreAuthCredentialOffer(<br/>issuer, configIds, code, txCode)
+    Note over Lib: CredentialOfferオブジェクト構築<br/>URLエンコード処理
+    Lib-->>Handler: openid-credential-offer://... URL
+    Handler-->>Admin: Credential Offer URL + TX Code
+```
+
 #### 実装例
 
 ```typescript
@@ -186,6 +206,34 @@ type AccessTokenIssuer = (
   authorizedCode: AuthorizedCodeWithStoredData,
   context?: TokenIssuanceContext,
 ) => Promise<Result<TokenResponse, ErrorPayload>>;
+```
+
+#### モジュール連携シーケンス
+
+```mermaid
+sequenceDiagram
+    participant Wallet as Wallet
+    participant Route as routes.ts<br/>(ownd-vci-common)
+    participant Lib as TokenIssuer.ts<br/>(ownd-vci)
+    participant Provider as vciConfigProvider.ts<br/>(アプリケーション)
+    participant Store as store.ts<br/>(アプリケーション)
+
+    Wallet->>Route: POST /token<br/>(pre-authorized_code, tx_code)
+    Route->>Lib: issueToken(request, config)
+    Note over Lib: リクエストバリデーション<br/>DPoP Proof検証（有効時）
+    Lib->>Provider: authCodeStateProvider(code)
+    Provider->>Store: getPreAuthCodeAndLearner(code)
+    Store-->>Provider: PreAuthCode + Learner情報
+    Provider-->>Lib: { exists: true, payload: {...} }
+    Note over Lib: TX Code検証<br/>有効期限チェック
+    Lib->>Provider: accessTokenIssuer(authCode, context)
+    Note over Provider: context.dpopJktで<br/>DPoP JWK Thumbprint受取
+    Provider->>Provider: generateRandomString()<br/>Access Token生成
+    Provider->>Store: addAccessToken(token, expiresIn, id, dpopJkt)
+    Store-->>Provider: 保存完了
+    Provider-->>Lib: { ok: true, payload: TokenResponse }
+    Lib-->>Route: TokenResponse
+    Route-->>Wallet: { access_token, token_type, expires_in }
 ```
 
 #### 実装例（DPoP対応）
@@ -312,6 +360,37 @@ type NonceIssuer = () => Promise<Result<NonceResponse, ErrorPayload>>;
 ```
 
 **DPoP nonce**: `dpopNonceProvider`を設定すると、レスポンスに`DPoP-Nonce`ヘッダーが追加される。Credential Endpointでのnonce検証に使用される。
+
+#### モジュール連携シーケンス
+
+```mermaid
+sequenceDiagram
+    participant Wallet as Wallet
+    participant Route as routes.ts<br/>(ownd-vci-common)
+    participant Lib as NonceIssuer.ts<br/>(ownd-vci)
+    participant Provider as nonceConfigProvider.ts<br/>(アプリケーション)
+    participant Store as authStore.ts<br/>(ownd-vci-common)
+
+    Wallet->>Route: POST /nonce
+    Route->>Lib: issueNonce(config)
+    Lib->>Provider: nonceIssuer()
+    Provider->>Provider: generateRandomString()<br/>c_nonce生成
+    Provider->>Store: addCNonce(cNonce, expiresIn)
+    Store-->>Provider: 保存完了
+    Provider-->>Lib: { ok: true, payload: { c_nonce, c_nonce_expires_in } }
+
+    opt DPoP nonce有効時
+        Lib->>Provider: dpopNonceProvider()
+        Provider->>Provider: generateRandomString()<br/>DPoP nonce生成
+        Provider->>Store: addDpopNonce(dpopNonce, expiresIn)
+        Store-->>Provider: 保存完了
+        Provider-->>Lib: dpopNonce
+        Note over Lib: レスポンスヘッダーに<br/>DPoP-Nonce追加
+    end
+
+    Lib-->>Route: NonceResponse + Headers
+    Route-->>Wallet: { c_nonce, c_nonce_expires_in }<br/>+ DPoP-Nonce header
+```
 
 #### 実装例（DPoP nonce対応）
 
@@ -461,6 +540,55 @@ JWT形式のProofを検証する。検証項目:
 - `aud`: Credential Issuer URLと一致すること
 - `iat`: 現在時刻から許容範囲内であること（5秒）
 - `nonce`: c_nonceが有効かつ未期限であること
+
+#### モジュール連携シーケンス
+
+```mermaid
+sequenceDiagram
+    participant Wallet as Wallet
+    participant Route as routes.ts<br/>(ownd-vci-common)
+    participant Lib as CredentialIssuer.ts<br/>(ownd-vci)
+    participant Provider as credentialsConfigProvider.ts<br/>(アプリケーション)
+    participant Store as authStore.ts<br/>(ownd-vci-common)
+    participant Issuer as learningCredential.ts<br/>(アプリケーション)
+
+    Wallet->>Route: POST /credentials<br/>(Authorization, DPoP, proof, vct)
+    Route->>Lib: issueCredential(request, config)
+
+    Note over Lib: 1. Access Token検証
+    Lib->>Provider: accessTokenStateProvider(token)
+    Provider->>Store: getAccessToken(token)
+    Store-->>Provider: AccessToken + AuthCode + dpopJkt
+    Provider-->>Lib: ValidAccessTokenState
+
+    opt DPoP有効時
+        Note over Lib: DPoP Proof検証<br/>- htu/htm検証<br/>- jktバインディング検証
+        Lib->>Provider: dpop.nonceValidator(nonce)
+        Provider->>Store: validateDpopNonce(nonce)
+        Store-->>Provider: boolean
+        Provider-->>Lib: 検証結果
+    end
+
+    Note over Lib: 2. リクエストバリデーション
+    Note over Lib: 3. メタデータ解決
+    Note over Lib: 4. Proof検証
+    Lib->>Provider: getCNonce(nonce)
+    Provider->>Store: getCNonce(nonce)
+    Store-->>Provider: c_nonce情報
+    Provider-->>Lib: c_nonce有効性
+
+    Note over Lib: 5. Credential発行
+    Lib->>Provider: issuingExecutor.sdJwtVc(sub, payload, proof)
+    Provider->>Issuer: issueLearningCredential(sub, holderJwk)
+    Issuer->>Store: getLearnerById(sub)
+    Store-->>Issuer: Learner情報
+    Issuer->>Issuer: クレーム構築<br/>SD-JWT署名
+    Issuer-->>Provider: { ok: true, payload: credential }
+    Provider-->>Lib: CredentialResponse
+
+    Lib-->>Route: CredentialResponse
+    Route-->>Wallet: { credential: "..." }
+```
 
 #### 実装例（DPoP対応）
 
