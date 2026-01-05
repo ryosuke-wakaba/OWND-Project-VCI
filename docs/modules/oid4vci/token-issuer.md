@@ -47,6 +47,44 @@ type AccessTokenIssuer = (
 ) => Promise<Result<TokenResponse, ErrorPayload>>;
 ```
 
+## クラス図
+
+```mermaid
+classDiagram
+    class TokenIssuerConfig {
+        +authCodeStateProvider: AuthCodeStateProvider
+        +accessTokenIssuer: AccessTokenIssuer
+        +dpop?: DpopConfig
+        +tokenEndpointUrl?: string
+    }
+
+    class DpopConfig {
+        +enabled: boolean
+        +required?: boolean
+        +allowedAlgorithms?: string[]
+        +iatToleranceSeconds?: number
+    }
+
+    class TokenIssuanceContext {
+        +dpopJkt?: string
+    }
+
+    class AuthCodeStateProvider {
+        <<callback>>
+        +invoke(authorizedCode: string) Promise~NotExists | Exists~
+    }
+
+    class AccessTokenIssuer {
+        <<callback>>
+        +invoke(authorizedCode, context?) Promise~Result~TokenResponse~~
+    }
+
+    TokenIssuerConfig --> AuthCodeStateProvider : uses
+    TokenIssuerConfig --> AccessTokenIssuer : uses
+    TokenIssuerConfig --> DpopConfig : optional
+    AccessTokenIssuer ..> TokenIssuanceContext : receives
+```
+
 ## モジュール連携シーケンス
 
 ```mermaid

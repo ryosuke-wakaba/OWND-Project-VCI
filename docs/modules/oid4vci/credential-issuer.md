@@ -80,6 +80,59 @@ JWT形式のProofを検証する。検証項目:
 - `iat`: 現在時刻から許容範囲内であること（5秒）
 - `nonce`: c_nonceが有効かつ未期限であること
 
+## クラス図
+
+```mermaid
+classDiagram
+    class CredentialIssuerConfig~T~ {
+        +credentialIssuer: string
+        +issuerMetadata: IssuerMetadata
+        +supportAnonymousAccess?: boolean
+        +accessTokenStateProvider: AccessTokenStateProvider~T~
+        +issuingExecutor: IssuingExecutor
+        +getCNonce?: function
+        +dpop?: CredentialDpopConfig
+    }
+
+    class CredentialDpopConfig {
+        +enabled: boolean
+        +required?: boolean
+        +allowedAlgorithms?: string[]
+        +iatToleranceSeconds?: number
+        +credentialEndpointUrl: string
+        +nonceValidator?: function
+    }
+
+    class IssuingExecutor {
+        +jwtVcJson?: IssueJwtVcJsonCredential
+        +sdJwtVc?: IssueSdJwtVcCredential
+    }
+
+    class AccessTokenStateProvider~T~ {
+        <<callback>>
+        +invoke(token: string) Promise~ValidAccessTokenState~T~~
+    }
+
+    class ValidAccessTokenState~T~ {
+        +expiresIn: number
+        +createdAt: Date
+        +authorizedCode: object
+        +storedAccessToken: T
+        +dpopJkt?: string
+    }
+
+    class IssueSdJwtVcCredential {
+        <<callback>>
+        +invoke(sub, payload, proof?) Promise~Result~
+    }
+
+    CredentialIssuerConfig --> AccessTokenStateProvider : uses
+    CredentialIssuerConfig --> IssuingExecutor : uses
+    CredentialIssuerConfig --> CredentialDpopConfig : optional
+    AccessTokenStateProvider ..> ValidAccessTokenState : returns
+    IssuingExecutor --> IssueSdJwtVcCredential : contains
+```
+
 ## モジュール連携シーケンス
 
 ```mermaid

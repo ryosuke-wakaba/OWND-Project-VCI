@@ -19,6 +19,35 @@ type NonceIssuer = () => Promise<Result<NonceResponse, ErrorPayload>>;
 
 **DPoP nonce**: `dpopNonceProvider`を設定すると、レスポンスに`DPoP-Nonce`ヘッダーが追加される。Credential Endpointでのnonce検証に使用される。
 
+## クラス図
+
+```mermaid
+classDiagram
+    class NonceIssuerConfig {
+        +nonceIssuer: NonceIssuer
+        +dpopNonceProvider?: function
+    }
+
+    class NonceIssuer {
+        <<callback>>
+        +invoke() Promise~Result~NonceResponse~~
+    }
+
+    class NonceResponse {
+        +c_nonce: string
+        +c_nonce_expires_in: number
+    }
+
+    class DpopNonceProvider {
+        <<callback>>
+        +invoke() Promise~string~
+    }
+
+    NonceIssuerConfig --> NonceIssuer : uses
+    NonceIssuerConfig --> DpopNonceProvider : optional
+    NonceIssuer ..> NonceResponse : returns
+```
+
 ## モジュール連携シーケンス
 
 ```mermaid
