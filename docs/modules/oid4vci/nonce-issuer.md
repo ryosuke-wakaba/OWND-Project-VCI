@@ -6,21 +6,6 @@ c_nonceを発行する。Credential Endpoint呼び出し前に必須。
 
 ## Config型
 
-```typescript
-interface NonceIssuerConfig {
-  // c_nonceを生成するコールバック
-  nonceIssuer: NonceIssuer;
-  // DPoP nonce生成（オプション）- DPoP-Nonceヘッダー用
-  dpopNonceProvider?: () => Promise<string>;
-}
-
-type NonceIssuer = () => Promise<Result<NonceResponse, ErrorPayload>>;
-```
-
-**DPoP nonce**: `dpopNonceProvider`を設定すると、レスポンスに`DPoP-Nonce`ヘッダーが追加される。Credential Endpointでのnonce検証に使用される。
-
-## クラス図
-
 ```mermaid
 classDiagram
     class NonceIssuerConfig {
@@ -47,6 +32,19 @@ classDiagram
     NonceIssuerConfig --> DpopNonceProvider : optional
     NonceIssuer ..> NonceResponse : returns
 ```
+
+```typescript
+interface NonceIssuerConfig {
+  // c_nonceを生成するコールバック
+  nonceIssuer: NonceIssuer;
+  // DPoP nonce生成（オプション）- DPoP-Nonceヘッダー用
+  dpopNonceProvider?: () => Promise<string>;
+}
+
+type NonceIssuer = () => Promise<Result<NonceResponse, ErrorPayload>>;
+```
+
+**DPoP nonce**: `dpopNonceProvider`を設定すると、レスポンスに`DPoP-Nonce`ヘッダーが追加される。Credential Endpointでのnonce検証に使用される。
 
 ## モジュール連携シーケンス
 

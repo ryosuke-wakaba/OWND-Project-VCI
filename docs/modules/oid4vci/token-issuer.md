@@ -11,44 +11,6 @@ Pre-authorized codeを検証し、Access Tokenを発行する。
 
 ## Config型
 
-```typescript
-interface TokenIssuerConfig {
-  // 認可コードの状態を取得するコールバック
-  authCodeStateProvider: AuthCodeStateProvider;
-  // Access Tokenを発行するコールバック
-  accessTokenIssuer: AccessTokenIssuer;
-  // DPoP設定（オプション）
-  dpop?: DpopConfig;
-  // Token EndpointのURL（DPoP有効時に必須、htu検証用）
-  tokenEndpointUrl?: string;
-}
-
-interface DpopConfig {
-  enabled: boolean;              // DPoPサポートを有効化
-  required?: boolean;            // 全リクエストでDPoPを必須化（デフォルト: false）
-  allowedAlgorithms?: string[];  // 許可する署名アルゴリズム
-  iatToleranceSeconds?: number;  // iat許容範囲（デフォルト: 300秒）
-}
-
-// Access Token発行時のコンテキスト（DPoPバインディング等）
-interface TokenIssuanceContext {
-  dpopJkt?: string;  // DPoP JWK Thumbprint（DPoP Proof検証成功時に設定）
-}
-
-// 認可コードの存在と状態を返す
-type AuthCodeStateProvider = (
-  authorizedCode: string,
-) => Promise<NotExists | Exists<PayloadAtExists>>;
-
-// Access Tokenを発行して返す（contextでDPoP情報を受け取る）
-type AccessTokenIssuer = (
-  authorizedCode: AuthorizedCodeWithStoredData,
-  context?: TokenIssuanceContext,
-) => Promise<Result<TokenResponse, ErrorPayload>>;
-```
-
-## クラス図
-
 ```mermaid
 classDiagram
     class TokenIssuerConfig {
@@ -83,6 +45,42 @@ classDiagram
     TokenIssuerConfig --> AccessTokenIssuer : uses
     TokenIssuerConfig --> DpopConfig : optional
     AccessTokenIssuer ..> TokenIssuanceContext : receives
+```
+
+```typescript
+interface TokenIssuerConfig {
+  // 認可コードの状態を取得するコールバック
+  authCodeStateProvider: AuthCodeStateProvider;
+  // Access Tokenを発行するコールバック
+  accessTokenIssuer: AccessTokenIssuer;
+  // DPoP設定（オプション）
+  dpop?: DpopConfig;
+  // Token EndpointのURL（DPoP有効時に必須、htu検証用）
+  tokenEndpointUrl?: string;
+}
+
+interface DpopConfig {
+  enabled: boolean;              // DPoPサポートを有効化
+  required?: boolean;            // 全リクエストでDPoPを必須化（デフォルト: false）
+  allowedAlgorithms?: string[];  // 許可する署名アルゴリズム
+  iatToleranceSeconds?: number;  // iat許容範囲（デフォルト: 300秒）
+}
+
+// Access Token発行時のコンテキスト（DPoPバインディング等）
+interface TokenIssuanceContext {
+  dpopJkt?: string;  // DPoP JWK Thumbprint（DPoP Proof検証成功時に設定）
+}
+
+// 認可コードの存在と状態を返す
+type AuthCodeStateProvider = (
+  authorizedCode: string,
+) => Promise<NotExists | Exists<PayloadAtExists>>;
+
+// Access Tokenを発行して返す（contextでDPoP情報を受け取る）
+type AccessTokenIssuer = (
+  authorizedCode: AuthorizedCodeWithStoredData,
+  context?: TokenIssuanceContext,
+) => Promise<Result<TokenResponse, ErrorPayload>>;
 ```
 
 ## モジュール連携シーケンス
