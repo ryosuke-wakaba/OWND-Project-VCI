@@ -16,6 +16,8 @@ import keys, {
   removeCertificateAtIndex,
 } from "ownd-vci-common/dist/keys.js";
 import keyStore from "ownd-vci-common/dist/store/keyStore.js";
+import authStore from "ownd-vci-common/dist/store/authStore.js";
+import signedMetadata from "ownd-vci-common/dist/signedMetadata.js";
 import {
   getCertificatesInfo,
   CERT_PEM_PREAMBLE,
@@ -23,6 +25,7 @@ import {
 } from "@ownd-project/ts-toolbox";
 
 import store, { NewLearner } from "../../store.js";
+import { MetadataRepository } from "../../metadata/MetadataRepository.js";
 
 export async function handleNewLearner(ctx: Koa.Context) {
   if (!ctx.request.body) {
@@ -725,6 +728,85 @@ export async function handleRemoveCert(ctx: Koa.Context) {
   }
 }
 
+// Metadata Management Handlers
+export async function handleMetadataIndex(ctx: Koa.Context) {
+  try {
+    // Get current metadata
+    const credentialIssuer = process.env.CREDENTIAL_ISSUER || "";
+    const metadataRepository = new MetadataRepository(credentialIssuer);
+    const metadata = await metadataRepository.getIssuerMetadata();
+
+    // Get available signing keys
+    const keysResult = await keys.getAllKeys();
+    const availableKeys = keysResult.ok
+      ? keysResult.payload.filter((k) => !k.revokedAt)
+      : [];
+
+    // Get signed metadata history
+    const signedMetadataHistory = await authStore.getAllSignedMetadata();
+
+    // Get active signed metadata
+    const activeSignedMetadata = await authStore.getActiveSignedMetadata();
+
+    await ctx.render("admin/metadata", {
+      title: "メタデータ管理",
+      metadata: JSON.stringify(metadata, null, 2),
+      availableKeys,
+      signedMetadataHistory,
+      activeSignedMetadata,
+    });
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to load metadata page" };
+  }
+}
+
+export async function handleMetadataSign(ctx: Koa.Context) {
+  try {
+    const { signingKeyKid, includeFullChain } = ctx.request.body;
+
+    if (!signingKeyKid) {
+      ctx.status = 400;
+      ctx.body = { error: "Signing key is required" };
+      return;
+    }
+
+    // Get current metadata
+    const credentialIssuer = process.env.CREDENTIAL_ISSUER || "";
+    const metadataRepository = new MetadataRepository(credentialIssuer);
+    const metadata = await metadataRepository.getIssuerMetadata();
+
+    // Sign metadata with options
+    const result = await signedMetadata.signMetadata(metadata, signingKeyKid, {
+      includeFullChain: includeFullChain === "true",
+    });
+
+    if (result.ok) {
+      ctx.redirect("/admin/metadata");
+    } else {
+      ctx.status = 400;
+      ctx.body = { error: result.error.error };
+    }
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to sign metadata" };
+  }
+}
+
+export async function handleMetadataRevoke(ctx: Koa.Context) {
+  try {
+    const { id } = ctx.params;
+    await authStore.revokeSignedMetadata(Number(id));
+    ctx.redirect("/admin/metadata");
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to revoke signed metadata" };
+  }
+}
+
 export default {
   handleAdminIndex,
   handleNewLearner,
@@ -750,4 +832,8 @@ export default {
   handleAddParentCert,
   handleRemoveParentCerts,
   handleRemoveCert,
+  // Metadata management
+  handleMetadataIndex,
+  handleMetadataSign,
+  handleMetadataRevoke,
 };

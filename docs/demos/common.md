@@ -12,6 +12,7 @@
 - [`src/store/keyStore.ts`](../../demos/common/src/store/keyStore.ts) - 署名鍵管理
 - [`src/store/authStore.ts`](../../demos/common/src/store/authStore.ts) - 認可・認証データ管理
 - [`src/keys.ts`](../../demos/common/src/keys.ts) - 鍵・証明書操作ロジック
+- [`src/signedMetadata.ts`](../../demos/common/src/signedMetadata.ts) - 署名付きメタデータ生成
 - [`src/routes/admin/`](../../demos/common/src/routes/admin/) - 管理API共通実装
 - [`src/routes/common.ts`](../../demos/common/src/routes/common.ts) - 共通ルーティング
 
@@ -47,6 +48,16 @@
 │   description       │
 │   createdAt         │
 └─────────────────────┘
+
+┌─────────────────────┐
+│   signed_metadata   │
+├─────────────────────┤
+│ * id (PK)           │
+│   jwt               │
+│   signingKeyKid     │
+│   createdAt         │
+│   revokedAt         │
+└─────────────────────┘
 ```
 
 #### テーブル定義
@@ -75,6 +86,17 @@
 | description | VARCHAR(255) | 証明書の説明（NULL許可） |
 | createdAt | DATETIME | 作成日時 |
 
+##### signed_metadata
+署名付きIssuerメタデータ（OID4VCI Section 12.2.3）。
+
+| カラム | 型 | 説明 |
+|--------|------|------|
+| id | INTEGER | 主キー（自動採番） |
+| jwt | TEXT | 署名付きメタデータJWT |
+| signingKeyKid | VARCHAR(255) | 署名に使用した鍵のkid |
+| createdAt | DATETIME | 作成日時 |
+| revokedAt | DATETIME | 失効日時（NULL=有効） |
+
 #### 主要操作（keyStore）
 
 | 関数 | 説明 |
@@ -89,6 +111,16 @@
 | `getX509CertificateData` | 証明書データと説明を取得 |
 | `updateX509Certificate` | 証明書チェーンを更新 |
 | `updateX509CertificateDescription` | 証明書の説明を更新 |
+
+#### 主要操作（signedMetadata）
+
+| 関数 | 説明 |
+|------|------|
+| `addSignedMetadata` | 署名付きメタデータを登録 |
+| `getActiveSignedMetadata` | 有効な署名付きメタデータを取得 |
+| `revokeSignedMetadata` | 指定IDの署名付きメタデータを失効 |
+| `revokeAllSignedMetadata` | 全署名付きメタデータを失効 |
+| `getAllSignedMetadata` | 全署名付きメタデータを取得 |
 
 ---
 

@@ -16,7 +16,7 @@
     "strict": true,
     "skipLibCheck": true
   },
-  "include": ["./src/**/*.ts", "./tests/**/*.ts"],
+  "include": ["./src/**/*.ts"],
   "ts-node": {
     "esm": true,
     "experimentalSpecifierResolution": "node"

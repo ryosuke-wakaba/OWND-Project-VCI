@@ -55,6 +55,7 @@ export const TBL_NM_AUTH_CODES = "auth_codes";
 export const TBL_NM_ACCESS_TOKENS = "access_tokens";
 export const TBL_NM_C_NONCES = "c_nonces";
 export const TBL_NM_AUTH_CODE_METADATA = "auth_code_metadata";
+export const TBL_NM_SIGNED_METADATA = "signed_metadata";
 
 const DDL_AUTH_CODES = `
   CREATE TABLE ${TBL_NM_AUTH_CODES} (
@@ -99,11 +100,22 @@ const DDL_AUTH_CODE_METADATA = `
   )
 `.trim();
 
+const DDL_SIGNED_METADATA = `
+  CREATE TABLE ${TBL_NM_SIGNED_METADATA} (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    jwt TEXT NOT NULL,
+    signingKeyKid VARCHAR(255),
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    revokedAt DATETIME DEFAULT NULL
+  )
+`.trim();
+
 const DDL_MAP = {
   [TBL_NM_AUTH_CODES]: DDL_AUTH_CODES,
   [TBL_NM_ACCESS_TOKENS]: DDL_ACCESS_TOKENS,
   [TBL_NM_C_NONCES]: DDL_C_NONCES,
   [TBL_NM_AUTH_CODE_METADATA]: DDL_AUTH_CODE_METADATA,
+  [TBL_NM_SIGNED_METADATA]: DDL_SIGNED_METADATA,
 };
 
 /**
@@ -430,6 +442,106 @@ export const validateDpopNonce = async (nonce: string): Promise<boolean> => {
   return now < expiresAt;
 };
 
+// ========================================
+// Signed Metadata Management
+// ========================================
+
+export interface SignedMetadata {
+  id: number;
+  jwt: string;
+  signingKeyKid?: string;
+  createdAt: string;
+  revokedAt?: string;
+}
+
+/**
+ * Add a signed metadata JWT to the database
+ * @param jwt - The signed metadata JWT
+ * @param signingKeyKid - The key ID used to sign the metadata
+ * @returns The ID of the inserted record
+ */
+export const addSignedMetadata = async (
+  jwt: string,
+  signingKeyKid?: string,
+): Promise<number | undefined> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.run(
+      `INSERT INTO ${TBL_NM_SIGNED_METADATA} (jwt, signingKeyKid) VALUES (?, ?)`,
+      jwt,
+      signingKeyKid || null,
+    );
+    return result.lastID;
+  } catch (err) {
+    handleError(err);
+  }
+};
+
+/**
+ * Get the active (non-revoked) signed metadata
+ * @returns The most recent active signed metadata, or undefined if none exists
+ */
+export const getActiveSignedMetadata = async (): Promise<
+  SignedMetadata | undefined
+> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.get<SignedMetadata>(
+      `SELECT * FROM ${TBL_NM_SIGNED_METADATA} WHERE revokedAt IS NULL ORDER BY createdAt DESC LIMIT 1`,
+    );
+    return result;
+  } catch (err) {
+    handleError(err);
+  }
+};
+
+/**
+ * Revoke a signed metadata by ID
+ * @param id - The ID of the signed metadata to revoke
+ */
+export const revokeSignedMetadata = async (id: number): Promise<void> => {
+  try {
+    const db = await store.openDb();
+    await db.run(
+      `UPDATE ${TBL_NM_SIGNED_METADATA} SET revokedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+      id,
+    );
+  } catch (err) {
+    handleError(err);
+  }
+};
+
+/**
+ * Revoke all active signed metadata
+ */
+export const revokeAllSignedMetadata = async (): Promise<void> => {
+  try {
+    const db = await store.openDb();
+    await db.run(
+      `UPDATE ${TBL_NM_SIGNED_METADATA} SET revokedAt = CURRENT_TIMESTAMP WHERE revokedAt IS NULL`,
+    );
+  } catch (err) {
+    handleError(err);
+  }
+};
+
+/**
+ * Get all signed metadata (for history display)
+ * @returns All signed metadata records, ordered by creation date descending
+ */
+export const getAllSignedMetadata = async (): Promise<SignedMetadata[]> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.all<SignedMetadata[]>(
+      `SELECT * FROM ${TBL_NM_SIGNED_METADATA} ORDER BY createdAt DESC`,
+    );
+    return result || [];
+  } catch (err) {
+    handleError(err);
+    return [];
+  }
+};
+
 export default {
   createDb,
   destroyDb,
@@ -446,4 +558,9 @@ export default {
   getAuthCodeMetadataByCode,
   generateDpopNonce,
   validateDpopNonce,
+  addSignedMetadata,
+  getActiveSignedMetadata,
+  revokeSignedMetadata,
+  revokeAllSignedMetadata,
+  getAllSignedMetadata,
 };
