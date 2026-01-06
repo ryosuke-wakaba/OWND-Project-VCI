@@ -106,6 +106,26 @@
       /.well-known/openid-credential-issuer
     </a>
   </p>
+
+  <div class="curl-commands">
+    <h4>確認用コマンド</h4>
+
+    <div class="curl-item">
+      <label>JSON形式（デフォルト）:</label>
+      <div class="curl-container">
+        <code id="curl-json">curl <%= credentialIssuer %>/.well-known/openid-credential-issuer</code>
+        <button type="button" class="btn btn-secondary btn-copy-small" onclick="copyCurl('curl-json')">コピー</button>
+      </div>
+    </div>
+
+    <div class="curl-item">
+      <label>JWT形式（署名付きメタデータ）:</label>
+      <div class="curl-container">
+        <code id="curl-jwt">curl -H "Accept: application/jwt" <%= credentialIssuer %>/.well-known/openid-credential-issuer</code>
+        <button type="button" class="btn btn-secondary btn-copy-small" onclick="copyCurl('curl-jwt')">コピー</button>
+      </div>
+    </div>
+  </div>
 </div>
 
 <script>
@@ -117,6 +137,20 @@ function copyJwt() {
   const jwtContent = document.getElementById('jwt-content').textContent;
   navigator.clipboard.writeText(jwtContent).then(() => {
     const btn = document.querySelector('.btn-copy');
+    const originalText = btn.textContent;
+    btn.textContent = 'コピーしました';
+    btn.classList.add('copied');
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.classList.remove('copied');
+    }, 2000);
+  });
+}
+
+function copyCurl(elementId) {
+  const curlContent = document.getElementById(elementId).textContent;
+  navigator.clipboard.writeText(curlContent).then(() => {
+    const btn = document.getElementById(elementId).parentElement.querySelector('.btn-copy-small');
     const originalText = btn.textContent;
     btn.textContent = 'コピーしました';
     btn.classList.add('copied');
@@ -276,5 +310,56 @@ details summary:hover {
 
 .endpoint-link:hover {
   text-decoration: underline;
+}
+
+.curl-commands {
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e2e8f0;
+}
+
+.curl-commands h4 {
+  margin: 0 0 1rem 0;
+  font-size: 0.95rem;
+  color: #475569;
+}
+
+.curl-item {
+  margin-bottom: 1rem;
+}
+
+.curl-item label {
+  display: block;
+  font-size: 0.85rem;
+  color: #64748b;
+  margin-bottom: 0.3rem;
+}
+
+.curl-container {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: #f8fafc;
+  padding: 0.5rem;
+  border-radius: 4px;
+}
+
+.curl-container code {
+  flex: 1;
+  font-family: monospace;
+  font-size: 0.85rem;
+  color: #1e293b;
+  word-break: break-all;
+}
+
+.btn-copy-small {
+  font-size: 0.75rem;
+  padding: 0.25rem 0.5rem;
+  white-space: nowrap;
+}
+
+.btn-copy-small.copied {
+  background-color: #28a745;
+  color: white;
 }
 </style>

@@ -754,6 +754,7 @@ export async function handleMetadataIndex(ctx: Koa.Context) {
       availableKeys,
       signedMetadataHistory,
       activeSignedMetadata,
+      credentialIssuer,
     });
   } catch (err) {
     console.error(err);
