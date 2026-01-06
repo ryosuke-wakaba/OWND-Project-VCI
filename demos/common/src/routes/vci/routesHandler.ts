@@ -15,8 +15,11 @@ import { IMetadataRepository } from "ownd-vci/dist/metadata/IMetadataRepository.
 /**
  * Issuer Metadataを返すハンドラ
  *
- * 有効な署名付きメタデータが存在する場合はJWT形式で返却し、
- * 存在しない場合はJSON形式で返却する。
+ * クライアントのAccept Headerに基づいてレスポンス形式を決定する:
+ * - Accept: application/jwt かつ署名付きメタデータあり → JWT形式で返却
+ * - Accept: application/json または指定なし → JSON形式で返却
+ *
+ * @see https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-12.2.2
  *
  * @param ctx - Koaコンテキスト
  * @param metadataRepository - メタデータリポジトリ実装（各demoから注入）
@@ -30,17 +33,23 @@ export async function handleIssueMetadata(
   defaultLocale: string,
 ) {
   try {
-    // Check for active signed metadata first
-    const signedMetadata = await authStore.getActiveSignedMetadata();
-    if (signedMetadata) {
-      console.debug("Returning signed metadata JWT");
-      ctx.body = signedMetadata.jwt;
-      ctx.status = 200;
-      ctx.set("Content-Type", "application/jwt");
-      return;
+    const acceptHeader = ctx.request.header["accept"];
+
+    // クライアントが application/jwt を要求した場合
+    if (acceptHeader && acceptHeader.includes("application/jwt")) {
+      const signedMetadata = await authStore.getActiveSignedMetadata();
+      if (signedMetadata) {
+        console.debug("Returning signed metadata JWT (Accept: application/jwt)");
+        ctx.body = signedMetadata.jwt;
+        ctx.status = 200;
+        ctx.set("Content-Type", "application/jwt");
+        return;
+      }
+      // 署名付きメタデータがない場合はJSONにフォールバック
+      console.debug("Accept: application/jwt requested but no signed metadata available, falling back to JSON");
     }
 
-    // No signed metadata, return JSON
+    // デフォルト: JSON形式で返却
     const needsLocalization = process.env.RESOLVE_ACCEPT_LANGUAGE === "true";
 
     // リポジトリから取得

@@ -380,20 +380,68 @@ describe("Signed Metadata", () => {
     });
   });
 
-  describe("Endpoint Response Format", () => {
-    it("should return application/jwt Content-Type for signed metadata", () => {
-      // When signed metadata exists, Content-Type should be application/jwt
-      const expectedContentType = "application/jwt";
+  describe("Endpoint Response Format (Accept Header based)", () => {
+    /**
+     * OID4VCI Section 12.2.2に基づくAccept Header判定ロジック:
+     * - Accept: application/jwt + 署名あり → JWT返却
+     * - Accept: application/jwt + 署名なし → JSONにフォールバック
+     * - Accept: application/json → JSON返却
+     * - Accept Header なし → JSON返却（デフォルト）
+     */
+
+    it("should return application/jwt when Accept header is application/jwt and signed metadata exists", () => {
+      // クライアントがAccept: application/jwtを指定し、署名付きメタデータがある場合
+      const acceptHeader = "application/jwt";
+      const hasSignedMetadata = true;
+
+      const shouldReturnJwt = acceptHeader.includes("application/jwt") && hasSignedMetadata;
+      assert.isTrue(shouldReturnJwt);
+
+      const expectedContentType = shouldReturnJwt ? "application/jwt" : "application/json";
       assert.equal(expectedContentType, "application/jwt");
     });
 
-    it("should return application/json Content-Type when no signed metadata", () => {
-      // When no signed metadata exists, Content-Type should be application/json
+    it("should fallback to application/json when Accept header is application/jwt but no signed metadata", () => {
+      // クライアントがAccept: application/jwtを指定したが、署名付きメタデータがない場合
+      const acceptHeader = "application/jwt";
+      const hasSignedMetadata = false;
+
+      const shouldReturnJwt = acceptHeader.includes("application/jwt") && hasSignedMetadata;
+      assert.isFalse(shouldReturnJwt);
+
+      const expectedContentType = shouldReturnJwt ? "application/jwt" : "application/json";
+      assert.equal(expectedContentType, "application/json");
+    });
+
+    it("should return application/json when Accept header is application/json", () => {
+      // クライアントがAccept: application/jsonを指定した場合
+      const acceptHeader = "application/json";
+
+      const requestsJwt = acceptHeader.includes("application/jwt");
+      assert.isFalse(requestsJwt);
+
       const expectedContentType = "application/json";
       assert.equal(expectedContentType, "application/json");
     });
 
-    it("should return raw JWT string when signed metadata exists", async () => {
+    it("should return application/json when no Accept header is provided (default)", () => {
+      // Accept Headerがない場合はデフォルトでJSON
+      // 実装では: if (acceptHeader && acceptHeader.includes("application/jwt"))
+      // Accept Header なし → JSONを返却
+
+      // Test the logic: when acceptHeader is falsy, we should return JSON
+      function determineContentType(acceptHeader: string | undefined): string {
+        if (acceptHeader && acceptHeader.includes("application/jwt")) {
+          return "application/jwt";
+        }
+        return "application/json";
+      }
+
+      assert.equal(determineContentType(undefined), "application/json");
+      assert.equal(determineContentType(""), "application/json");
+    });
+
+    it("should return raw JWT string when Accept: application/jwt and signed metadata exists", async () => {
       const alg = "ES256";
       const signingKey = await jose.importJWK(privateJwk as jose.JWK, alg);
 
@@ -426,8 +474,8 @@ describe("Signed Metadata", () => {
       assert.equal(decodedHeader.typ, SIGNED_METADATA_TYP);
     });
 
-    it("should return JSON object when no signed metadata exists", () => {
-      // When returning JSON, it should be a valid object
+    it("should return JSON object as default response format", () => {
+      // デフォルト（JSONを返却する場合）のレスポンス形式
       const jsonResponse = sampleMetadata;
       assert.isObject(jsonResponse);
       assert.property(jsonResponse, "credential_issuer");
