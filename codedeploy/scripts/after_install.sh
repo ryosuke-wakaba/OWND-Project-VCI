@@ -71,9 +71,12 @@ else
   exit 1
 fi
 
-# Set proper ownership
-chown -R ec2-user:ec2-user /opt/app
+# Set proper ownership for .env file (explicitly, as /opt/app may be a symlink)
+chown ec2-user:ec2-user /opt/app/demos/learning-vci/.env
 chmod 600 /opt/app/demos/learning-vci/.env
+
+# Set ownership for the rest of /opt/app
+chown -R ec2-user:ec2-user /opt/app/
 
 # Create data directory for SQLite
 mkdir -p /opt/app/demos/learning-vci/data
