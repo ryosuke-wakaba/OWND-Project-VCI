@@ -50,17 +50,18 @@ echo "Generating .env from SSM Parameter Store..."
 SSM_PARAMETER_PATH="${SSM_PARAMETER_PATH:-/ownd-eujp/experiment/issuer}"
 
 # Fetch all parameters under the path and generate .env file
-aws ssm get-parameters-by-path \
-  --path "$SSM_PARAMETER_PATH" \
-  --with-decryption \
-  --region "$REGION" \
-  --query "Parameters[*].[Name,Value]" \
-  --output text | while IFS=$'\t' read -r name value; do
+# Note: Using process substitution to avoid subshell issues with pipelines
+while IFS=$'\t' read -r name value; do
     # Extract parameter name (last part of the path)
     key=$(basename "$name")
     # Quote the value to handle spaces and special characters
     echo "${key}=\"${value}\""
-done > /opt/app/demos/learning-vci/.env
+done < <(aws ssm get-parameters-by-path \
+  --path "$SSM_PARAMETER_PATH" \
+  --with-decryption \
+  --region "$REGION" \
+  --query "Parameters[*].[Name,Value]" \
+  --output text) > /opt/app/demos/learning-vci/.env
 
 # Verify .env was created
 if [ -s /opt/app/demos/learning-vci/.env ]; then
@@ -77,3 +78,5 @@ chmod 600 /opt/app/demos/learning-vci/.env
 # Create data directory for SQLite
 mkdir -p /opt/app/demos/learning-vci/data
 chown ec2-user:ec2-user /opt/app/demos/learning-vci/data
+
+echo "after_install.sh completed successfully"
