@@ -21,7 +21,8 @@ export const authCodeStateProvider: AuthCodeStateProvider = async (
     ...rest,
     isUsed: usedAt !== null,
     // Include requireClientAuth from stored auth code
-    requireClientAuth: storedAuthCode.requireClientAuth || false,
+    // Note: SQLite returns 0/1 for boolean columns, so we convert to boolean
+    requireClientAuth: Boolean(storedAuthCode.requireClientAuth),
     storedData: { id: storedAuthCode.id },
   };
   return {
