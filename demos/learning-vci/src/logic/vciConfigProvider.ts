@@ -20,6 +20,9 @@ export const authCodeStateProvider: AuthCodeStateProvider = async (
   const _preAuthorizedCode = {
     ...rest,
     isUsed: usedAt !== null,
+    // Include requireClientAuth from stored auth code
+    // Note: SQLite returns 0/1 for boolean columns, so we convert to boolean
+    requireClientAuth: Boolean(storedAuthCode.requireClientAuth),
     storedData: { id: storedAuthCode.id },
   };
   return {
@@ -84,6 +87,13 @@ const getTokenEndpointUrl = (): string => {
   return `${issuer}/token`;
 };
 
+/**
+ * Get Credential Issuer URL for Client Authentication audience validation
+ */
+const getCredentialIssuerUrl = (): string => {
+  return process.env.CREDENTIAL_ISSUER || "http://localhost:3001";
+};
+
 export const tokenConfigure = (): TokenIssuerConfig => {
   const config: TokenIssuerConfig = {
     authCodeStateProvider,
@@ -100,6 +110,17 @@ export const tokenConfigure = (): TokenIssuerConfig => {
     };
     config.tokenEndpointUrl = getTokenEndpointUrl();
   }
+
+  // Add Client Authentication configuration
+  // Client authentication is checked per auth code (requireClientAuth flag)
+  config.clientAuthentication = {
+    enabled: true,
+    issuerAudience: getCredentialIssuerUrl(),
+    // Optional: Add custom x5c validator for certificate chain validation
+    // x5cValidator: async (x5cChain) => { ... }
+    // Optional: Add jti validator for replay detection
+    // jtiValidator: async (jti) => { ... }
+  };
 
   return config;
 };

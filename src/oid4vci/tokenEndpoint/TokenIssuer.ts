@@ -10,6 +10,12 @@ import {
   hasDpopHeader,
   DpopValidationResult,
 } from "../dpop/index.js";
+import {
+  extractClientAttestationHeaders,
+  hasClientAttestationHeaders,
+  validateClientAuthentication,
+  ClientAuthValidationResult,
+} from "../clientAuthentication/index.js";
 
 export class TokenIssuer {
   // eslint-disable-next-line no-unused-vars
@@ -91,8 +97,93 @@ export class TokenIssuer {
       return { ok, error: { status: 400, payload: error } };
     }
 
-    // Issue access token with context (including DPoP binding if applicable)
     const { authorizedCode } = validateResult.payload;
+
+    // Client Authentication validation (if enabled and required)
+    if (this.config.clientAuthentication?.enabled) {
+      const clientAuthHeaders = extractClientAttestationHeaders((name) =>
+        request.getHeader(name),
+      );
+      const hasClientAuth = hasClientAttestationHeaders(clientAuthHeaders);
+      const requireClientAuth = authorizedCode.requireClientAuth === true;
+
+      // Check if client auth is required for this auth code
+      if (requireClientAuth) {
+        if (!hasClientAuth) {
+          return {
+            ok: false,
+            error: {
+              status: 401,
+              payload: {
+                error: "invalid_client",
+                error_description:
+                  "Client authentication is required: OAuth-Client-Attestation and OAuth-Client-Attestation-PoP headers must be provided",
+              },
+            },
+          };
+        }
+
+        // Validate client authentication
+        const clientAuthResult: ClientAuthValidationResult =
+          await validateClientAuthentication(clientAuthHeaders, {
+            issuerAudience: this.config.clientAuthentication.issuerAudience,
+            allowedAlgorithms:
+              this.config.clientAuthentication.allowedAlgorithms,
+            iatToleranceSeconds:
+              this.config.clientAuthentication.iatToleranceSeconds,
+            x5cValidator: this.config.clientAuthentication.x5cValidator,
+            jtiValidator: this.config.clientAuthentication.jtiValidator,
+          });
+
+        if (!clientAuthResult.valid) {
+          return {
+            ok: false,
+            error: {
+              status: 401,
+              payload: {
+                error: clientAuthResult.errorCode,
+                error_description: clientAuthResult.errorDescription,
+              },
+            },
+          };
+        }
+
+        console.log(
+          `[TokenIssuer] Client authenticated: clientId=${clientAuthResult.clientId}, walletProvider=${clientAuthResult.walletProvider}`,
+        );
+      } else if (hasClientAuth) {
+        // Client auth headers provided but not required - still validate them
+        const clientAuthResult: ClientAuthValidationResult =
+          await validateClientAuthentication(clientAuthHeaders, {
+            issuerAudience: this.config.clientAuthentication.issuerAudience,
+            allowedAlgorithms:
+              this.config.clientAuthentication.allowedAlgorithms,
+            iatToleranceSeconds:
+              this.config.clientAuthentication.iatToleranceSeconds,
+            x5cValidator: this.config.clientAuthentication.x5cValidator,
+            jtiValidator: this.config.clientAuthentication.jtiValidator,
+          });
+
+        if (!clientAuthResult.valid) {
+          return {
+            ok: false,
+            error: {
+              status: 401,
+              payload: {
+                error: clientAuthResult.errorCode,
+                error_description: clientAuthResult.errorDescription,
+              },
+            },
+          };
+        }
+
+        console.log(
+          `[TokenIssuer] Client authenticated (optional): clientId=${clientAuthResult.clientId}, walletProvider=${clientAuthResult.walletProvider}`,
+        );
+      }
+    }
+
+    // Issue access token with context (including DPoP binding if applicable)
     const accessToken = await this.config.accessTokenIssuer(
       authorizedCode,
       context,

@@ -12,6 +12,8 @@ export interface AuthorizedCode extends Identifiable {
   isUsed: boolean;
   createdAt: string;
   sub: string;
+  /** Whether client authentication (Wallet Attestation) is required */
+  requireClientAuth?: boolean;
 }
 
 export interface AccessToken {

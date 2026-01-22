@@ -170,6 +170,7 @@ export const addPreAuthCode = async (
   txCode: string,
   sub: string,
   signingKeyKid?: string,
+  requireClientAuth?: boolean,
 ) => {
   try {
     const authCodeId = await authStore.addAuthCode(
@@ -179,6 +180,7 @@ export const addPreAuthCode = async (
       txCode,
       true,
       sub,
+      requireClientAuth,
     );
     // Store signing key kid in metadata if provided
     if (authCodeId && signingKeyKid) {
@@ -193,6 +195,7 @@ export const addPreAuthCode = async (
 type StoredPreAuthCode = {
   usedAt: string;
   sub?: string;
+  requireClientAuth?: boolean;
 } & Omit<AuthorizedCode, "isUsed"> &
   Identifiable;
 
