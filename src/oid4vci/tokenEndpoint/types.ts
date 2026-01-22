@@ -1,6 +1,7 @@
 import { ErrorPayload, ErrorResponse, Result } from "../../types.js";
 import { TokenResponse } from "../types/protocol.types.js";
 import { Exists, NotExists, AuthorizedCode } from "../types/types.js";
+import { X5cChainValidator } from "../clientAuthentication/types.js";
 
 /**
  * DPoP configuration for Token Endpoint
@@ -18,11 +19,32 @@ export interface DpopConfig {
   iatToleranceSeconds?: number;
 }
 
+/**
+ * Client Authentication configuration for Token Endpoint
+ * OAuth 2.0 Attestation-Based Client Authentication
+ */
+export interface ClientAuthenticationConfig {
+  /** Enable Client Authentication support */
+  enabled: boolean;
+  /** Credential Issuer URL for audience validation in PoP JWT */
+  issuerAudience: string;
+  /** Allowed signature algorithms (default: ES256, ES384, ES512) */
+  allowedAlgorithms?: string[];
+  /** Tolerance for iat claim in seconds (default: 300) */
+  iatToleranceSeconds?: number;
+  /** Custom x5c certificate chain validator */
+  x5cValidator?: X5cChainValidator;
+  /** JTI validator for replay detection */
+  jtiValidator?: (jti: string) => Promise<boolean>;
+}
+
 export interface TokenIssuerConfig {
   authCodeStateProvider: AuthCodeStateProvider;
   accessTokenIssuer: AccessTokenIssuer;
   /** DPoP configuration (optional) */
   dpop?: DpopConfig;
+  /** Client Authentication configuration (optional) */
+  clientAuthentication?: ClientAuthenticationConfig;
   /** HTTP URI for htu validation (required when dpop is enabled) */
   tokenEndpointUrl?: string;
 }

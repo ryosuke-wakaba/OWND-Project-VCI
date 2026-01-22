@@ -66,6 +66,7 @@ const DDL_AUTH_CODES = `
     txCode VARCHAR(8),
     needsProof BOOLEAN,
     sub VARCHAR(255),
+    requireClientAuth BOOLEAN DEFAULT FALSE,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     usedAt DATETIME DEFAULT NULL
   )
@@ -128,6 +129,13 @@ const runMigrations = async () => {
     "dpopJkt",
     "VARCHAR(255) DEFAULT NULL",
   );
+
+  // Migration: Add requireClientAuth column to auth_codes table (Wallet Attestation support)
+  await store.addColumnIfNotExists(
+    TBL_NM_AUTH_CODES,
+    "requireClientAuth",
+    "BOOLEAN DEFAULT FALSE",
+  );
 };
 
 export const createDb = async () => {
@@ -148,6 +156,7 @@ interface JoinedAuthCode {
   codeCreatedAt: string;
   usedAt: string;
   sub: string;
+  requireClientAuth: boolean;
 }
 export const addAuthCode = async (
   code: string,
@@ -156,17 +165,19 @@ export const addAuthCode = async (
   txCode: string,
   needsProof: boolean,
   sub?: string,
+  requireClientAuth?: boolean,
 ) => {
   try {
     const db = await store.openDb();
     const result = await db.run(
-      `INSERT INTO ${TBL_NM_AUTH_CODES} (code, expiresIn, preAuthFlow, txCode, needsProof, sub) VALUES (?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ${TBL_NM_AUTH_CODES} (code, expiresIn, preAuthFlow, txCode, needsProof, sub, requireClientAuth) VALUES (?, ?, ?, ?, ?, ?, ?)`,
       code,
       expiresIn,
       preAuthFlow,
       txCode,
       needsProof,
       sub || null,
+      requireClientAuth || false,
     );
     return result.lastID!;
   } catch (err) {
@@ -178,7 +189,7 @@ export const getAuthCode = async (code: string) => {
   try {
     const db = await store.openDb();
     const result = await db.get<AuthorizedCode>(
-      `SELECT id, code, expiresIn, preAuthFlow, txCode, needsProof, createdAt, usedAt FROM ${TBL_NM_AUTH_CODES} WHERE code = ?`,
+      `SELECT id, code, expiresIn, preAuthFlow, txCode, needsProof, requireClientAuth, createdAt, usedAt FROM ${TBL_NM_AUTH_CODES} WHERE code = ?`,
       code,
     );
     if (result) {
@@ -295,6 +306,7 @@ export const getAccessToken = async (
         p.preAuthFlow,
         p.usedAt,
         p.sub,
+        p.requireClientAuth,
         a.createdAt
       FROM ${TBL_NM_ACCESS_TOKENS} as a
       LEFT JOIN ${TBL_NM_AUTH_CODES} AS p ON a.authorized_code_id = p.id
@@ -317,6 +329,7 @@ export const getAccessToken = async (
           isUsed: row.usedAt !== null,
           createdAt: row.codeCreatedAt,
           sub: row.sub,
+          requireClientAuth: row.requireClientAuth || false,
         },
       };
     } else {

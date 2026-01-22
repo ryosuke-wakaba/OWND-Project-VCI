@@ -1,42 +1,42 @@
 # learning-vci
 
-Learning Credential（学習証明書）を発行するVCIデモ。
+Learning Credential（学習証明書）を発行する VCI デモ。
 
 ## 概要
 
-EUDI Wallet仕様に準拠した教育クレデンシャルを発行する。`demos/employee-vci`をベースに実装。
+EUDI Wallet 仕様に準拠した教育クレデンシャルを発行する。`demos/employee-vci`をベースに実装。
 
-## Credential仕様
+## Credential 仕様
 
 ### 基本情報
 
-| 項目 | 値 |
-|------|-----|
-| vct | `urn:eu.europa.ec.eudi:learning:credential:1` |
-| format | `dc+sd-jwt` |
-| scope | `LearningCredential` |
+| 項目   | 値                                            |
+| ------ | --------------------------------------------- |
+| vct    | `urn:eu.europa.ec.eudi:learning:credential:1` |
+| format | `dc+sd-jwt`                                   |
+| scope  | `LearningCredential`                          |
 
 ### データフィールド
 
 #### 必須フィールド (Mandatory)
 
-| フィールド名 | 型 | SD | 説明 |
-|------------|---|---|------|
-| `issuing_authority` | string | Never | 発行機関名 |
-| `issuing_country` | string | Never | 発行国 (ISO 3166-1 Alpha-2) |
-| `date_of_issuance` | string | Never | 発行日 (YYYY-MM-DD) |
-| `family_name` | string | Always | 姓 |
-| `given_name` | string | Always | 名 |
-| `achievement_title` | string | Never | コース/資格の公式タイトル |
+| フィールド名        | 型     | SD     | 説明                        |
+| ------------------- | ------ | ------ | --------------------------- |
+| `issuing_authority` | string | Never  | 発行機関名                  |
+| `issuing_country`   | string | Never  | 発行国 (ISO 3166-1 Alpha-2) |
+| `date_of_issuance`  | string | Never  | 発行日 (YYYY-MM-DD)         |
+| `family_name`       | string | Always | 姓                          |
+| `given_name`        | string | Always | 名                          |
+| `achievement_title` | string | Never  | コース/資格の公式タイトル   |
 
 #### オプションフィールド (Optional)
 
-| フィールド名 | 型 | SD | 説明 |
-|------------|---|---|------|
-| `date_of_expiry` | string | Never | 有効期限 (YYYY-MM-DD) |
-| `achievement_description` | string | Never | 実績の説明 |
-| `learning_outcomes` | string[] | Always | 学習成果リスト |
-| `assessment_grade` | string | Always | 評価/成績 |
+| フィールド名              | 型       | SD     | 説明                  |
+| ------------------------- | -------- | ------ | --------------------- |
+| `date_of_expiry`          | string   | Never  | 有効期限 (YYYY-MM-DD) |
+| `achievement_description` | string   | Never  | 実績の説明            |
+| `learning_outcomes`       | string[] | Always | 学習成果リスト        |
+| `assessment_grade`        | string   | Always | 評価/成績             |
 
 ---
 
@@ -51,18 +51,18 @@ cd demos/learning-vci
 cp .env.sample .env
 ```
 
-### 2. 外部URL経由でアクセスする場合（zrok等）
+### 2. 外部 URL 経由でアクセスする場合（zrok 等）
 
 モバイルウォレットからアクセスするには、ローカルサーバーを外部公開する必要があります。
 
-#### zrokのセットアップ
+#### zrok のセットアップ
 
 ```bash
 # zrokで公開（別ターミナルで実行）
 zrok share public http://localhost:3001
 ```
 
-表示されたURL（例: `https://xxxxx.share.zrok.io`）を `.env` に設定:
+表示された URL（例: `https://xxxxx.share.zrok.io`）を `.env` に設定:
 
 ```bash
 # .env
@@ -70,7 +70,7 @@ CREDENTIAL_ISSUER=https://xxxxx.share.zrok.io
 CREDENTIAL_ISSUER_IDENTIFIER=https://xxxxx.share.zrok.io
 ```
 
-#### ngrokの場合
+#### ngrok の場合
 
 ```bash
 ngrok http 3001
@@ -92,9 +92,10 @@ npm run dev
 ### 4. 管理画面へアクセス
 
 - ローカル: http://localhost:3001/admin/learners
-- 外部URL: https://xxxxx.share.zrok.io/admin/learners
+- 外部 URL: https://xxxxx.share.zrok.io/admin/learners
 
-Basic認証:
+Basic 認証:
+
 - ユーザー名: `BASIC_AUTH_USERNAME` の値（デフォルト: admin）
 - パスワード: `BASIC_AUTH_PASSWORD` の値（デフォルト: admin）
 
@@ -146,7 +147,7 @@ demos/learning-vci/
 
 ## 参考
 
-- [Learning Credential移行ガイド](/Users/ryousuke/repositories/ownd/ipa2025/OWND-Project-VP/docs/archive/learning-credential-migration.md)
+- [Learning Credential 移行ガイド](/Users/ryousuke/repositories/ownd/ipa2025/OWND-Project-VP/docs/archive/learning-credential-migration.md)
 - [employee-vci](./employee-vci.md)
 - EUDI-Wallet-NiScy_JP EU pilot_v0.10.docx
 
@@ -155,28 +156,29 @@ demos/learning-vci/
 ## キーペア管理機能
 
 ### 概要
-管理画面からIssuerキーペア（署名鍵）を管理し、クレデンシャル発行時に署名鍵を選択できる。
+
+管理画面から Issuer キーペア（署名鍵）を管理し、クレデンシャル発行時に署名鍵を選択できる。
 
 ### 管理画面
 
-| パス | 画面 | 説明 |
-|------|------|------|
-| `/admin/keys` | 鍵一覧 | 登録済み鍵ペアの一覧表示 |
-| `/admin/keys/new` | 鍵新規登録 | EC鍵ペアの生成（P-256/secp256k1） |
-| `/admin/keys/import` | 鍵インポート | PEM形式の秘密鍵+証明書のインポート |
-| `/admin/keys/:kid` | 鍵詳細 | 鍵情報、証明書チェーン、説明の表示・編集 |
-| `/admin/keys/:kid/certificate` | 証明書発行 | 自己署名証明書またはリーフ証明書の発行 |
-| `/admin/keys/:kid/add-parent-cert` | 上位証明書追加 | 証明書チェーンへの上位証明書追加 |
+| パス                               | 画面           | 説明                                     |
+| ---------------------------------- | -------------- | ---------------------------------------- |
+| `/admin/keys`                      | 鍵一覧         | 登録済み鍵ペアの一覧表示                 |
+| `/admin/keys/new`                  | 鍵新規登録     | EC 鍵ペアの生成（P-256/secp256k1）       |
+| `/admin/keys/import`               | 鍵インポート   | PEM 形式の秘密鍵+証明書のインポート      |
+| `/admin/keys/:kid`                 | 鍵詳細         | 鍵情報、証明書チェーン、説明の表示・編集 |
+| `/admin/keys/:kid/certificate`     | 証明書発行     | 自己署名証明書またはリーフ証明書の発行   |
+| `/admin/keys/:kid/add-parent-cert` | 上位証明書追加 | 証明書チェーンへの上位証明書追加         |
 
 ### 証明書チェーン表示
 
 キーペア詳細画面では、証明書チェーンを階層的に表示する。
 
-| 位置 | ラベル | 説明 |
-|------|--------|------|
-| 先頭 | End Entity | 対象キーの証明書 |
+| 位置 | ラベル       | 説明                       |
+| ---- | ------------ | -------------------------- |
+| 先頭 | End Entity   | 対象キーの証明書           |
 | 中間 | Intermediate | 中間証明書（存在する場合） |
-| 末尾 | Root | ルート証明書 |
+| 末尾 | Root         | ルート証明書               |
 
 上位証明書は**リーフ証明書として発行した場合**のみ表示される。自己署名証明書の場合は単一証明書のみ。
 
@@ -186,9 +188,10 @@ demos/learning-vci/
 
 **画面**: `/admin/keys/:kid/add-parent-cert`
 
-**入力**: 上位証明書のPEM形式テキスト（複数証明書対応、中間証明書→ルート証明書の順で入力）
+**入力**: 上位証明書の PEM 形式テキスト（複数証明書対応、中間証明書 → ルート証明書の順で入力）
 
 **処理**:
+
 1. 既存の証明書チェーンを取得
 2. 入力された上位証明書をパース
 3. 既存チェーン + 新規上位証明書でチェーンを更新
@@ -199,13 +202,15 @@ demos/learning-vci/
 
 クレデンシャル発行時に、使用する署名鍵を選択できる。
 
-**選択画面**: `/admin/learners/:id/offer`（Credential Offer生成画面）
+**選択画面**: `/admin/learners/:id/offer`（Credential Offer 生成画面）
 
 **署名鍵の決定ロジック**:
+
 1. 証明書がある鍵 → `x5c`方式（証明書チェーンをヘッダーに含む）
 2. 証明書がない鍵 → `jwk`方式（公開鍵をヘッダーに含む）
 
 **データフロー**:
+
 ```
 Offer生成 → auth_code + auth_code_metadata(signingKeyKid)
          → Access Token発行
@@ -214,15 +219,50 @@ Offer生成 → auth_code + auth_code_metadata(signingKeyKid)
 
 ### 既知の制約
 
-VCIプロトコルのアーキテクチャ上、credential発行関数は`sub`（学習者ID）のみを受け取る。そのため、同一学習者に対して複数のオファーが並行して存在する場合、最新のオファーの署名鍵が使用される。
+VCI プロトコルのアーキテクチャ上、credential 発行関数は`sub`（学習者 ID）のみを受け取る。そのため、同一学習者に対して複数のオファーが並行して存在する場合、最新のオファーの署名鍵が使用される。
 
 **暫定対応**: `getLatestSigningKeyKidForLearner(learnerId)` 関数で最新の署名鍵を取得。
 
 ---
 
+## クライアント認証（Wallet Attestation）
+
+### 概要
+
+Credential Offer 生成時に「クライアント認証を要求する」を有効にすると、Token Endpoint 呼び出し時に Wallet Attestation によるクライアント認証が要求される。
+
+### 使用方法
+
+1. 管理画面の「Credential Offer 生成」画面 (`/admin/learners/:id/offer`) で「クライアント認証を要求する（Wallet Attestation）」チェックボックスをオンにする
+
+2. Credential Offer を生成
+
+3. Wallet が Token Endpoint にアクセスする際、以下の HTTP ヘッダーを送信する必要がある：
+   - `OAuth-Client-Attestation`: Wallet Provider が発行した Client Attestation JWT
+   - `OAuth-Client-Attestation-PoP`: Wallet が署名した PoP JWT
+
+### 認証フロー
+
+```
+Wallet → Token Endpoint
+    [OAuth-Client-Attestation: <JWT>]
+    [OAuth-Client-Attestation-PoP: <PoP JWT>]
+
+    → 1. Client Attestation JWT検証（x5c署名）
+    → 2. PoP JWT検証（cnf.jwk署名）
+    → 3. Access Token発行
+```
+
+### 詳細ドキュメント
+
+- [クライアント認証モジュール](../modules/oid4vci/client-authentication.md)
+- [Token Endpoint API 仕様](../api/token-endpoint.md)
+
+---
+
 ## マイグレーション
 
-既存DBを使用している場合、以下のSQLを実行する必要がある:
+既存 DB を使用している場合、以下の SQL を実行する必要がある:
 
 ```sql
 -- 証明書の説明カラム追加
@@ -236,4 +276,7 @@ CREATE TABLE auth_code_metadata (
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (authCodeId) REFERENCES auth_codes(id)
 );
+
+-- クライアント認証要求フラグ追加
+ALTER TABLE auth_codes ADD COLUMN requireClientAuth BOOLEAN DEFAULT FALSE;
 ```

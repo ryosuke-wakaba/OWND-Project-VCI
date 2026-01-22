@@ -148,15 +148,24 @@ export type GenerateCredentialOfferResult = {
   subject: any;
   credentialOffer: string;
   txCode: string;
+  requireClientAuth: boolean;
+};
+
+export type GenerateCredentialOfferOptions = {
+  signingKeyKid?: string;
+  requireClientAuth?: boolean;
 };
 
 const credentialOfferForLearner = async (
   learnerNo: string,
-  signingKeyKid?: string,
+  options: GenerateCredentialOfferOptions = {},
 ): Promise<Result<GenerateCredentialOfferResult, NotSuccessResult>> => {
+  const { signingKeyKid, requireClientAuth } = options;
+
   console.log("=== Credential Offer Generation Started ===");
   console.log("Learner No:", learnerNo);
   console.log("Signing Key:", signingKeyKid || "(latest)");
+  console.log("Require Client Auth:", requireClientAuth || false);
 
   const learner = await store.getLearnerByNo(learnerNo);
   if (!learner) {
@@ -181,6 +190,7 @@ const credentialOfferForLearner = async (
     txCode,
     String(learner.id),
     signingKeyKid,
+    requireClientAuth,
   );
 
   const credentialOfferUrl = generatePreAuthCredentialOffer(
@@ -197,6 +207,7 @@ const credentialOfferForLearner = async (
     subject: { learnerNo },
     credentialOffer: credentialOfferUrl,
     txCode: txCode,
+    requireClientAuth: requireClientAuth || false,
   };
   return { ok: true, payload };
 };
@@ -330,8 +341,12 @@ export async function handleLearnerCredentialOfferDisplay(ctx: Koa.Context) {
   try {
     const { learnerNo } = ctx.params;
     const signingKeyKid = ctx.request.body?.signingKeyKid;
+    const requireClientAuth = ctx.request.body?.requireClientAuth === "true";
 
-    const result = await credentialOfferForLearner(learnerNo, signingKeyKid);
+    const result = await credentialOfferForLearner(learnerNo, {
+      signingKeyKid,
+      requireClientAuth,
+    });
 
     if (result.ok) {
       const expiresInSeconds = parseInt(
@@ -345,6 +360,7 @@ export async function handleLearnerCredentialOfferDisplay(ctx: Koa.Context) {
         subject: result.payload.subject,
         credentialOffer: result.payload.credentialOffer,
         txCode: result.payload.txCode,
+        requireClientAuth: result.payload.requireClientAuth,
         expiresAtJST: expiresAt.toLocaleString("ja-JP", {
           timeZone: "Asia/Tokyo",
         }),
