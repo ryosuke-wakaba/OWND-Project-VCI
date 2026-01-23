@@ -139,6 +139,8 @@
 │   txCode            │
 │   needsProof        │
 │   sub               │
+│   requireClientAuth │
+│   requireDpop       │
 │   createdAt         │
 │   usedAt            │
 └──────────┬──────────┘
@@ -152,17 +154,28 @@
 │   token (UNIQUE)    │  │   authCodeId (FK)   │
 │   expiresIn         │  │   signingKeyKid     │
 │   authorized_code_id│  │   createdAt         │
-│   createdAt         │  └─────────────────────┘
-└─────────────────────┘
-
-┌─────────────────────┐
-│      c_nonces       │
-├─────────────────────┤
-│ * id (PK)           │
-│   nonce             │
-│   expired_in        │
+│   dpopJkt           │  └─────────────────────┘
 │   createdAt         │
 └─────────────────────┘
+
+┌─────────────────────┐  ┌─────────────────────────────┐
+│      c_nonces       │  │ trusted_wallet_provider_cas │
+├─────────────────────┤  ├─────────────────────────────┤
+│ * id (PK)           │  │ * id (PK)                   │
+│   nonce             │  │   name                      │
+│   expired_in        │  │   rootCertPem               │
+│   createdAt         │  │   enabled                   │
+└─────────────────────┘  │   createdAt                 │
+                         │   updatedAt                 │
+                         └─────────────────────────────┘
+
+┌─────────────────────────────┐
+│ wallet_attestation_settings │
+├─────────────────────────────┤
+│ * id (PK)                   │
+│   enableChainValidation     │
+│   updatedAt                 │
+└─────────────────────────────┘
 ```
 
 #### テーブル定義
@@ -179,6 +192,8 @@
 | txCode | VARCHAR(8) | Transaction Code（PIN） |
 | needsProof | BOOLEAN | Proof必須か |
 | sub | VARCHAR(255) | Subject識別子 |
+| requireClientAuth | BOOLEAN | Wallet Attestation必須か（デフォルト: FALSE） |
+| requireDpop | BOOLEAN | DPoP必須か（デフォルト: FALSE） |
 | createdAt | DATETIME | 作成日時 |
 | usedAt | DATETIME | 使用日時（NULL=未使用） |
 
@@ -191,6 +206,7 @@ Access Tokenを格納。
 | token | VARCHAR(2048) | Access Token（UNIQUE） |
 | expiresIn | INTEGER | 有効期限（秒） |
 | authorized_code_id | INTEGER | FK → auth_codes.id |
+| dpopJkt | VARCHAR(255) | DPoP JWK Thumbprint（DPoPバインド時に設定） |
 | createdAt | DATETIME | 作成日時 |
 
 ##### auth_code_metadata
@@ -204,30 +220,78 @@ Access Tokenを格納。
 | createdAt | DATETIME | 作成日時 |
 
 ##### c_nonces
-c_nonce（Client Nonce）を格納。
+c_nonce（Client Nonce）およびDPoP Nonceを格納。
 
 | カラム | 型 | 説明 |
 |--------|------|------|
 | id | INTEGER | 主キー（自動採番） |
-| nonce | TEXT | c_nonce値 |
+| nonce | TEXT | nonce値（c_nonceまたはDPoP nonce） |
 | expired_in | INTEGER | 有効期限（秒） |
 | createdAt | DATETIME | 作成日時（Unix timestamp） |
 
+##### trusted_wallet_provider_cas
+Wallet Attestation検証用の信頼されたCA証明書を格納。
+
+| カラム | 型 | 説明 |
+|--------|------|------|
+| id | INTEGER | 主キー（自動採番） |
+| name | VARCHAR(255) | CA名 |
+| rootCertPem | TEXT | ルート証明書（PEM形式） |
+| enabled | BOOLEAN | 有効か（デフォルト: TRUE） |
+| createdAt | DATETIME | 作成日時 |
+| updatedAt | DATETIME | 更新日時 |
+
+##### wallet_attestation_settings
+Wallet Attestation検証のグローバル設定を格納。
+
+| カラム | 型 | 説明 |
+|--------|------|------|
+| id | INTEGER | 主キー（自動採番） |
+| enableChainValidation | BOOLEAN | 証明書チェーン検証を有効化（デフォルト: FALSE） |
+| updatedAt | DATETIME | 更新日時 |
+
 #### 主要操作（authStore）
+
+##### 認可コード・アクセストークン
 
 | 関数 | 説明 |
 |------|------|
-| `addAuthCode` | 認可コードを登録 |
+| `addAuthCode` | 認可コードを登録（requireClientAuth, requireDpop対応） |
 | `getAuthCode` | 認可コードを取得 |
 | `updateAuthCode` | 認可コードを使用済みに更新 |
-| `addAccessToken` | Access Tokenを登録 |
-| `getAccessToken` | Access Token（+認可コード情報）を取得 |
+| `addAccessToken` | Access Tokenを登録（dpopJkt対応） |
+| `getAccessToken` | Access Token（+認可コード情報+dpopJkt）を取得 |
 | `addCNonce` | c_nonceを登録 |
 | `getCNonce` | c_nonceを取得 |
 | `refreshNonce` | 新しいc_nonceを発行 |
 | `addAuthCodeMetadata` | 認可コードメタデータ（署名鍵指定）を登録 |
 | `getAuthCodeMetadata` | 認可コードIDでメタデータを取得 |
 | `getAuthCodeMetadataByCode` | 認可コードでメタデータを取得 |
+
+##### DPoP Nonce管理
+
+| 関数 | 説明 |
+|------|------|
+| `generateDpopNonce` | 新しいDPoP nonceを生成・保存 |
+| `validateDpopNonce` | DPoP nonceを検証（有効期限チェック） |
+
+##### Wallet Provider CA管理
+
+| 関数 | 説明 |
+|------|------|
+| `addTrustedWalletProviderCA` | 信頼されたCA証明書を登録 |
+| `getAllTrustedWalletProviderCAs` | 全CA証明書を取得 |
+| `getEnabledTrustedWalletProviderCAs` | 有効なCA証明書を取得 |
+| `getTrustedWalletProviderCA` | IDでCA証明書を取得 |
+| `updateTrustedWalletProviderCAEnabled` | CA証明書の有効/無効を更新 |
+| `deleteTrustedWalletProviderCA` | CA証明書を削除 |
+
+##### Wallet Attestation設定
+
+| 関数 | 説明 |
+|------|------|
+| `getWalletAttestationSettings` | Wallet Attestation設定を取得 |
+| `updateWalletAttestationSettings` | Wallet Attestation設定を更新 |
 
 ---
 
