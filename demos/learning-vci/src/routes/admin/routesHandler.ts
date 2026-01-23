@@ -824,6 +824,130 @@ export async function handleMetadataRevoke(ctx: Koa.Context) {
   }
 }
 
+// Wallet Provider CA Management Handlers
+export async function handleWalletProviderCAIndex(ctx: Koa.Context) {
+  try {
+    const cas = await authStore.getAllTrustedWalletProviderCAs();
+    const settings = await authStore.getWalletAttestationSettings();
+
+    // Parse certificate info for each CA
+    const casWithInfo = cas.map((ca) => {
+      let certInfo = null;
+      try {
+        const certInfos = getCertificatesInfo([ca.rootCertPem]);
+        if (certInfos.length > 0) {
+          certInfo = certInfos[0];
+        }
+      } catch (e) {
+        console.error("Failed to parse CA certificate:", e);
+      }
+      return { ...ca, certInfo };
+    });
+
+    await ctx.render("admin/wallet-provider-ca", {
+      title: "Wallet Provider CA 管理",
+      cas: casWithInfo,
+      settings,
+    });
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to load wallet provider CA page" };
+  }
+}
+
+export async function handleWalletProviderCAImport(ctx: Koa.Context) {
+  try {
+    const { name, rootCertPem } = ctx.request.body;
+
+    if (!name || !name.trim()) {
+      ctx.status = 400;
+      ctx.body = { error: "CA name is required" };
+      return;
+    }
+
+    if (!rootCertPem || !rootCertPem.trim()) {
+      ctx.status = 400;
+      ctx.body = { error: "Root certificate is required" };
+      return;
+    }
+
+    // Validate the certificate format
+    const trimmedCert = rootCertPem.trim();
+    if (
+      !trimmedCert.includes("-----BEGIN CERTIFICATE-----") ||
+      !trimmedCert.includes("-----END CERTIFICATE-----")
+    ) {
+      ctx.status = 400;
+      ctx.body = { error: "Invalid certificate format. Must be PEM format." };
+      return;
+    }
+
+    // Try to parse the certificate to validate it
+    try {
+      getCertificatesInfo([trimmedCert]);
+    } catch (e) {
+      ctx.status = 400;
+      ctx.body = { error: "Invalid certificate. Could not parse." };
+      return;
+    }
+
+    await authStore.addTrustedWalletProviderCA(name.trim(), trimmedCert);
+    ctx.redirect("/admin/wallet-provider-ca");
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to import CA certificate" };
+  }
+}
+
+export async function handleWalletProviderCAToggle(ctx: Koa.Context) {
+  try {
+    const { id } = ctx.params;
+    const ca = await authStore.getTrustedWalletProviderCA(Number(id));
+    if (!ca) {
+      ctx.status = 404;
+      ctx.body = { error: "CA not found" };
+      return;
+    }
+
+    await authStore.updateTrustedWalletProviderCAEnabled(
+      Number(id),
+      !ca.enabled,
+    );
+    ctx.redirect("/admin/wallet-provider-ca");
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to toggle CA status" };
+  }
+}
+
+export async function handleWalletProviderCADelete(ctx: Koa.Context) {
+  try {
+    const { id } = ctx.params;
+    await authStore.deleteTrustedWalletProviderCA(Number(id));
+    ctx.redirect("/admin/wallet-provider-ca");
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to delete CA" };
+  }
+}
+
+export async function handleWalletAttestationSettingsUpdate(ctx: Koa.Context) {
+  try {
+    const enableChainValidation =
+      ctx.request.body?.enableChainValidation === "true";
+    await authStore.updateWalletAttestationSettings(enableChainValidation);
+    ctx.redirect("/admin/wallet-provider-ca");
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to update settings" };
+  }
+}
+
 export default {
   handleAdminIndex,
   handleNewLearner,
@@ -853,4 +977,10 @@ export default {
   handleMetadataIndex,
   handleMetadataSign,
   handleMetadataRevoke,
+  // Wallet Provider CA management
+  handleWalletProviderCAIndex,
+  handleWalletProviderCAImport,
+  handleWalletProviderCAToggle,
+  handleWalletProviderCADelete,
+  handleWalletAttestationSettingsUpdate,
 };

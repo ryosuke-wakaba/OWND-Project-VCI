@@ -226,6 +226,49 @@ const init = () => {
     },
   );
 
+  // Wallet Provider CA Management Routes
+  router.get(
+    "/admin/wallet-provider-ca",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleWalletProviderCAIndex(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/wallet-provider-ca/import",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleWalletProviderCAImport(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/wallet-provider-ca/:id/toggle",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleWalletProviderCAToggle(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/wallet-provider-ca/:id/delete",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleWalletProviderCADelete(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/wallet-provider-ca/settings",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleWalletAttestationSettingsUpdate(ctx);
+    },
+  );
+
   return router;
 };
 

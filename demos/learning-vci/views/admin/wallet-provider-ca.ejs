@@ -1,0 +1,270 @@
+<div class="breadcrumb">
+  <a href="/admin">管理メニュー</a> &gt; <span>Wallet Provider CA 管理</span>
+</div>
+
+<h2>Wallet Provider CA 管理</h2>
+
+<section class="settings-section">
+  <h3>検証設定</h3>
+  <form method="POST" action="/admin/wallet-provider-ca/settings">
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="enableChainValidation" value="true" <%= settings.enableChainValidation ? 'checked' : '' %>>
+        証明書チェーン検証を有効にする
+      </label>
+      <p class="help-text">
+        有効にすると、Wallet Attestation の x5c 証明書チェーンを登録済み CA 証明書で検証します。
+        無効の場合、x5c の署名検証のみ行い、トラストアンカーの検証はスキップされます。
+      </p>
+    </div>
+    <button type="submit" class="btn btn-primary">設定を保存</button>
+  </form>
+</section>
+
+<section class="ca-list-section">
+  <h3>登録済み CA 証明書</h3>
+  <% if (cas.length === 0) { %>
+    <p class="empty-message">登録済みの CA 証明書はありません。</p>
+  <% } else { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th>名前</th>
+          <th>Subject</th>
+          <th>有効期限</th>
+          <th>状態</th>
+          <th>登録日</th>
+          <th>操作</th>
+        </tr>
+      </thead>
+      <tbody>
+        <% cas.forEach(ca => { %>
+          <tr class="<%= !ca.enabled ? 'disabled-row' : '' %>">
+            <td><%= ca.name %></td>
+            <td>
+              <% if (ca.certInfo) { %>
+                <code class="subject"><%= ca.certInfo.subject %></code>
+              <% } else { %>
+                <span class="text-muted">-</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (ca.certInfo) { %>
+                <%= new Date(ca.certInfo.notAfter).toLocaleDateString('ja-JP') %>
+              <% } else { %>
+                <span class="text-muted">-</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (ca.enabled) { %>
+                <span class="status-badge status-active">有効</span>
+              <% } else { %>
+                <span class="status-badge status-inactive">無効</span>
+              <% } %>
+            </td>
+            <td><%= new Date(ca.createdAt).toLocaleDateString('ja-JP') %></td>
+            <td class="actions">
+              <form method="POST" action="/admin/wallet-provider-ca/<%= ca.id %>/toggle" style="display:inline;">
+                <button type="submit" class="btn btn-sm <%= ca.enabled ? 'btn-warning' : 'btn-success' %>">
+                  <%= ca.enabled ? '無効化' : '有効化' %>
+                </button>
+              </form>
+              <form method="POST" action="/admin/wallet-provider-ca/<%= ca.id %>/delete" style="display:inline;" onsubmit="return confirm('この CA 証明書を削除しますか？');">
+                <button type="submit" class="btn btn-sm btn-danger">削除</button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+
+<section class="import-section">
+  <h3>CA 証明書をインポート</h3>
+  <form method="POST" action="/admin/wallet-provider-ca/import">
+    <div class="form-group">
+      <label for="name">CA 名 <span class="required">*</span></label>
+      <input type="text" id="name" name="name" required placeholder="例: Example Wallet Provider CA">
+    </div>
+    <div class="form-group">
+      <label for="rootCertPem">ルート証明書（PEM 形式） <span class="required">*</span></label>
+      <textarea id="rootCertPem" name="rootCertPem" rows="12" required placeholder="-----BEGIN CERTIFICATE-----
+MIIBxxxxxxxxxxxxxxxx...
+-----END CERTIFICATE-----"></textarea>
+      <p class="help-text">
+        Wallet Provider の証明書を発行した CA のルート証明書を PEM 形式で入力してください。
+      </p>
+    </div>
+    <button type="submit" class="btn btn-primary">インポート</button>
+  </form>
+</section>
+
+<style>
+  .settings-section,
+  .ca-list-section,
+  .import-section {
+    background: #fff;
+    border: 1px solid #e2e8f0;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .settings-section h3,
+  .ca-list-section h3,
+  .import-section h3 {
+    margin-top: 0;
+    margin-bottom: 1rem;
+    color: #1e293b;
+    border-bottom: 1px solid #e2e8f0;
+    padding-bottom: 0.5rem;
+  }
+
+  .checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+  }
+
+  .checkbox-label input[type="checkbox"] {
+    width: 18px;
+    height: 18px;
+  }
+
+  .help-text {
+    color: #64748b;
+    font-size: 0.875rem;
+    margin-top: 0.5rem;
+  }
+
+  .empty-message {
+    color: #64748b;
+    font-style: italic;
+  }
+
+  .data-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.75rem;
+    text-align: left;
+    border-bottom: 1px solid #e2e8f0;
+  }
+
+  .data-table th {
+    background: #f8fafc;
+    font-weight: 600;
+    color: #475569;
+  }
+
+  .data-table .disabled-row {
+    opacity: 0.6;
+  }
+
+  .subject {
+    font-size: 0.8rem;
+    background: #f1f5f9;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    display: inline-block;
+    max-width: 300px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .status-badge {
+    display: inline-block;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+
+  .status-active {
+    background: #dcfce7;
+    color: #166534;
+  }
+
+  .status-inactive {
+    background: #fef2f2;
+    color: #991b1b;
+  }
+
+  .actions {
+    white-space: nowrap;
+  }
+
+  .btn-sm {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.75rem;
+  }
+
+  .btn-warning {
+    background: #f59e0b;
+    color: #fff;
+    border: none;
+  }
+
+  .btn-warning:hover {
+    background: #d97706;
+  }
+
+  .btn-success {
+    background: #10b981;
+    color: #fff;
+    border: none;
+  }
+
+  .btn-success:hover {
+    background: #059669;
+  }
+
+  .btn-danger {
+    background: #ef4444;
+    color: #fff;
+    border: none;
+  }
+
+  .btn-danger:hover {
+    background: #dc2626;
+  }
+
+  .form-group {
+    margin-bottom: 1rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 500;
+    color: #374151;
+  }
+
+  .form-group input[type="text"],
+  .form-group textarea {
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    font-size: 1rem;
+  }
+
+  .form-group textarea {
+    font-family: monospace;
+    font-size: 0.875rem;
+  }
+
+  .required {
+    color: #ef4444;
+  }
+
+  .text-muted {
+    color: #9ca3af;
+  }
+</style>
