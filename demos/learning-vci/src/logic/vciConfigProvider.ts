@@ -7,6 +7,7 @@ import {
   TokenIssuerConfig,
   TokenIssuanceContext,
 } from "ownd-vci/dist/oid4vci/tokenEndpoint/types.js";
+import { x5cValidator } from "./x5cValidator.js";
 
 export const authCodeStateProvider: AuthCodeStateProvider = async (
   authorizedCode: string,
@@ -116,8 +117,9 @@ export const tokenConfigure = (): TokenIssuerConfig => {
   config.clientAuthentication = {
     enabled: true,
     issuerAudience: getCredentialIssuerUrl(),
-    // Optional: Add custom x5c validator for certificate chain validation
-    // x5cValidator: async (x5cChain) => { ... }
+    // Custom x5c validator for certificate chain validation against trusted CAs
+    // The validator checks wallet attestation settings to determine if chain validation is enabled
+    x5cValidator,
     // Optional: Add jti validator for replay detection
     // jtiValidator: async (jti) => { ... }
   };

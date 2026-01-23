@@ -140,7 +140,8 @@ demos/learning-vci/
         ├── key-detail.ejs             # キーペア詳細
         ├── key-import.ejs             # キーペアインポート
         ├── key-certificate.ejs        # 証明書発行
-        └── add-parent-cert.ejs        # 上位証明書追加
+        ├── add-parent-cert.ejs        # 上位証明書追加
+        └── wallet-provider-ca.ejs     # Wallet Provider CA管理
 ```
 
 ---
@@ -260,6 +261,60 @@ Wallet → Token Endpoint
 
 ---
 
+## Wallet Provider CA 管理
+
+### 概要
+
+Wallet Attestation の x5c 証明書チェーンを、登録した信頼済み CA 証明書に対して検証する機能を提供する。
+
+### 管理画面
+
+**パス**: `/admin/wallet-provider-ca`
+
+| 機能                   | 説明                                                                       |
+| ---------------------- | -------------------------------------------------------------------------- |
+| 検証設定               | 証明書チェーン検証の有効/無効を切り替え                                    |
+| CA 証明書一覧          | 登録済み CA 証明書の表示、有効/無効の切り替え、削除                        |
+| CA 証明書インポート    | Wallet Provider の証明書を発行した CA のルート証明書を PEM 形式でインポート |
+
+### 使用方法
+
+1. **CA 証明書のインポート**
+   - `/admin/wallet-provider-ca` にアクセス
+   - 「CA 証明書をインポート」セクションで CA 名とルート証明書（PEM 形式）を入力
+   - 「インポート」をクリック
+
+2. **証明書チェーン検証の有効化**
+   - 「検証設定」セクションで「証明書チェーン検証を有効にする」チェックボックスをオン
+   - 「設定を保存」をクリック
+
+3. **検証動作**
+   - Wallet Attestation を使用するクレデンシャル発行時、x5c 証明書チェーンが登録済み CA 証明書に対して検証される
+   - 検証に失敗した場合、`invalid_client` エラーが返される
+
+### 検証フロー
+
+```
+Wallet → Token Endpoint
+    [OAuth-Client-Attestation: <JWT with x5c header>]
+    [OAuth-Client-Attestation-PoP: <PoP JWT>]
+
+    → 1. Client Attestation JWT検証（x5c署名）
+    → 2. x5c証明書チェーン検証（※チェーン検証有効時のみ）
+         └─ x5c[0]（Wallet Provider証明書）を取得
+         └─ 登録済みCA証明書に対してチェーン検証
+    → 3. PoP JWT検証（cnf.jwk署名）
+    → 4. Access Token発行
+```
+
+### 注意事項
+
+- 証明書チェーン検証が無効の場合、x5c ヘッダーの署名検証のみ実行される（トラストアンカー検証はスキップ）
+- 証明書チェーン検証を有効にする場合、少なくとも 1 つの有効な CA 証明書を登録する必要がある
+- 無効化された CA 証明書は検証対象から除外される
+
+---
+
 ## マイグレーション
 
 既存 DB を使用している場合、以下の SQL を実行する必要がある:
@@ -279,4 +334,21 @@ CREATE TABLE auth_code_metadata (
 
 -- クライアント認証要求フラグ追加
 ALTER TABLE auth_codes ADD COLUMN requireClientAuth BOOLEAN DEFAULT FALSE;
+
+-- 信頼するWallet Provider CA証明書テーブル追加
+CREATE TABLE trusted_wallet_provider_cas (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  name VARCHAR(255) NOT NULL,
+  rootCertPem TEXT NOT NULL,
+  enabled BOOLEAN DEFAULT TRUE,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Wallet Attestation設定テーブル追加
+CREATE TABLE wallet_attestation_settings (
+  id INTEGER PRIMARY KEY AUTOINCREMENT,
+  enableChainValidation BOOLEAN DEFAULT FALSE,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+);
 ```
