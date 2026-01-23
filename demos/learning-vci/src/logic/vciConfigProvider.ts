@@ -24,6 +24,8 @@ export const authCodeStateProvider: AuthCodeStateProvider = async (
     // Include requireClientAuth from stored auth code
     // Note: SQLite returns 0/1 for boolean columns, so we convert to boolean
     requireClientAuth: Boolean(storedAuthCode.requireClientAuth),
+    // Include requireDpop from stored auth code
+    requireDpop: Boolean(storedAuthCode.requireDpop),
     storedData: { id: storedAuthCode.id },
   };
   return {
@@ -74,13 +76,6 @@ export const accessTokenIssuer: AccessTokenIssuer = async (
 };
 
 /**
- * Check if DPoP is enabled via environment variable
- */
-const isDpopEnabled = (): boolean => {
-  return process.env.DPOP_ENABLED === "true";
-};
-
-/**
  * Get token endpoint URL from environment
  */
 const getTokenEndpointUrl = (): string => {
@@ -101,16 +96,15 @@ export const tokenConfigure = (): TokenIssuerConfig => {
     accessTokenIssuer,
   };
 
-  // Add DPoP configuration if enabled
+  // DPoP is always enabled. Whether it's required is controlled per auth code.
   // Note: Token Endpoint does not issue nonces per OID4VCI spec.
   // Nonces are issued by the Nonce Endpoint.
-  if (isDpopEnabled()) {
-    config.dpop = {
-      enabled: true,
-      required: process.env.DPOP_REQUIRED === "true",
-    };
-    config.tokenEndpointUrl = getTokenEndpointUrl();
-  }
+  config.dpop = {
+    enabled: true,
+    // required is checked per auth code (requireDpop flag) in TokenIssuer
+    required: false,
+  };
+  config.tokenEndpointUrl = getTokenEndpointUrl();
 
   // Add Client Authentication configuration
   // Client authentication is checked per auth code (requireClientAuth flag)

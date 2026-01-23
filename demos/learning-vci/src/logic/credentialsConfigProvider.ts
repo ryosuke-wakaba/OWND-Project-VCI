@@ -5,7 +5,6 @@ import {
   CredentialIssuerConfig,
   IssueSdJwtVcCredential,
   DecodedProofJwt,
-  CredentialDpopConfig,
 } from "ownd-vci/dist/oid4vci/credentialEndpoint/types.js";
 import {
   CredentialRequestVcSdJwt,
@@ -89,37 +88,11 @@ const getCNonceWrapper = async (nonce: string) => {
 };
 
 /**
- * Check if DPoP is enabled via environment variable
- */
-const isDpopEnabled = (): boolean => {
-  return process.env.DPOP_ENABLED === "true";
-};
-
-/**
  * Get credential endpoint URL from environment
  */
 const getCredentialEndpointUrl = (): string => {
   const issuer = process.env.CREDENTIAL_ISSUER || "http://localhost:3001";
   return `${issuer}/credentials`;
-};
-
-/**
- * Build DPoP configuration if enabled
- *
- * Note: DPoP nonces are issued only by the Nonce Endpoint per OID4VCI specification.
- * Credential Endpoint validates nonces but does not issue new ones.
- */
-const buildDpopConfig = (): CredentialDpopConfig | undefined => {
-  if (!isDpopEnabled()) {
-    return undefined;
-  }
-
-  return {
-    enabled: true,
-    required: process.env.DPOP_REQUIRED === "true",
-    credentialEndpointUrl: getCredentialEndpointUrl(),
-    nonceValidator: async (nonce: string) => authStore.validateDpopNonce(nonce),
-  };
 };
 
 export const configure = (): CredentialIssuerConfig<StoredAccessToken> => {
@@ -132,11 +105,16 @@ export const configure = (): CredentialIssuerConfig<StoredAccessToken> => {
     getCNonce: getCNonceWrapper,
   };
 
-  // Add DPoP configuration if enabled
-  const dpopConfig = buildDpopConfig();
-  if (dpopConfig) {
-    config.dpop = dpopConfig;
-  }
+  // DPoP is always enabled. Whether it's required is controlled per auth code.
+  // Note: DPoP nonces are issued only by the Nonce Endpoint per OID4VCI specification.
+  // Credential Endpoint validates nonces but does not issue new ones.
+  config.dpop = {
+    enabled: true,
+    // required is checked per auth code (via access token's authorizedCode.requireDpop)
+    required: false,
+    credentialEndpointUrl: getCredentialEndpointUrl(),
+    nonceValidator: async (nonce: string) => authStore.validateDpopNonce(nonce),
+  };
 
   return config;
 };

@@ -149,23 +149,26 @@ export type GenerateCredentialOfferResult = {
   credentialOffer: string;
   txCode: string;
   requireClientAuth: boolean;
+  requireDpop: boolean;
 };
 
 export type GenerateCredentialOfferOptions = {
   signingKeyKid?: string;
   requireClientAuth?: boolean;
+  requireDpop?: boolean;
 };
 
 const credentialOfferForLearner = async (
   learnerNo: string,
   options: GenerateCredentialOfferOptions = {},
 ): Promise<Result<GenerateCredentialOfferResult, NotSuccessResult>> => {
-  const { signingKeyKid, requireClientAuth } = options;
+  const { signingKeyKid, requireClientAuth, requireDpop } = options;
 
   console.log("=== Credential Offer Generation Started ===");
   console.log("Learner No:", learnerNo);
   console.log("Signing Key:", signingKeyKid || "(latest)");
   console.log("Require Client Auth:", requireClientAuth || false);
+  console.log("Require DPoP:", requireDpop || false);
 
   const learner = await store.getLearnerByNo(learnerNo);
   if (!learner) {
@@ -191,6 +194,7 @@ const credentialOfferForLearner = async (
     String(learner.id),
     signingKeyKid,
     requireClientAuth,
+    requireDpop,
   );
 
   const credentialOfferUrl = generatePreAuthCredentialOffer(
@@ -208,6 +212,7 @@ const credentialOfferForLearner = async (
     credentialOffer: credentialOfferUrl,
     txCode: txCode,
     requireClientAuth: requireClientAuth || false,
+    requireDpop: requireDpop || false,
   };
   return { ok: true, payload };
 };
@@ -342,10 +347,12 @@ export async function handleLearnerCredentialOfferDisplay(ctx: Koa.Context) {
     const { learnerNo } = ctx.params;
     const signingKeyKid = ctx.request.body?.signingKeyKid;
     const requireClientAuth = ctx.request.body?.requireClientAuth === "true";
+    const requireDpop = ctx.request.body?.requireDpop === "true";
 
     const result = await credentialOfferForLearner(learnerNo, {
       signingKeyKid,
       requireClientAuth,
+      requireDpop,
     });
 
     if (result.ok) {
@@ -361,6 +368,7 @@ export async function handleLearnerCredentialOfferDisplay(ctx: Koa.Context) {
         credentialOffer: result.payload.credentialOffer,
         txCode: result.payload.txCode,
         requireClientAuth: result.payload.requireClientAuth,
+        requireDpop: result.payload.requireDpop,
         expiresAtJST: expiresAt.toLocaleString("ja-JP", {
           timeZone: "Asia/Tokyo",
         }),
