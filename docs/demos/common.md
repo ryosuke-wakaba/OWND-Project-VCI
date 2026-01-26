@@ -250,6 +250,31 @@ Wallet Attestation検証のグローバル設定を格納。
 | enableChainValidation | BOOLEAN | 証明書チェーン検証を有効化（デフォルト: FALSE） |
 | updatedAt | DATETIME | 更新日時 |
 
+##### issuance_events
+クレデンシャル発行フローのイベントを記録。
+
+| カラム | 型 | 説明 |
+|--------|------|------|
+| id | INTEGER | 主キー（自動採番） |
+| authCodeId | INTEGER | FK → auth_codes.id |
+| eventType | VARCHAR(32) | イベント種別（token_request, token_issued, credential_request, credential_issued） |
+| dpopJwt | TEXT | DPoP JWT（生データ） |
+| dpopHeader | TEXT | DPoP JWT Header（JSON） |
+| dpopPayload | TEXT | DPoP JWT Payload（JSON） |
+| dpopValid | BOOLEAN | DPoP 検証結果 |
+| dpopError | TEXT | DPoP 検証エラー |
+| walletAttestationJwt | TEXT | Wallet Attestation JWT（生データ） |
+| walletAttestationHeader | TEXT | Wallet Attestation JWT Header（JSON） |
+| walletAttestationPayload | TEXT | Wallet Attestation JWT Payload（JSON） |
+| walletAttestationValid | BOOLEAN | Wallet Attestation 検証結果 |
+| walletAttestationError | TEXT | Wallet Attestation 検証エラー |
+| walletAttestationPopJwt | TEXT | Wallet Attestation PoP JWT（生データ） |
+| walletAttestationPopHeader | TEXT | Wallet Attestation PoP JWT Header（JSON） |
+| walletAttestationPopPayload | TEXT | Wallet Attestation PoP JWT Payload（JSON） |
+| walletAttestationPopValid | BOOLEAN | Wallet Attestation PoP 検証結果 |
+| walletAttestationPopError | TEXT | Wallet Attestation PoP 検証エラー |
+| createdAt | DATETIME | 作成日時 |
+
 #### 主要操作（authStore）
 
 ##### 認可コード・アクセストークン
@@ -292,6 +317,14 @@ Wallet Attestation検証のグローバル設定を格納。
 |------|------|
 | `getWalletAttestationSettings` | Wallet Attestation設定を取得 |
 | `updateWalletAttestationSettings` | Wallet Attestation設定を更新 |
+
+##### 発行イベント管理
+
+| 関数 | 説明 |
+|------|------|
+| `addIssuanceEvent` | 発行イベントを記録 |
+| `getIssuanceEventsByAuthCodeId` | 認可コードIDで発行イベントを取得 |
+| `getAuthCodeById` | IDで認可コードを取得 |
 
 ---
 

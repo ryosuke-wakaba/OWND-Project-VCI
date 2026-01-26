@@ -150,6 +150,7 @@ export type GenerateCredentialOfferResult = {
   txCode: string;
   requireClientAuth: boolean;
   requireDpop: boolean;
+  authCodeId: number;
 };
 
 export type GenerateCredentialOfferOptions = {
@@ -187,7 +188,7 @@ const credentialOfferForLearner = async (
   console.log("Expires in:", expiresIn, "seconds");
 
   // Store learner ID as sub, signing key kid stored separately in metadata
-  await store.addPreAuthCode(
+  const authCodeId = await store.addPreAuthCode(
     code,
     expiresIn,
     txCode,
@@ -197,6 +198,14 @@ const credentialOfferForLearner = async (
     requireDpop,
   );
 
+  if (!authCodeId) {
+    console.log("Failed to create auth code");
+    return {
+      ok: false,
+      error: { type: "INTERNAL_ERROR", message: "Failed to create auth code" },
+    };
+  }
+
   const credentialOfferUrl = generatePreAuthCredentialOffer(
     process.env.CREDENTIAL_ISSUER || "",
     ["LearningCredential"],
@@ -205,6 +214,7 @@ const credentialOfferForLearner = async (
   );
 
   console.log("Credential Offer URL generated");
+  console.log("Auth Code ID:", authCodeId);
   console.log("=== Credential Offer Generation Completed ===\n");
 
   const payload = {
@@ -213,6 +223,7 @@ const credentialOfferForLearner = async (
     txCode: txCode,
     requireClientAuth: requireClientAuth || false,
     requireDpop: requireDpop || false,
+    authCodeId,
   };
   return { ok: true, payload };
 };
@@ -369,6 +380,7 @@ export async function handleLearnerCredentialOfferDisplay(ctx: Koa.Context) {
         txCode: result.payload.txCode,
         requireClientAuth: result.payload.requireClientAuth,
         requireDpop: result.payload.requireDpop,
+        authCodeId: result.payload.authCodeId,
         expiresAtJST: expiresAt.toLocaleString("ja-JP", {
           timeZone: "Asia/Tokyo",
         }),
@@ -956,6 +968,101 @@ export async function handleWalletAttestationSettingsUpdate(ctx: Koa.Context) {
   }
 }
 
+// Issuance Status Handler
+export async function handleIssuanceStatus(ctx: Koa.Context) {
+  try {
+    const { authCodeId } = ctx.params;
+    const id = Number(authCodeId);
+
+    if (isNaN(id)) {
+      ctx.status = 400;
+      ctx.body = { error: "Invalid auth code ID" };
+      return;
+    }
+
+    // Get auth code
+    const authCode = await authStore.getAuthCodeById(id);
+    if (!authCode) {
+      ctx.status = 404;
+      ctx.body = { error: "Auth code not found" };
+      return;
+    }
+
+    // Get learner info
+    const learner = authCode.sub
+      ? await store.getLearnerById(authCode.sub)
+      : null;
+
+    // Get issuance events
+    const events = await authStore.getIssuanceEventsByAuthCodeId(id);
+
+    // Calculate status
+    const now = Date.now();
+    const createdAt = new Date(authCode.createdAt).getTime();
+    const expiresAt = createdAt + authCode.expiresIn * 1000;
+    const isExpired = now > expiresAt;
+
+    const hasTokenRequest = events.some(
+      (e) => e.eventType === "token_request" || e.eventType === "token_issued",
+    );
+    const hasTokenIssued = events.some((e) => e.eventType === "token_issued");
+    const hasCredentialRequest = events.some(
+      (e) =>
+        e.eventType === "credential_request" ||
+        e.eventType === "credential_issued",
+    );
+    const hasCredentialIssued = events.some(
+      (e) => e.eventType === "credential_issued",
+    );
+
+    let status: string;
+    if (!hasTokenRequest) {
+      status = isExpired ? "no_request_expired" : "no_request";
+    } else if (hasCredentialIssued) {
+      status = "credential_issued";
+    } else if (hasTokenIssued) {
+      status = "token_issued";
+    } else {
+      status = "token_request";
+    }
+
+    // Get token events
+    const tokenEvents = events.filter(
+      (e) => e.eventType === "token_request" || e.eventType === "token_issued",
+    );
+    const credentialEvents = events.filter(
+      (e) =>
+        e.eventType === "credential_request" ||
+        e.eventType === "credential_issued",
+    );
+
+    await ctx.render("admin/issuance-status", {
+      title: "発行状況",
+      authCode,
+      learner,
+      events,
+      tokenEvents,
+      credentialEvents,
+      status,
+      isExpired,
+      hasTokenRequest,
+      hasTokenIssued,
+      hasCredentialRequest,
+      hasCredentialIssued,
+      expiresAtJST: new Date(expiresAt).toLocaleString("ja-JP", {
+        timeZone: "Asia/Tokyo",
+      }),
+      createdAtJST: new Date(authCode.createdAt).toLocaleString("ja-JP", {
+        timeZone: "Asia/Tokyo",
+      }),
+    });
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to load issuance status" };
+  }
+}
+
 export default {
   handleAdminIndex,
   handleNewLearner,
@@ -991,4 +1098,6 @@ export default {
   handleWalletProviderCAToggle,
   handleWalletProviderCADelete,
   handleWalletAttestationSettingsUpdate,
+  // Issuance status
+  handleIssuanceStatus,
 };

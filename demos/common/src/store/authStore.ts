@@ -58,6 +58,7 @@ export const TBL_NM_AUTH_CODE_METADATA = "auth_code_metadata";
 export const TBL_NM_SIGNED_METADATA = "signed_metadata";
 export const TBL_NM_TRUSTED_WALLET_PROVIDER_CAS = "trusted_wallet_provider_cas";
 export const TBL_NM_WALLET_ATTESTATION_SETTINGS = "wallet_attestation_settings";
+export const TBL_NM_ISSUANCE_EVENTS = "issuance_events";
 
 const DDL_AUTH_CODES = `
   CREATE TABLE ${TBL_NM_AUTH_CODES} (
@@ -132,6 +133,31 @@ const DDL_WALLET_ATTESTATION_SETTINGS = `
   )
 `.trim();
 
+const DDL_ISSUANCE_EVENTS = `
+  CREATE TABLE ${TBL_NM_ISSUANCE_EVENTS} (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    authCodeId INTEGER NOT NULL,
+    eventType VARCHAR(32) NOT NULL,
+    dpopJwt TEXT,
+    dpopHeader TEXT,
+    dpopPayload TEXT,
+    dpopValid BOOLEAN,
+    dpopError TEXT,
+    walletAttestationJwt TEXT,
+    walletAttestationHeader TEXT,
+    walletAttestationPayload TEXT,
+    walletAttestationValid BOOLEAN,
+    walletAttestationError TEXT,
+    walletAttestationPopJwt TEXT,
+    walletAttestationPopHeader TEXT,
+    walletAttestationPopPayload TEXT,
+    walletAttestationPopValid BOOLEAN,
+    walletAttestationPopError TEXT,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (authCodeId) REFERENCES ${TBL_NM_AUTH_CODES}(id)
+  )
+`.trim();
+
 const DDL_MAP = {
   [TBL_NM_AUTH_CODES]: DDL_AUTH_CODES,
   [TBL_NM_ACCESS_TOKENS]: DDL_ACCESS_TOKENS,
@@ -140,6 +166,7 @@ const DDL_MAP = {
   [TBL_NM_SIGNED_METADATA]: DDL_SIGNED_METADATA,
   [TBL_NM_TRUSTED_WALLET_PROVIDER_CAS]: DDL_TRUSTED_WALLET_PROVIDER_CAS,
   [TBL_NM_WALLET_ATTESTATION_SETTINGS]: DDL_WALLET_ATTESTATION_SETTINGS,
+  [TBL_NM_ISSUANCE_EVENTS]: DDL_ISSUANCE_EVENTS,
 };
 
 /**
@@ -796,12 +823,149 @@ export const updateWalletAttestationSettings = async (
   }
 };
 
+// ========================================
+// Issuance Events Management
+// ========================================
+
+export type IssuanceEventType =
+  | "token_request"
+  | "token_issued"
+  | "credential_request"
+  | "credential_issued";
+
+export interface IssuanceEvent {
+  id: number;
+  authCodeId: number;
+  eventType: IssuanceEventType;
+  dpopJwt?: string;
+  dpopHeader?: string;
+  dpopPayload?: string;
+  dpopValid?: boolean;
+  dpopError?: string;
+  walletAttestationJwt?: string;
+  walletAttestationHeader?: string;
+  walletAttestationPayload?: string;
+  walletAttestationValid?: boolean;
+  walletAttestationError?: string;
+  walletAttestationPopJwt?: string;
+  walletAttestationPopHeader?: string;
+  walletAttestationPopPayload?: string;
+  walletAttestationPopValid?: boolean;
+  walletAttestationPopError?: string;
+  createdAt: string;
+}
+
+export interface AddIssuanceEventParams {
+  authCodeId: number;
+  eventType: IssuanceEventType;
+  dpopJwt?: string;
+  dpopHeader?: string;
+  dpopPayload?: string;
+  dpopValid?: boolean;
+  dpopError?: string;
+  walletAttestationJwt?: string;
+  walletAttestationHeader?: string;
+  walletAttestationPayload?: string;
+  walletAttestationValid?: boolean;
+  walletAttestationError?: string;
+  walletAttestationPopJwt?: string;
+  walletAttestationPopHeader?: string;
+  walletAttestationPopPayload?: string;
+  walletAttestationPopValid?: boolean;
+  walletAttestationPopError?: string;
+}
+
+/**
+ * Add an issuance event to the database
+ * @param params - The event parameters
+ * @returns The ID of the inserted record
+ */
+export const addIssuanceEvent = async (
+  params: AddIssuanceEventParams,
+): Promise<number | undefined> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.run(
+      `INSERT INTO ${TBL_NM_ISSUANCE_EVENTS} (
+        authCodeId, eventType,
+        dpopJwt, dpopHeader, dpopPayload, dpopValid, dpopError,
+        walletAttestationJwt, walletAttestationHeader, walletAttestationPayload, walletAttestationValid, walletAttestationError,
+        walletAttestationPopJwt, walletAttestationPopHeader, walletAttestationPopPayload, walletAttestationPopValid, walletAttestationPopError
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      params.authCodeId,
+      params.eventType,
+      params.dpopJwt || null,
+      params.dpopHeader || null,
+      params.dpopPayload || null,
+      params.dpopValid ?? null,
+      params.dpopError || null,
+      params.walletAttestationJwt || null,
+      params.walletAttestationHeader || null,
+      params.walletAttestationPayload || null,
+      params.walletAttestationValid ?? null,
+      params.walletAttestationError || null,
+      params.walletAttestationPopJwt || null,
+      params.walletAttestationPopHeader || null,
+      params.walletAttestationPopPayload || null,
+      params.walletAttestationPopValid ?? null,
+      params.walletAttestationPopError || null,
+    );
+    return result.lastID;
+  } catch (err) {
+    handleError(err);
+  }
+};
+
+/**
+ * Get all issuance events for an auth code
+ * @param authCodeId - The auth code ID
+ * @returns All issuance events for the auth code, ordered by creation date
+ */
+export const getIssuanceEventsByAuthCodeId = async (
+  authCodeId: number,
+): Promise<IssuanceEvent[]> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.all<IssuanceEvent[]>(
+      `SELECT * FROM ${TBL_NM_ISSUANCE_EVENTS} WHERE authCodeId = ? ORDER BY createdAt ASC`,
+      authCodeId,
+    );
+    return result || [];
+  } catch (err) {
+    handleError(err);
+    return [];
+  }
+};
+
+/**
+ * Get auth code by ID
+ * @param id - The auth code ID
+ * @returns The auth code or undefined
+ */
+export const getAuthCodeById = async (
+  id: number,
+): Promise<(AuthorizedCode & { id: number; sub?: string }) | undefined> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.get<
+      AuthorizedCode & { id: number; sub?: string }
+    >(
+      `SELECT id, code, expiresIn, preAuthFlow, txCode, needsProof, requireClientAuth, requireDpop, sub, createdAt, usedAt FROM ${TBL_NM_AUTH_CODES} WHERE id = ?`,
+      id,
+    );
+    return result;
+  } catch (err) {
+    handleError(err);
+  }
+};
+
 export default {
   createDb,
   destroyDb,
   addAuthCode,
   updateAuthCode,
   getAuthCode,
+  getAuthCodeById,
   addAccessToken,
   addCNonce,
   getCNonce,
@@ -825,4 +989,6 @@ export default {
   deleteTrustedWalletProviderCA,
   getWalletAttestationSettings,
   updateWalletAttestationSettings,
+  addIssuanceEvent,
+  getIssuanceEventsByAuthCodeId,
 };

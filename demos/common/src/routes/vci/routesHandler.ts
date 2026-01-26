@@ -3,14 +3,17 @@ import Koa from "koa";
 import { TokenIssuerConfig } from "ownd-vci/dist/oid4vci/tokenEndpoint/types.js";
 import { TokenIssuer } from "ownd-vci/dist/oid4vci/tokenEndpoint/TokenIssuer.js";
 import { CredentialIssuerConfig } from "ownd-vci/dist/oid4vci/credentialEndpoint/types.js";
-import { StoredAccessToken } from "../../store/authStore.js";
-import authStore from "../../store/authStore.js";
+import authStore, {
+  StoredAccessToken,
+  AddIssuanceEventParams,
+} from "../../store/authStore.js";
 import { CredentialIssuer } from "ownd-vci/dist/oid4vci/credentialEndpoint/CredentialIssuer.js";
 import { NonceIssuerConfig } from "ownd-vci/dist/oid4vci/nonceEndpoint/types.js";
 import { NonceIssuer } from "ownd-vci/dist/oid4vci/nonceEndpoint/NonceIssuer.js";
 import { resolveAcceptLanguage } from "resolve-accept-language";
 import { localizeIssuerMetadata } from "ownd-vci/dist/utils/localize.js";
 import { IMetadataRepository } from "ownd-vci/dist/metadata/IMetadataRepository.js";
+import { decodeJwtParts, safeStringify } from "../../utils/jwtDecode.js";
 
 /**
  * Issuer Metadataを返すハンドラ
@@ -125,11 +128,64 @@ export async function handleToken(
   console.log("Pre-authorized Code:", ctx.request.body?.["pre-authorized_code"]?.substring(0, 10) + "...");
   console.log("TX Code provided:", !!ctx.request.body?.tx_code);
 
+  // Extract JWTs from headers for event logging
+  const dpopJwt = ctx.get("DPoP") || undefined;
+  const walletAttestationJwt = ctx.get("OAuth-Client-Attestation") || undefined;
+  const walletAttestationPopJwt = ctx.get("OAuth-Client-Attestation-PoP") || undefined;
+
+  // Get auth code for event logging
+  const preAuthCode = ctx.request.body?.["pre-authorized_code"];
+  const authCode = preAuthCode ? await authStore.getAuthCode(preAuthCode) : undefined;
+
   const tokenRequest = new TokenIssuer(configGenerator());
   const result = await tokenRequest.issue({
     getHeader: (name: string) => ctx.get(name),
     getBody: () => ctx.request.body,
   });
+
+  // Record issuance event
+  if (authCode?.id) {
+    const decodedDpop = dpopJwt ? decodeJwtParts(dpopJwt) : null;
+    const decodedWA = walletAttestationJwt ? decodeJwtParts(walletAttestationJwt) : null;
+    const decodedWAPop = walletAttestationPopJwt ? decodeJwtParts(walletAttestationPopJwt) : null;
+
+    // Determine error type based on error code, not JWT presence
+    const errorPayload = !result.ok ? result.error.payload : null;
+    const errorCode = errorPayload && "error" in errorPayload ? (errorPayload as { error: string }).error : null;
+    const isDpopError = errorCode === "invalid_dpop_proof" || errorCode === "use_dpop_nonce";
+    const isClientError = errorCode === "invalid_client";
+    const errorJson = errorPayload ? JSON.stringify(errorPayload) : undefined;
+
+    const eventParams: AddIssuanceEventParams = {
+      authCodeId: authCode.id,
+      eventType: result.ok ? "token_issued" : "token_request",
+      dpopJwt,
+      dpopHeader: safeStringify(decodedDpop?.header),
+      dpopPayload: safeStringify(decodedDpop?.payload),
+      // DPoP valid if: JWT sent and no DPoP error (even if request fails for other reason)
+      dpopValid: isDpopError ? false : (dpopJwt ? true : undefined),
+      dpopError: isDpopError ? errorJson : undefined,
+      walletAttestationJwt,
+      walletAttestationHeader: safeStringify(decodedWA?.header),
+      walletAttestationPayload: safeStringify(decodedWA?.payload),
+      // Wallet Attestation valid if: JWT sent and no client error (even if request fails for other reason)
+      walletAttestationValid: isClientError ? false : (walletAttestationJwt ? true : undefined),
+      walletAttestationError: isClientError ? errorJson : undefined,
+      walletAttestationPopJwt,
+      walletAttestationPopHeader: safeStringify(decodedWAPop?.header),
+      walletAttestationPopPayload: safeStringify(decodedWAPop?.payload),
+      // Wallet Attestation PoP valid if: JWT sent and no client error (even if request fails for other reason)
+      walletAttestationPopValid: isClientError ? false : (walletAttestationPopJwt ? true : undefined),
+      walletAttestationPopError: isClientError ? errorJson : undefined,
+    };
+
+    try {
+      await authStore.addIssuanceEvent(eventParams);
+      console.log("Issuance event recorded:", eventParams.eventType);
+    } catch (err) {
+      console.error("Failed to record issuance event:", err);
+    }
+  }
 
   if (!result.ok) {
     console.log("❌ Token Request Failed:", JSON.stringify(result.error.payload));
@@ -161,11 +217,49 @@ export async function handleCredential(
   console.log("Proof Type:", ctx.request.body?.proof?.proof_type);
   console.log("Number of JWT Proofs:", ctx.request.body?.proofs?.jwt?.length || 0);
 
+  // Extract DPoP JWT for event logging
+  const dpopJwt = ctx.get("DPoP") || undefined;
+
+  // Get auth code ID from access token for event logging
+  const authHeader = ctx.get("Authorization");
+  const accessToken = authHeader?.replace(/^(Bearer|DPoP)\s+/i, "");
+  const storedAccessToken = accessToken ? await authStore.getAccessToken(accessToken) : undefined;
+  const authCodeId = storedAccessToken?.authorizedCode?.id;
+
   const credentialIssuer = new CredentialIssuer(configGenerator());
   const result = await credentialIssuer.issue({
     getHeader: (name: string) => ctx.get(name),
     getBody: () => ctx.request.body,
   });
+
+  // Record issuance event
+  if (authCodeId) {
+    const decodedDpop = dpopJwt ? decodeJwtParts(dpopJwt) : null;
+
+    // Determine error type based on error code
+    const errorPayload = !result.ok ? result.error.payload : null;
+    const errorCode = errorPayload && "error" in errorPayload ? (errorPayload as { error: string }).error : null;
+    const isDpopError = errorCode === "invalid_dpop_proof" || errorCode === "use_dpop_nonce";
+    const errorJson = errorPayload ? JSON.stringify(errorPayload) : undefined;
+
+    const eventParams: AddIssuanceEventParams = {
+      authCodeId,
+      eventType: result.ok ? "credential_issued" : "credential_request",
+      dpopJwt,
+      dpopHeader: safeStringify(decodedDpop?.header),
+      dpopPayload: safeStringify(decodedDpop?.payload),
+      dpopValid: result.ok && dpopJwt ? true : (isDpopError ? false : undefined),
+      dpopError: isDpopError ? errorJson : undefined,
+    };
+
+    try {
+      await authStore.addIssuanceEvent(eventParams);
+      console.log("Issuance event recorded:", eventParams.eventType);
+    } catch (err) {
+      console.error("Failed to record issuance event:", err);
+    }
+  }
+
   if (!result.ok) {
     console.log("❌ Credential Request Failed:", JSON.stringify(result.error.payload));
     console.debug("Error details:", JSON.stringify(result.error));
