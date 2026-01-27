@@ -159,6 +159,13 @@ const runMigrations = async () => {
     "requireClientAuth",
     "BOOLEAN DEFAULT FALSE",
   );
+
+  // Migration: Add requireDpop column to auth_codes table (per-credential DPoP requirement)
+  await store.addColumnIfNotExists(
+    TBL_NM_AUTH_CODES,
+    "requireDpop",
+    "BOOLEAN DEFAULT FALSE",
+  );
 };
 
 export const createDb = async () => {
@@ -180,6 +187,7 @@ interface JoinedAuthCode {
   usedAt: string;
   sub: string;
   requireClientAuth: boolean;
+  requireDpop: boolean;
 }
 export const addAuthCode = async (
   code: string,
@@ -189,11 +197,12 @@ export const addAuthCode = async (
   needsProof: boolean,
   sub?: string,
   requireClientAuth?: boolean,
+  requireDpop?: boolean,
 ) => {
   try {
     const db = await store.openDb();
     const result = await db.run(
-      `INSERT INTO ${TBL_NM_AUTH_CODES} (code, expiresIn, preAuthFlow, txCode, needsProof, sub, requireClientAuth) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO ${TBL_NM_AUTH_CODES} (code, expiresIn, preAuthFlow, txCode, needsProof, sub, requireClientAuth, requireDpop) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
       code,
       expiresIn,
       preAuthFlow,
@@ -201,6 +210,7 @@ export const addAuthCode = async (
       needsProof,
       sub || null,
       requireClientAuth || false,
+      requireDpop || false,
     );
     return result.lastID!;
   } catch (err) {
@@ -212,7 +222,7 @@ export const getAuthCode = async (code: string) => {
   try {
     const db = await store.openDb();
     const result = await db.get<AuthorizedCode>(
-      `SELECT id, code, expiresIn, preAuthFlow, txCode, needsProof, requireClientAuth, createdAt, usedAt FROM ${TBL_NM_AUTH_CODES} WHERE code = ?`,
+      `SELECT id, code, expiresIn, preAuthFlow, txCode, needsProof, requireClientAuth, requireDpop, createdAt, usedAt FROM ${TBL_NM_AUTH_CODES} WHERE code = ?`,
       code,
     );
     if (result) {
@@ -330,6 +340,7 @@ export const getAccessToken = async (
         p.usedAt,
         p.sub,
         p.requireClientAuth,
+        p.requireDpop,
         a.createdAt
       FROM ${TBL_NM_ACCESS_TOKENS} as a
       LEFT JOIN ${TBL_NM_AUTH_CODES} AS p ON a.authorized_code_id = p.id
@@ -353,6 +364,7 @@ export const getAccessToken = async (
           createdAt: row.codeCreatedAt,
           sub: row.sub,
           requireClientAuth: row.requireClientAuth || false,
+          requireDpop: row.requireDpop || false,
         },
       };
     } else {

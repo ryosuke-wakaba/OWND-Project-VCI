@@ -53,6 +53,16 @@
     </small>
   </div>
 
+  <div class="form-group">
+    <label class="checkbox-label">
+      <input type="checkbox" name="requireDpop" value="true">
+      DPoPを必須にする
+    </label>
+    <small class="form-text">
+      チェックすると、クレデンシャル発行時にDPoP Proofの提示が必須になります。
+    </small>
+  </div>
+
   <% if (availableKeys.length === 0) { %>
   <div class="alert alert-warning">
     <p>利用可能な署名鍵がありません。先に<a href="/admin/keys/new">キーペアを生成</a>してください。</p>

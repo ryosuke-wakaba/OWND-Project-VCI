@@ -22,6 +22,18 @@ export class TokenIssuer {
   constructor(private config: TokenIssuerConfig) {}
 
   async issue(request: HttpRequest): Promise<IssueResult> {
+    // Validate pre-authorized code first (needed to check per-code DPoP requirement)
+    const validateResult = await validate(
+      request,
+      this.config.authCodeStateProvider,
+    );
+    if (!validateResult.ok) {
+      const { ok, error } = validateResult;
+      return { ok, error: { status: 400, payload: error } };
+    }
+
+    const { authorizedCode } = validateResult.payload;
+
     // DPoP Proof validation (if enabled)
     let dpopResult: DpopValidationResult | undefined;
     const context: TokenIssuanceContext = {};
@@ -30,8 +42,11 @@ export class TokenIssuer {
       const dpopHeader = request.getHeader("DPoP");
       const hasDpop = hasDpopHeader(dpopHeader);
 
-      // Check if DPoP is required but not provided
-      if (this.config.dpop.required && !hasDpop) {
+      // Check if DPoP is required for this auth code (per-credential setting)
+      const requireDpop =
+        this.config.dpop.required || authorizedCode.requireDpop === true;
+
+      if (requireDpop && !hasDpop) {
         return {
           ok: false,
           error: {
@@ -86,18 +101,6 @@ export class TokenIssuer {
         context.dpopJkt = dpopResult.thumbprint;
       }
     }
-
-    // Validate pre-authorized code
-    const validateResult = await validate(
-      request,
-      this.config.authCodeStateProvider,
-    );
-    if (!validateResult.ok) {
-      const { ok, error } = validateResult;
-      return { ok, error: { status: 400, payload: error } };
-    }
-
-    const { authorizedCode } = validateResult.payload;
 
     // Client Authentication validation (if enabled and required)
     if (this.config.clientAuthentication?.enabled) {

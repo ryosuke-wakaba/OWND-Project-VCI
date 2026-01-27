@@ -14,6 +14,8 @@ export interface AuthorizedCode extends Identifiable {
   sub: string;
   /** Whether client authentication (Wallet Attestation) is required */
   requireClientAuth?: boolean;
+  /** Whether DPoP proof is required for this authorization code */
+  requireDpop?: boolean;
 }
 
 export interface AccessToken {
