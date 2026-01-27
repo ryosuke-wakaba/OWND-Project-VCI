@@ -269,6 +269,15 @@ const init = () => {
     },
   );
 
+  // Issuance Status Route
+  router.get(
+    "/admin/auth-codes/:authCodeId/status",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleIssuanceStatus(ctx);
+    },
+  );
+
   return router;
 };
 

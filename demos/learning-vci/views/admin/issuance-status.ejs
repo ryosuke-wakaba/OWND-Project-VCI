@@ -1,0 +1,577 @@
+<nav class="breadcrumb">
+  <a href="/admin">トップ</a> &gt; <a href="/admin/learners">学習者管理</a> &gt; <span>発行状況</span>
+</nav>
+
+<h2>発行状況</h2>
+
+<div class="issuance-status-container">
+  <div class="info-section">
+    <h3>認可コード情報</h3>
+    <div class="info-item">
+      <label>認可コードID:</label>
+      <span class="monospace"><%= authCode.id %></span>
+    </div>
+    <% if (learner) { %>
+    <div class="info-item">
+      <label>学習者:</label>
+      <span><%= learner.familyName %> <%= learner.givenName %> (<%= learner.learnerNo %>)</span>
+    </div>
+    <% } %>
+    <div class="info-item">
+      <label>作成日時:</label>
+      <span><%= createdAtJST %></span>
+    </div>
+    <div class="info-item">
+      <label>有効期限:</label>
+      <span class="<%= isExpired ? 'expired' : '' %>"><%= expiresAtJST %> <%= isExpired ? '(期限切れ)' : '' %></span>
+    </div>
+    <div class="info-item">
+      <label>クライアント認証:</label>
+      <% if (authCode.requireClientAuth) { %>
+      <span class="badge badge-warning">必須</span>
+      <% } else { %>
+      <span class="badge badge-secondary">任意</span>
+      <% } %>
+    </div>
+    <div class="info-item">
+      <label>DPoP:</label>
+      <% if (authCode.requireDpop) { %>
+      <span class="badge badge-purple">必須</span>
+      <% } else { %>
+      <span class="badge badge-secondary">任意</span>
+      <% } %>
+    </div>
+  </div>
+
+  <div class="info-section">
+    <h3>発行状況</h3>
+    <div class="status-indicator status-<%= status %>">
+      <% if (status === 'no_request') { %>
+        <span class="status-icon">&#128336;</span> 発行要求なし（待機中）
+      <% } else if (status === 'no_request_expired') { %>
+        <span class="status-icon">&#10060;</span> 発行要求なし（期限切れ）
+      <% } else if (status === 'token_request') { %>
+        <span class="status-icon">&#9888;</span> Token要求中（エラーあり）
+      <% } else if (status === 'token_issued') { %>
+        <span class="status-icon">&#9989;</span> Token発行済み（Credential待ち）
+      <% } else if (status === 'credential_issued') { %>
+        <span class="status-icon">&#10004;</span> Credential発行完了
+      <% } %>
+    </div>
+  </div>
+
+  <% if (tokenEvents && tokenEvents.length > 0) { %>
+  <div class="info-section">
+    <h3>Token Endpoint</h3>
+    <% tokenEvents.forEach((event, idx) => { %>
+    <div class="event-card">
+      <div class="event-header">
+        <span class="event-type <%= event.eventType === 'token_issued' ? 'success' : 'info' %>">
+          <%= event.eventType === 'token_issued' ? '発行成功' : 'リクエスト受信' %>
+        </span>
+        <span class="event-time"><%= new Date(event.createdAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }) %></span>
+      </div>
+
+      <% if (event.dpopJwt || event.dpopError) { %>
+      <div class="jwt-section">
+        <div class="jwt-header-row" onclick="toggleJwtSection('dpop-token-<%= idx %>')">
+          <span class="jwt-title">DPoP JWT</span>
+          <% if (event.dpopValid === true || event.dpopValid === 1) { %>
+          <span class="jwt-status valid">検証成功</span>
+          <% } else if (event.dpopValid === false || event.dpopValid === 0 || event.dpopError) { %>
+          <span class="jwt-status invalid">検証失敗</span>
+          <% } else { %>
+          <span class="jwt-status pending">未検証</span>
+          <% } %>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div id="dpop-token-<%= idx %>" class="jwt-content" style="display: none;">
+          <% if (event.dpopError) { %>
+          <div class="jwt-error">
+            <strong>エラー:</strong> <%= event.dpopError %>
+          </div>
+          <% } %>
+          <% if (event.dpopJwt) { %>
+          <div class="jwt-raw">
+            <label>生データ:</label>
+            <textarea readonly><%= event.dpopJwt %></textarea>
+          </div>
+          <% if (event.dpopHeader) { %>
+          <div class="jwt-decoded">
+            <label>Header:</label>
+            <pre><%= JSON.stringify(JSON.parse(event.dpopHeader), null, 2) %></pre>
+          </div>
+          <% } %>
+          <% if (event.dpopPayload) { %>
+          <div class="jwt-decoded">
+            <label>Payload:</label>
+            <pre><%= JSON.stringify(JSON.parse(event.dpopPayload), null, 2) %></pre>
+          </div>
+          <% } %>
+          <% } else { %>
+          <p class="no-jwt-note">DPoP JWT は送信されませんでした</p>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (event.walletAttestationJwt || event.walletAttestationError) { %>
+      <div class="jwt-section">
+        <div class="jwt-header-row" onclick="toggleJwtSection('wa-<%= idx %>')">
+          <span class="jwt-title">Wallet Attestation JWT</span>
+          <% if (event.walletAttestationValid === true || event.walletAttestationValid === 1) { %>
+          <span class="jwt-status valid">検証成功</span>
+          <% } else if (event.walletAttestationValid === false || event.walletAttestationValid === 0 || event.walletAttestationError) { %>
+          <span class="jwt-status invalid">検証失敗</span>
+          <% } else { %>
+          <span class="jwt-status pending">受信済み</span>
+          <% } %>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div id="wa-<%= idx %>" class="jwt-content" style="display: none;">
+          <% if (event.walletAttestationError) { %>
+          <div class="jwt-error">
+            <strong>エラー:</strong> <%= event.walletAttestationError %>
+          </div>
+          <% } %>
+          <% if (event.walletAttestationJwt) { %>
+          <div class="jwt-raw">
+            <label>生データ:</label>
+            <textarea readonly><%= event.walletAttestationJwt %></textarea>
+          </div>
+          <% if (event.walletAttestationHeader) { %>
+          <div class="jwt-decoded">
+            <label>Header:</label>
+            <pre><%= JSON.stringify(JSON.parse(event.walletAttestationHeader), null, 2) %></pre>
+          </div>
+          <% } %>
+          <% if (event.walletAttestationPayload) { %>
+          <div class="jwt-decoded">
+            <label>Payload:</label>
+            <pre><%= JSON.stringify(JSON.parse(event.walletAttestationPayload), null, 2) %></pre>
+          </div>
+          <% } %>
+          <% } else { %>
+          <p class="no-jwt-note">Wallet Attestation JWT は送信されませんでした</p>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (event.walletAttestationPopJwt || event.walletAttestationPopError) { %>
+      <div class="jwt-section">
+        <div class="jwt-header-row" onclick="toggleJwtSection('wa-pop-<%= idx %>')">
+          <span class="jwt-title">Wallet Attestation PoP JWT</span>
+          <% if (event.walletAttestationPopValid === true || event.walletAttestationPopValid === 1) { %>
+          <span class="jwt-status valid">検証成功</span>
+          <% } else if (event.walletAttestationPopValid === false || event.walletAttestationPopValid === 0 || event.walletAttestationPopError) { %>
+          <span class="jwt-status invalid">検証失敗</span>
+          <% } else { %>
+          <span class="jwt-status pending">受信済み</span>
+          <% } %>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div id="wa-pop-<%= idx %>" class="jwt-content" style="display: none;">
+          <% if (event.walletAttestationPopError) { %>
+          <div class="jwt-error">
+            <strong>エラー:</strong> <%= event.walletAttestationPopError %>
+          </div>
+          <% } %>
+          <% if (event.walletAttestationPopJwt) { %>
+          <div class="jwt-raw">
+            <label>生データ:</label>
+            <textarea readonly><%= event.walletAttestationPopJwt %></textarea>
+          </div>
+          <% if (event.walletAttestationPopHeader) { %>
+          <div class="jwt-decoded">
+            <label>Header:</label>
+            <pre><%= JSON.stringify(JSON.parse(event.walletAttestationPopHeader), null, 2) %></pre>
+          </div>
+          <% } %>
+          <% if (event.walletAttestationPopPayload) { %>
+          <div class="jwt-decoded">
+            <label>Payload:</label>
+            <pre><%= JSON.stringify(JSON.parse(event.walletAttestationPopPayload), null, 2) %></pre>
+          </div>
+          <% } %>
+          <% } else { %>
+          <p class="no-jwt-note">Wallet Attestation PoP JWT は送信されませんでした</p>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (!event.dpopJwt && !event.dpopError && !event.walletAttestationJwt && !event.walletAttestationError && !event.walletAttestationPopJwt && !event.walletAttestationPopError) { %>
+      <p class="no-jwt-note">受信したJWTはありません</p>
+      <% } %>
+    </div>
+    <% }); %>
+  </div>
+  <% } %>
+
+  <% if (credentialEvents && credentialEvents.length > 0) { %>
+  <div class="info-section">
+    <h3>Credential Endpoint</h3>
+    <% credentialEvents.forEach((event, idx) => { %>
+    <div class="event-card">
+      <div class="event-header">
+        <span class="event-type <%= event.eventType === 'credential_issued' ? 'success' : 'info' %>">
+          <%= event.eventType === 'credential_issued' ? '発行成功' : 'リクエスト受信' %>
+        </span>
+        <span class="event-time"><%= new Date(event.createdAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }) %></span>
+      </div>
+
+      <% if (event.dpopJwt || event.dpopError) { %>
+      <div class="jwt-section">
+        <div class="jwt-header-row" onclick="toggleJwtSection('dpop-cred-<%= idx %>')">
+          <span class="jwt-title">DPoP JWT</span>
+          <% if (event.dpopValid === true || event.dpopValid === 1) { %>
+          <span class="jwt-status valid">検証成功</span>
+          <% } else if (event.dpopValid === false || event.dpopValid === 0 || event.dpopError) { %>
+          <span class="jwt-status invalid">検証失敗</span>
+          <% } else { %>
+          <span class="jwt-status pending">未検証</span>
+          <% } %>
+          <span class="toggle-icon">&#9660;</span>
+        </div>
+        <div id="dpop-cred-<%= idx %>" class="jwt-content" style="display: none;">
+          <% if (event.dpopError) { %>
+          <div class="jwt-error">
+            <strong>エラー:</strong> <%= event.dpopError %>
+          </div>
+          <% } %>
+          <% if (event.dpopJwt) { %>
+          <div class="jwt-raw">
+            <label>生データ:</label>
+            <textarea readonly><%= event.dpopJwt %></textarea>
+          </div>
+          <% if (event.dpopHeader) { %>
+          <div class="jwt-decoded">
+            <label>Header:</label>
+            <pre><%= JSON.stringify(JSON.parse(event.dpopHeader), null, 2) %></pre>
+          </div>
+          <% } %>
+          <% if (event.dpopPayload) { %>
+          <div class="jwt-decoded">
+            <label>Payload:</label>
+            <pre><%= JSON.stringify(JSON.parse(event.dpopPayload), null, 2) %></pre>
+          </div>
+          <% } %>
+          <% } else { %>
+          <p class="no-jwt-note">DPoP JWT は送信されませんでした</p>
+          <% } %>
+        </div>
+      </div>
+      <% } %>
+
+      <% if (!event.dpopJwt && !event.dpopError) { %>
+      <p class="no-jwt-note">受信したJWTはありません</p>
+      <% } %>
+    </div>
+    <% }); %>
+  </div>
+  <% } %>
+
+  <% if ((!tokenEvents || tokenEvents.length === 0) && (!credentialEvents || credentialEvents.length === 0)) { %>
+  <div class="info-section">
+    <h3>イベント履歴</h3>
+    <p class="no-events-note">まだ発行要求を受信していません。</p>
+  </div>
+  <% } %>
+
+  <div class="form-actions">
+    <a href="/admin/learners" class="btn btn-secondary">学習者一覧に戻る</a>
+    <button onclick="location.reload()" class="btn btn-primary">更新</button>
+  </div>
+</div>
+
+<script>
+function toggleJwtSection(id) {
+  const el = document.getElementById(id);
+  if (el) {
+    el.style.display = el.style.display === 'none' ? 'block' : 'none';
+  }
+}
+</script>
+
+<style>
+.issuance-status-container {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.info-section {
+  background: white;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.info-section h3 {
+  margin-top: 0;
+  margin-bottom: 1.25rem;
+  color: #1e293b;
+  font-size: 1.25rem;
+  font-weight: 600;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e2e8f0;
+}
+
+.info-item {
+  display: flex;
+  margin-bottom: 1rem;
+  align-items: center;
+}
+
+.info-item label {
+  font-weight: 600;
+  min-width: 150px;
+  color: #475569;
+}
+
+.monospace {
+  font-family: 'Courier New', monospace;
+}
+
+.expired {
+  color: #dc2626;
+}
+
+.badge {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  border-radius: 4px;
+}
+
+.badge-warning {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  color: white;
+}
+
+.badge-purple {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  color: white;
+}
+
+.badge-secondary {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.status-indicator {
+  padding: 1.5rem;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  font-weight: 600;
+  text-align: center;
+}
+
+.status-icon {
+  margin-right: 0.5rem;
+}
+
+.status-no_request {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #64748b;
+}
+
+.status-no_request_expired {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+  color: #dc2626;
+}
+
+.status-token_request {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+}
+
+.status-token_issued {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  color: #1e40af;
+}
+
+.status-credential_issued {
+  background: linear-gradient(135deg, #dcfce7 0%, #bbf7d0 100%);
+  color: #166534;
+}
+
+.event-card {
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 1rem;
+}
+
+.event-card:last-child {
+  margin-bottom: 0;
+}
+
+.event-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.event-type {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  font-weight: 600;
+  font-size: 0.875rem;
+}
+
+.event-type.success {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.event-type.info {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.event-time {
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.jwt-section {
+  margin-top: 1rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.jwt-header-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem 1rem;
+  background: #f1f5f9;
+  cursor: pointer;
+  user-select: none;
+}
+
+.jwt-header-row:hover {
+  background: #e2e8f0;
+}
+
+.jwt-title {
+  font-weight: 600;
+  flex: 1;
+}
+
+.jwt-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.jwt-status.valid {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.jwt-status.invalid {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.jwt-status.pending {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.toggle-icon {
+  color: #64748b;
+}
+
+.jwt-content {
+  padding: 1rem;
+  background: white;
+}
+
+.jwt-error {
+  background: #fef2f2;
+  color: #dc2626;
+  padding: 0.75rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+}
+
+.jwt-raw {
+  margin-bottom: 1rem;
+}
+
+.jwt-raw label,
+.jwt-decoded label {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 0.5rem;
+  color: #475569;
+}
+
+.jwt-raw textarea {
+  width: 100%;
+  height: 80px;
+  padding: 0.75rem;
+  font-family: 'Courier New', monospace;
+  font-size: 0.75rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 4px;
+  background: #f8fafc;
+  resize: vertical;
+}
+
+.jwt-decoded pre {
+  background: #1e293b;
+  color: #e2e8f0;
+  padding: 1rem;
+  border-radius: 4px;
+  overflow-x: auto;
+  font-size: 0.75rem;
+  margin: 0;
+}
+
+.no-jwt-note,
+.no-events-note {
+  color: #64748b;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-start;
+  margin-top: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .info-section {
+    padding: 1.5rem;
+  }
+
+  .info-item {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .info-item label {
+    margin-bottom: 0.5rem;
+  }
+
+  .event-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+  }
+}
+</style>
