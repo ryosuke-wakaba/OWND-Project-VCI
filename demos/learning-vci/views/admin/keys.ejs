@@ -1,14 +1,14 @@
 <nav class="breadcrumb">
-  <a href="/admin">トップ</a> &gt; <span>キーペア管理</span>
+  <a href="/admin"><%= t('common:breadcrumb.top') %></a> &gt; <span><%= t('keys:breadcrumb.management') %></span>
 </nav>
 
-<h2>キーペア一覧</h2>
+<h2><%= t('keys:title') %></h2>
 
 <div class="toolbar">
   <div></div>
   <div class="actions">
-    <a href="/admin/keys/new" class="btn btn-primary">新規生成</a>
-    <a href="/admin/keys/import" class="btn btn-secondary">インポート</a>
+    <a href="/admin/keys/new" class="btn btn-primary"><%= t('keys:new.button') %></a>
+    <a href="/admin/keys/import" class="btn btn-secondary"><%= t('keys:import.button') %></a>
   </div>
 </div>
 
@@ -16,12 +16,12 @@
   <table>
     <thead>
       <tr>
-        <th>キーID</th>
-        <th>楕円曲線</th>
-        <th>証明書</th>
-        <th>説明</th>
-        <th>作成日</th>
-        <th>アクション</th>
+        <th><%= t('keys:table.keyId') %></th>
+        <th><%= t('keys:table.curve') %></th>
+        <th><%= t('keys:table.certificate') %></th>
+        <th><%= t('keys:table.description') %></th>
+        <th><%= t('keys:table.createdAt') %></th>
+        <th><%= t('common:labels.actions') %></th>
       </tr>
     </thead>
     <tbody>
@@ -31,18 +31,18 @@
           <td><%= key.crv %></td>
           <td>
             <% if (key.hasCertificate) { %>
-              <span class="badge badge-success">あり</span>
+              <span class="badge badge-success"><%= t('common:labels.yes') %></span>
             <% } else { %>
-              <span class="badge badge-warning">なし</span>
+              <span class="badge badge-warning"><%= t('common:labels.no') %></span>
             <% } %>
           </td>
           <td><%= key.certDescription || '-' %></td>
-          <td><%= new Date(key.createdAt).toLocaleString('ja-JP') %></td>
+          <td><%= new Date(key.createdAt).toLocaleString(lng === 'en' ? 'en-US' : 'ja-JP') %></td>
           <td>
             <div class="actions">
-              <a href="/admin/keys/<%= key.kid %>/detail" class="btn btn-secondary btn-small">詳細</a>
+              <a href="/admin/keys/<%= key.kid %>/detail" class="btn btn-secondary btn-small"><%= t('common:buttons.details') %></a>
               <% if (!key.hasCertificate) { %>
-                <a href="/admin/keys/<%= key.kid %>/certificate" class="btn btn-primary btn-small">証明書発行</a>
+                <a href="/admin/keys/<%= key.kid %>/certificate" class="btn btn-primary btn-small"><%= t('keys:detail.issueCertificate') %></a>
               <% } %>
             </div>
           </td>
@@ -52,8 +52,8 @@
   </table>
 <% } else { %>
   <div class="empty-state">
-    <p>登録されているキーペアがありません</p>
-    <a href="/admin/keys/new" class="btn btn-primary">最初のキーペアを生成</a>
+    <p><%= t('keys:empty.message') %></p>
+    <a href="/admin/keys/new" class="btn btn-primary"><%= t('keys:empty.action') %></a>
   </div>
 <% } %>
 

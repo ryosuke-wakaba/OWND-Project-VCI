@@ -1,0 +1,79 @@
+{
+  "title": "Learning VCI 管理画面",
+  "nav": {
+    "top": "トップ",
+    "learners": "学習者管理",
+    "keys": "キーペア管理",
+    "metadata": "メタデータ管理",
+    "walletProviderCA": "Wallet Provider CA"
+  },
+  "footer": {
+    "copyright": "&copy; 2025 Learning VCI"
+  },
+  "breadcrumb": {
+    "top": "トップ",
+    "adminMenu": "管理メニュー"
+  },
+  "buttons": {
+    "new": "新規登録",
+    "edit": "編集",
+    "delete": "削除",
+    "cancel": "キャンセル",
+    "save": "保存",
+    "update": "更新",
+    "register": "登録",
+    "issue": "発行",
+    "generate": "生成",
+    "import": "インポート",
+    "add": "追加",
+    "copy": "コピー",
+    "copied": "コピーしました",
+    "details": "詳細",
+    "back": "戻る",
+    "backToList": "一覧に戻る",
+    "refresh": "更新"
+  },
+  "labels": {
+    "required": "必須",
+    "optional": "任意",
+    "yes": "あり",
+    "no": "なし",
+    "valid": "有効",
+    "invalid": "無効",
+    "active": "有効",
+    "inactive": "無効",
+    "expired": "期限切れ",
+    "description": "説明",
+    "createdAt": "作成日",
+    "createdAtTime": "作成日時",
+    "expiresAt": "有効期限",
+    "status": "状態",
+    "actions": "アクション",
+    "operation": "操作"
+  },
+  "menu": {
+    "title": "管理メニュー",
+    "learners": {
+      "title": "学習者管理",
+      "description": "学習者の登録・編集・クレデンシャル発行"
+    },
+    "keys": {
+      "title": "キーペア管理",
+      "description": "署名鍵の生成・インポート・証明書発行"
+    },
+    "metadata": {
+      "title": "メタデータ管理",
+      "description": "署名付きメタデータの生成・管理"
+    }
+  },
+  "confirm": {
+    "delete": "削除してもよろしいですか？"
+  },
+  "alert": {
+    "deleteFailed": "削除に失敗しました",
+    "copyFailed": "コピーに失敗しました"
+  },
+  "help": {
+    "title": "ヘルプ"
+  }
+}

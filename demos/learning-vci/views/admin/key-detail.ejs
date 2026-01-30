@@ -1,65 +1,65 @@
 <nav class="breadcrumb">
-  <a href="/admin">トップ</a> &gt; <a href="/admin/keys">キーペア管理</a> &gt; <span>詳細</span>
+  <a href="/admin"><%= t('common:breadcrumb.top') %></a> &gt; <a href="/admin/keys"><%= t('keys:breadcrumb.management') %></a> &gt; <span><%= t('keys:breadcrumb.detail') %></span>
 </nav>
 
-<h2>キーペア詳細</h2>
+<h2><%= t('keys:detail.title') %></h2>
 
 <div class="detail-card">
-  <h3>基本情報</h3>
+  <h3><%= t('keys:detail.basicInfo') %></h3>
   <table class="detail-table">
     <tr>
-      <th>キーID</th>
+      <th><%= t('keys:detail.keyId') %></th>
       <td><%= key.kid %></td>
     </tr>
     <tr>
-      <th>鍵タイプ</th>
+      <th><%= t('keys:detail.keyType') %></th>
       <td><%= key.kty %></td>
     </tr>
     <tr>
-      <th>楕円曲線</th>
+      <th><%= t('keys:detail.curve') %></th>
       <td><%= key.crv %></td>
     </tr>
     <tr>
-      <th>作成日</th>
-      <td><%= new Date(key.createdAt).toLocaleString('ja-JP') %></td>
+      <th><%= t('keys:detail.createdAt') %></th>
+      <td><%= new Date(key.createdAt).toLocaleString(lng === 'en' ? 'en-US' : 'ja-JP') %></td>
     </tr>
     <tr>
-      <th>状態</th>
+      <th><%= t('keys:detail.status') %></th>
       <td>
         <% if (key.revokedAt) { %>
-          <span class="badge badge-danger">失効 (<%= new Date(key.revokedAt).toLocaleString('ja-JP') %>)</span>
+          <span class="badge badge-danger"><%= t('keys:detail.revoked') %> (<%= new Date(key.revokedAt).toLocaleString(lng === 'en' ? 'en-US' : 'ja-JP') %>)</span>
         <% } else { %>
-          <span class="badge badge-success">有効</span>
+          <span class="badge badge-success"><%= t('keys:detail.valid') %></span>
         <% } %>
       </td>
     </tr>
   </table>
 
-  <h3>公開鍵 (JWK)</h3>
+  <h3><%= t('keys:detail.publicKeyJwk') %></h3>
   <pre class="code-block"><%= JSON.stringify({ kty: key.kty, crv: key.crv, x: key.x, y: key.y }, null, 2) %></pre>
 </div>
 
 <% if (x509Chain && x509Chain.length > 0) { %>
 <div class="detail-card">
-  <h3>X.509証明書チェーン</h3>
+  <h3><%= t('keys:detail.x509CertChain') %></h3>
 
   <div class="cert-description-section">
     <form action="/admin/keys/<%= key.kid %>/description" method="POST" class="description-form">
-      <label>説明:</label>
-      <input type="text" name="description" value="<%= certDescription || '' %>" placeholder="証明書の説明を入力">
-      <button type="submit" class="btn btn-primary btn-small">保存</button>
+      <label><%= t('keys:detail.description') %>:</label>
+      <input type="text" name="description" value="<%= certDescription || '' %>" placeholder="<%= t('keys:detail.descriptionPlaceholder') %>">
+      <button type="submit" class="btn btn-primary btn-small"><%= t('common:buttons.save') %></button>
     </form>
   </div>
 
   <% x509Chain.forEach(function(cert, index) { %>
   <div class="cert-item">
-    <h4>証明書 <%= index + 1 %><% if (index === 0) { %> (End Entity)<% } else if (index === x509Chain.length - 1) { %> (Root)<% } else { %> (Intermediate)<% } %></h4>
+    <h4><%= t('keys:detail.certificate') %> <%= index + 1 %><% if (index === 0) { %> (<%= t('keys:detail.endEntity') %>)<% } else if (index === x509Chain.length - 1) { %> (<%= t('keys:detail.root') %>)<% } else { %> (<%= t('keys:detail.intermediate') %>)<% } %></h4>
 
     <% if (certInfos && certInfos[index]) { %>
     <% var info = certInfos[index]; %>
     <table class="detail-table cert-info-table">
       <tr>
-        <th>Subject</th>
+        <th><%= t('keys:detail.subject') %></th>
         <td>
           <% if (info.subject.commonName) { %>CN=<%= info.subject.commonName %><% } %>
           <% if (info.subject.organizationalUnitName) { %>, OU=<%= info.subject.organizationalUnitName %><% } %>
@@ -68,7 +68,7 @@
         </td>
       </tr>
       <tr>
-        <th>Issuer</th>
+        <th><%= t('keys:detail.issuer') %></th>
         <td>
           <% if (info.issuer.commonName) { %>CN=<%= info.issuer.commonName %><% } %>
           <% if (info.issuer.organizationalUnitName) { %>, OU=<%= info.issuer.organizationalUnitName %><% } %>
@@ -77,24 +77,24 @@
         </td>
       </tr>
       <tr>
-        <th>Serial Number</th>
+        <th><%= t('keys:detail.serialNumber') %></th>
         <td class="serial"><%= info.serialNumber %></td>
       </tr>
       <tr>
-        <th>有効期間</th>
+        <th><%= t('keys:detail.validityPeriod') %></th>
         <td>
-          <%= new Date(info.notBefore).toLocaleString('ja-JP') %>
+          <%= new Date(info.notBefore).toLocaleString(lng === 'en' ? 'en-US' : 'ja-JP') %>
           〜
-          <%= new Date(info.notAfter).toLocaleString('ja-JP') %>
+          <%= new Date(info.notAfter).toLocaleString(lng === 'en' ? 'en-US' : 'ja-JP') %>
         </td>
       </tr>
     </table>
     <% } %>
 
     <details class="cert-pem-details">
-      <summary>PEM形式を表示</summary>
+      <summary><%= t('keys:detail.showPem') %></summary>
       <div class="pem-container">
-        <button type="button" class="copy-btn" onclick="copyPem(this)" title="コピー">
+        <button type="button" class="copy-btn" onclick="copyPem(this)" title="<%= t('common:buttons.copy') %>">
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>
         </button>
         <pre class="code-block pem-content">-----BEGIN CERTIFICATE-----
@@ -106,10 +106,10 @@
     <% if (!key.revokedAt) { %>
     <div class="cert-actions">
       <% if (index === 0) { %>
-      <a href="/admin/keys/<%= key.kid %>/add-parent-cert" class="btn btn-secondary btn-small">上位証明書を追加</a>
+      <a href="/admin/keys/<%= key.kid %>/add-parent-cert" class="btn btn-secondary btn-small"><%= t('keys:detail.addParentCert') %></a>
       <% } else { %>
-      <form action="/admin/keys/<%= key.kid %>/remove-cert/<%= index %>" method="POST" style="display: inline;" onsubmit="return confirm('この証明書を削除しますか？');">
-        <button type="submit" class="btn btn-danger btn-small">この証明書を削除</button>
+      <form action="/admin/keys/<%= key.kid %>/remove-cert/<%= index %>" method="POST" style="display: inline;" onsubmit="return confirm('<%= t('keys:detail.confirmDeleteCert') %>');">
+        <button type="submit" class="btn btn-danger btn-small"><%= t('keys:detail.deleteCert') %></button>
       </form>
       <% } %>
     </div>
@@ -119,16 +119,16 @@
 </div>
 <% } else { %>
 <div class="detail-card">
-  <h3>X.509証明書</h3>
-  <p class="text-muted">証明書は登録されていません。</p>
+  <h3><%= t('keys:detail.x509CertChain') %></h3>
+  <p class="text-muted"><%= t('keys:detail.noCertificate') %></p>
   <% if (!key.revokedAt) { %>
-  <a href="/admin/keys/<%= key.kid %>/certificate" class="btn btn-primary">証明書を発行</a>
+  <a href="/admin/keys/<%= key.kid %>/certificate" class="btn btn-primary"><%= t('keys:detail.issueCertificate') %></a>
   <% } %>
 </div>
 <% } %>
 
 <div class="toolbar">
-  <a href="/admin/keys" class="btn btn-secondary">一覧に戻る</a>
+  <a href="/admin/keys" class="btn btn-secondary"><%= t('common:buttons.backToList') %></a>
 </div>
 
 <style>
@@ -322,7 +322,7 @@ function copyPem(button) {
     }, 2000);
   }).catch(function(err) {
     console.error('Failed to copy:', err);
-    alert('コピーに失敗しました');
+    alert('<%= t('common:alert.copyFailed') %>');
   });
 }
 </script>

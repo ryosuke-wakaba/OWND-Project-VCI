@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="ja">
+<html lang="<%= lng %>">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -27,13 +27,13 @@
 <body>
   <header>
     <div class="container">
-      <h1><a href="/admin" style="color: inherit; text-decoration: none;">Learning VCI 管理画面</a></h1>
+      <h1><a href="/admin" style="color: inherit; text-decoration: none;"><%= t('common:title') %></a></h1>
       <nav>
-        <a href="/admin">トップ</a>
-        <a href="/admin/learners">学習者管理</a>
-        <a href="/admin/keys">キーペア管理</a>
-        <a href="/admin/metadata">メタデータ管理</a>
-        <a href="/admin/wallet-provider-ca">Wallet Provider CA</a>
+        <a href="/admin"><%= t('common:nav.top') %></a>
+        <a href="/admin/learners"><%= t('common:nav.learners') %></a>
+        <a href="/admin/keys"><%= t('common:nav.keys') %></a>
+        <a href="/admin/metadata"><%= t('common:nav.metadata') %></a>
+        <a href="/admin/wallet-provider-ca"><%= t('common:nav.walletProviderCA') %></a>
       </nav>
     </div>
   </header>
@@ -42,7 +42,7 @@
   </main>
   <footer>
     <div class="container">
-      <p>&copy; 2025 Learning VCI</p>
+      <p><%- t('common:footer.copyright') %></p>
     </div>
   </footer>
 </body>

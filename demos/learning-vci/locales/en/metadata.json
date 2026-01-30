@@ -1,0 +1,40 @@
+{
+  "title": "Metadata Management",
+  "breadcrumb": {
+    "management": "Metadata Management"
+  },
+  "currentMetadata": "Current Metadata",
+  "signing": {
+    "title": "Signing",
+    "selectKey": "Select Signing Key:",
+    "withCert": "with certificate",
+    "latest": "Latest",
+    "includeFullChain": "Include intermediate certificates (Default: Leaf certificate only)",
+    "execute": "Execute Signing",
+    "noKeys": "No available signing keys. Please <a href=\"/admin/keys/new\">generate a key pair</a>.",
+    "confirm": "Execute signing on metadata?\n\nExisting signed metadata will be invalidated."
+  },
+  "history": {
+    "title": "Signing History",
+    "id": "ID",
+    "signingKey": "Signing Key",
+    "createdAt": "Created At",
+    "status": "Status",
+    "operation": "Operation",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "invalidate": "Invalidate",
+    "empty": "No signing history",
+    "confirmInvalidate": "Invalidate this signed metadata?"
+  },
+  "activeJwt": {
+    "title": "Active Signed Metadata (JWT)",
+    "showJwt": "Show JWT"
+  },
+  "endpoint": {
+    "title": "Endpoint",
+    "verifyCommands": "Verification Commands",
+    "jsonFormat": "JSON format (default):",
+    "jwtFormat": "JWT format (signed metadata):"
+  }
+}

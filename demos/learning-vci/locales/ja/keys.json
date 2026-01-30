@@ -1,0 +1,109 @@
+{
+  "title": "キーペア一覧",
+  "breadcrumb": {
+    "management": "キーペア管理",
+    "new": "新規生成",
+    "import": "インポート",
+    "detail": "詳細",
+    "certificate": "証明書発行",
+    "addParentCert": "上位証明書追加"
+  },
+  "new": {
+    "title": "キーペア生成",
+    "button": "新規生成"
+  },
+  "import": {
+    "title": "キーペアインポート",
+    "button": "インポート"
+  },
+  "table": {
+    "keyId": "キーID",
+    "curve": "楕円曲線",
+    "certificate": "証明書",
+    "description": "説明",
+    "createdAt": "作成日"
+  },
+  "form": {
+    "keyId": "キーID",
+    "keyIdPlaceholder": "例: issuer-key-1",
+    "keyIdHelp": "一意の識別子を入力してください",
+    "curve": "楕円曲線",
+    "curveP256": "P-256 (NIST)",
+    "curveSecp256k1": "secp256k1 (Bitcoin/Ethereum)",
+    "curveHelp": "署名に使用する楕円曲線を選択してください",
+    "privateKey": "秘密鍵 (PEM形式)",
+    "privateKeyHelp": "EC秘密鍵をPEM形式で入力してください（P-256またはsecp256k1）",
+    "certificateChain": "証明書チェーン (PEM形式、オプション)",
+    "certificateChainHelp": "リーフ証明書から順に、証明書チェーンをPEM形式で入力してください（複数可）",
+    "certDescription": "証明書の説明",
+    "certDescriptionPlaceholder": "例: 本番用署名証明書",
+    "certDescriptionHelp": "証明書をインポートする場合、その説明を入力してください（任意）"
+  },
+  "empty": {
+    "message": "登録されているキーペアがありません",
+    "action": "最初のキーペアを生成"
+  },
+  "detail": {
+    "title": "キーペア詳細",
+    "basicInfo": "基本情報",
+    "keyId": "キーID",
+    "keyType": "鍵タイプ",
+    "curve": "楕円曲線",
+    "createdAt": "作成日",
+    "status": "状態",
+    "revoked": "失効",
+    "valid": "有効",
+    "publicKeyJwk": "公開鍵 (JWK)",
+    "x509CertChain": "X.509証明書チェーン",
+    "description": "説明",
+    "descriptionPlaceholder": "証明書の説明を入力",
+    "certificate": "証明書",
+    "endEntity": "End Entity",
+    "intermediate": "Intermediate",
+    "root": "Root",
+    "subject": "Subject",
+    "issuer": "Issuer",
+    "serialNumber": "Serial Number",
+    "validityPeriod": "有効期間",
+    "showPem": "PEM形式を表示",
+    "addParentCert": "上位証明書を追加",
+    "deleteCert": "この証明書を削除",
+    "confirmDeleteCert": "この証明書を削除しますか？",
+    "noCertificate": "証明書は登録されていません。",
+    "issueCertificate": "証明書を発行"
+  },
+  "certificate": {
+    "title": "証明書発行",
+    "targetKey": "対象キー",
+    "subject": "Subject (DN形式)",
+    "subjectPlaceholder": "/C=JP/ST=Tokyo/O=Example Corp/CN=example.com",
+    "subjectHelp": "例: /C=JP/ST=Tokyo/O=組織名/CN=コモンネーム",
+    "certType": "証明書タイプ",
+    "selfSigned": "自己署名証明書（ルート証明書）",
+    "leafCert": "リーフ証明書（既存のルートCAで署名）",
+    "noKeysWithCert": "（証明書を持つキーがありません）",
+    "issuerRootCert": "発行元ルート証明書",
+    "selectIssuer": "選択してください"
+  },
+  "addParentCert": {
+    "title": "上位証明書の追加",
+    "targetKey": "対象キー",
+    "keyId": "キーID",
+    "currentChainLength": "現在のチェーン長",
+    "certificates": "証明書",
+    "leafCertSubject": "リーフ証明書 Subject",
+    "leafCertIssuer": "リーフ証明書 Issuer",
+    "parentCert": "上位証明書 (PEM形式)",
+    "parentCertHelp": "中間証明書→ルート証明書の順にPEM形式で入力してください（複数可）",
+    "helpText": "既存のリーフ証明書に対して、上位の証明書チェーンを追加できます。",
+    "helpOrder": "中間証明書（リーフに近い順）→ ルート証明書",
+    "helpFormat": "<code>-----BEGIN CERTIFICATE-----</code> 形式のPEM",
+    "helpMultiple": "複数の証明書を連続して貼り付けることができます"
+  },
+  "importHelp": {
+    "text": "外部で生成された秘密鍵と証明書をインポートできます。",
+    "privateKey": "<code>-----BEGIN EC PRIVATE KEY-----</code> または <code>-----BEGIN PRIVATE KEY-----</code> 形式",
+    "supportedCurves": "P-256, secp256k1",
+    "certificate": "X.509形式のPEM（オプション、複数指定可）"
+  }
+}

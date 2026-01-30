@@ -1,115 +1,115 @@
 <nav class="breadcrumb">
-  <a href="/admin">トップ</a> &gt; <a href="/admin/learners">学習者管理</a> &gt; <span>発行状況</span>
+  <a href="/admin"><%= t('common:breadcrumb.top') %></a> &gt; <a href="/admin/learners"><%= t('learners:breadcrumb.management') %></a> &gt; <span><%= t('learners:breadcrumb.issuanceStatus') %></span>
 </nav>
 
-<h2>発行状況</h2>
+<h2><%= t('learners:issuanceStatus.title') %></h2>
 
 <div class="issuance-status-container">
   <div class="info-section">
-    <h3>認可コード情報</h3>
+    <h3><%= t('learners:issuanceStatus.authCodeInfo') %></h3>
     <div class="info-item">
-      <label>認可コードID:</label>
+      <label><%= t('learners:issuanceStatus.authCodeId') %>:</label>
       <span class="monospace"><%= authCode.id %></span>
     </div>
     <% if (learner) { %>
     <div class="info-item">
-      <label>学習者:</label>
+      <label><%= t('learners:issuanceStatus.learner') %>:</label>
       <span><%= learner.familyName %> <%= learner.givenName %> (<%= learner.learnerNo %>)</span>
     </div>
     <% } %>
     <div class="info-item">
-      <label>作成日時:</label>
+      <label><%= t('learners:issuanceStatus.createdAt') %>:</label>
       <span><%= createdAtJST %></span>
     </div>
     <div class="info-item">
-      <label>有効期限:</label>
-      <span class="<%= isExpired ? 'expired' : '' %>"><%= expiresAtJST %> <%= isExpired ? '(期限切れ)' : '' %></span>
+      <label><%= t('learners:issuanceStatus.expiresAt') %>:</label>
+      <span class="<%= isExpired ? 'expired' : '' %>"><%= expiresAtJST %> <%= isExpired ? t('learners:issuanceStatus.expired') : '' %></span>
     </div>
     <div class="info-item">
-      <label>クライアント認証:</label>
+      <label><%= t('learners:issuanceStatus.clientAuth') %>:</label>
       <% if (authCode.requireClientAuth) { %>
-      <span class="badge badge-warning">必須</span>
+      <span class="badge badge-warning"><%= t('learners:issuanceStatus.required') %></span>
       <% } else { %>
-      <span class="badge badge-secondary">任意</span>
+      <span class="badge badge-secondary"><%= t('learners:issuanceStatus.optional') %></span>
       <% } %>
     </div>
     <div class="info-item">
-      <label>DPoP:</label>
+      <label><%= t('learners:issuanceStatus.dpop') %>:</label>
       <% if (authCode.requireDpop) { %>
-      <span class="badge badge-purple">必須</span>
+      <span class="badge badge-purple"><%= t('learners:issuanceStatus.required') %></span>
       <% } else { %>
-      <span class="badge badge-secondary">任意</span>
+      <span class="badge badge-secondary"><%= t('learners:issuanceStatus.optional') %></span>
       <% } %>
     </div>
   </div>
 
   <div class="info-section">
-    <h3>発行状況</h3>
+    <h3><%= t('learners:issuanceStatus.statusTitle') %></h3>
     <div class="status-indicator status-<%= status %>">
       <% if (status === 'no_request') { %>
-        <span class="status-icon">&#128336;</span> 発行要求なし（待機中）
+        <span class="status-icon">&#128336;</span> <%= t('learners:issuanceStatus.status.noRequest') %>
       <% } else if (status === 'no_request_expired') { %>
-        <span class="status-icon">&#10060;</span> 発行要求なし（期限切れ）
+        <span class="status-icon">&#10060;</span> <%= t('learners:issuanceStatus.status.noRequestExpired') %>
       <% } else if (status === 'token_request') { %>
-        <span class="status-icon">&#9888;</span> Token要求中（エラーあり）
+        <span class="status-icon">&#9888;</span> <%= t('learners:issuanceStatus.status.tokenRequest') %>
       <% } else if (status === 'token_issued') { %>
-        <span class="status-icon">&#9989;</span> Token発行済み（Credential待ち）
+        <span class="status-icon">&#9989;</span> <%= t('learners:issuanceStatus.status.tokenIssued') %>
       <% } else if (status === 'credential_issued') { %>
-        <span class="status-icon">&#10004;</span> Credential発行完了
+        <span class="status-icon">&#10004;</span> <%= t('learners:issuanceStatus.status.credentialIssued') %>
       <% } %>
     </div>
   </div>
 
   <% if (tokenEvents && tokenEvents.length > 0) { %>
   <div class="info-section">
-    <h3>Token Endpoint</h3>
+    <h3><%= t('learners:issuanceStatus.tokenEndpoint') %></h3>
     <% tokenEvents.forEach((event, idx) => { %>
     <div class="event-card">
       <div class="event-header">
         <span class="event-type <%= event.eventType === 'token_issued' ? 'success' : 'info' %>">
-          <%= event.eventType === 'token_issued' ? '発行成功' : 'リクエスト受信' %>
+          <%= event.eventType === 'token_issued' ? t('learners:issuanceStatus.event.issueSuccess') : t('learners:issuanceStatus.event.requestReceived') %>
         </span>
-        <span class="event-time"><%= new Date(event.createdAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }) %></span>
+        <span class="event-time"><%= new Date(event.createdAt).toLocaleString(lng === 'en' ? 'en-US' : 'ja-JP', { timeZone: 'Asia/Tokyo' }) %></span>
       </div>
 
       <% if (event.dpopJwt || event.dpopError) { %>
       <div class="jwt-section">
         <div class="jwt-header-row" onclick="toggleJwtSection('dpop-token-<%= idx %>')">
-          <span class="jwt-title">DPoP JWT</span>
+          <span class="jwt-title"><%= t('learners:issuanceStatus.jwt.dpop') %></span>
           <% if (event.dpopValid === true || event.dpopValid === 1) { %>
-          <span class="jwt-status valid">検証成功</span>
+          <span class="jwt-status valid"><%= t('learners:issuanceStatus.jwt.verificationSuccess') %></span>
           <% } else if (event.dpopValid === false || event.dpopValid === 0 || event.dpopError) { %>
-          <span class="jwt-status invalid">検証失敗</span>
+          <span class="jwt-status invalid"><%= t('learners:issuanceStatus.jwt.verificationFailed') %></span>
           <% } else { %>
-          <span class="jwt-status pending">未検証</span>
+          <span class="jwt-status pending"><%= t('learners:issuanceStatus.jwt.notVerified') %></span>
           <% } %>
           <span class="toggle-icon">&#9660;</span>
         </div>
         <div id="dpop-token-<%= idx %>" class="jwt-content" style="display: none;">
           <% if (event.dpopError) { %>
           <div class="jwt-error">
-            <strong>エラー:</strong> <%= event.dpopError %>
+            <strong><%= t('learners:issuanceStatus.jwt.error') %>:</strong> <%= event.dpopError %>
           </div>
           <% } %>
           <% if (event.dpopJwt) { %>
           <div class="jwt-raw">
-            <label>生データ:</label>
+            <label><%= t('learners:issuanceStatus.jwt.rawData') %>:</label>
             <textarea readonly><%= event.dpopJwt %></textarea>
           </div>
           <% if (event.dpopHeader) { %>
           <div class="jwt-decoded">
-            <label>Header:</label>
+            <label><%= t('learners:issuanceStatus.jwt.header') %>:</label>
             <pre><%= JSON.stringify(JSON.parse(event.dpopHeader), null, 2) %></pre>
           </div>
           <% } %>
           <% if (event.dpopPayload) { %>
           <div class="jwt-decoded">
-            <label>Payload:</label>
+            <label><%= t('learners:issuanceStatus.jwt.payload') %>:</label>
             <pre><%= JSON.stringify(JSON.parse(event.dpopPayload), null, 2) %></pre>
           </div>
           <% } %>
           <% } else { %>
-          <p class="no-jwt-note">DPoP JWT は送信されませんでした</p>
+          <p class="no-jwt-note"><%= t('learners:issuanceStatus.jwt.dpopNotSent') %></p>
           <% } %>
         </div>
       </div>
@@ -118,41 +118,41 @@
       <% if (event.walletAttestationJwt || event.walletAttestationError) { %>
       <div class="jwt-section">
         <div class="jwt-header-row" onclick="toggleJwtSection('wa-<%= idx %>')">
-          <span class="jwt-title">Wallet Attestation JWT</span>
+          <span class="jwt-title"><%= t('learners:issuanceStatus.jwt.walletAttestation') %></span>
           <% if (event.walletAttestationValid === true || event.walletAttestationValid === 1) { %>
-          <span class="jwt-status valid">検証成功</span>
+          <span class="jwt-status valid"><%= t('learners:issuanceStatus.jwt.verificationSuccess') %></span>
           <% } else if (event.walletAttestationValid === false || event.walletAttestationValid === 0 || event.walletAttestationError) { %>
-          <span class="jwt-status invalid">検証失敗</span>
+          <span class="jwt-status invalid"><%= t('learners:issuanceStatus.jwt.verificationFailed') %></span>
           <% } else { %>
-          <span class="jwt-status pending">受信済み</span>
+          <span class="jwt-status pending"><%= t('learners:issuanceStatus.jwt.received') %></span>
           <% } %>
           <span class="toggle-icon">&#9660;</span>
         </div>
         <div id="wa-<%= idx %>" class="jwt-content" style="display: none;">
           <% if (event.walletAttestationError) { %>
           <div class="jwt-error">
-            <strong>エラー:</strong> <%= event.walletAttestationError %>
+            <strong><%= t('learners:issuanceStatus.jwt.error') %>:</strong> <%= event.walletAttestationError %>
           </div>
           <% } %>
           <% if (event.walletAttestationJwt) { %>
           <div class="jwt-raw">
-            <label>生データ:</label>
+            <label><%= t('learners:issuanceStatus.jwt.rawData') %>:</label>
             <textarea readonly><%= event.walletAttestationJwt %></textarea>
           </div>
           <% if (event.walletAttestationHeader) { %>
           <div class="jwt-decoded">
-            <label>Header:</label>
+            <label><%= t('learners:issuanceStatus.jwt.header') %>:</label>
             <pre><%= JSON.stringify(JSON.parse(event.walletAttestationHeader), null, 2) %></pre>
           </div>
           <% } %>
           <% if (event.walletAttestationPayload) { %>
           <div class="jwt-decoded">
-            <label>Payload:</label>
+            <label><%= t('learners:issuanceStatus.jwt.payload') %>:</label>
             <pre><%= JSON.stringify(JSON.parse(event.walletAttestationPayload), null, 2) %></pre>
           </div>
           <% } %>
           <% } else { %>
-          <p class="no-jwt-note">Wallet Attestation JWT は送信されませんでした</p>
+          <p class="no-jwt-note"><%= t('learners:issuanceStatus.jwt.walletAttestationNotSent') %></p>
           <% } %>
         </div>
       </div>
@@ -161,48 +161,48 @@
       <% if (event.walletAttestationPopJwt || event.walletAttestationPopError) { %>
       <div class="jwt-section">
         <div class="jwt-header-row" onclick="toggleJwtSection('wa-pop-<%= idx %>')">
-          <span class="jwt-title">Wallet Attestation PoP JWT</span>
+          <span class="jwt-title"><%= t('learners:issuanceStatus.jwt.walletAttestationPop') %></span>
           <% if (event.walletAttestationPopValid === true || event.walletAttestationPopValid === 1) { %>
-          <span class="jwt-status valid">検証成功</span>
+          <span class="jwt-status valid"><%= t('learners:issuanceStatus.jwt.verificationSuccess') %></span>
           <% } else if (event.walletAttestationPopValid === false || event.walletAttestationPopValid === 0 || event.walletAttestationPopError) { %>
-          <span class="jwt-status invalid">検証失敗</span>
+          <span class="jwt-status invalid"><%= t('learners:issuanceStatus.jwt.verificationFailed') %></span>
           <% } else { %>
-          <span class="jwt-status pending">受信済み</span>
+          <span class="jwt-status pending"><%= t('learners:issuanceStatus.jwt.received') %></span>
           <% } %>
           <span class="toggle-icon">&#9660;</span>
         </div>
         <div id="wa-pop-<%= idx %>" class="jwt-content" style="display: none;">
           <% if (event.walletAttestationPopError) { %>
           <div class="jwt-error">
-            <strong>エラー:</strong> <%= event.walletAttestationPopError %>
+            <strong><%= t('learners:issuanceStatus.jwt.error') %>:</strong> <%= event.walletAttestationPopError %>
           </div>
           <% } %>
           <% if (event.walletAttestationPopJwt) { %>
           <div class="jwt-raw">
-            <label>生データ:</label>
+            <label><%= t('learners:issuanceStatus.jwt.rawData') %>:</label>
             <textarea readonly><%= event.walletAttestationPopJwt %></textarea>
           </div>
           <% if (event.walletAttestationPopHeader) { %>
           <div class="jwt-decoded">
-            <label>Header:</label>
+            <label><%= t('learners:issuanceStatus.jwt.header') %>:</label>
             <pre><%= JSON.stringify(JSON.parse(event.walletAttestationPopHeader), null, 2) %></pre>
           </div>
           <% } %>
           <% if (event.walletAttestationPopPayload) { %>
           <div class="jwt-decoded">
-            <label>Payload:</label>
+            <label><%= t('learners:issuanceStatus.jwt.payload') %>:</label>
             <pre><%= JSON.stringify(JSON.parse(event.walletAttestationPopPayload), null, 2) %></pre>
           </div>
           <% } %>
           <% } else { %>
-          <p class="no-jwt-note">Wallet Attestation PoP JWT は送信されませんでした</p>
+          <p class="no-jwt-note"><%= t('learners:issuanceStatus.jwt.walletAttestationPopNotSent') %></p>
           <% } %>
         </div>
       </div>
       <% } %>
 
       <% if (!event.dpopJwt && !event.dpopError && !event.walletAttestationJwt && !event.walletAttestationError && !event.walletAttestationPopJwt && !event.walletAttestationPopError) { %>
-      <p class="no-jwt-note">受信したJWTはありません</p>
+      <p class="no-jwt-note"><%= t('learners:issuanceStatus.jwt.noJwt') %></p>
       <% } %>
     </div>
     <% }); %>
@@ -211,61 +211,61 @@
 
   <% if (credentialEvents && credentialEvents.length > 0) { %>
   <div class="info-section">
-    <h3>Credential Endpoint</h3>
+    <h3><%= t('learners:issuanceStatus.credentialEndpoint') %></h3>
     <% credentialEvents.forEach((event, idx) => { %>
     <div class="event-card">
       <div class="event-header">
         <span class="event-type <%= event.eventType === 'credential_issued' ? 'success' : 'info' %>">
-          <%= event.eventType === 'credential_issued' ? '発行成功' : 'リクエスト受信' %>
+          <%= event.eventType === 'credential_issued' ? t('learners:issuanceStatus.event.issueSuccess') : t('learners:issuanceStatus.event.requestReceived') %>
         </span>
-        <span class="event-time"><%= new Date(event.createdAt).toLocaleString('ja-JP', { timeZone: 'Asia/Tokyo' }) %></span>
+        <span class="event-time"><%= new Date(event.createdAt).toLocaleString(lng === 'en' ? 'en-US' : 'ja-JP', { timeZone: 'Asia/Tokyo' }) %></span>
       </div>
 
       <% if (event.dpopJwt || event.dpopError) { %>
       <div class="jwt-section">
         <div class="jwt-header-row" onclick="toggleJwtSection('dpop-cred-<%= idx %>')">
-          <span class="jwt-title">DPoP JWT</span>
+          <span class="jwt-title"><%= t('learners:issuanceStatus.jwt.dpop') %></span>
           <% if (event.dpopValid === true || event.dpopValid === 1) { %>
-          <span class="jwt-status valid">検証成功</span>
+          <span class="jwt-status valid"><%= t('learners:issuanceStatus.jwt.verificationSuccess') %></span>
           <% } else if (event.dpopValid === false || event.dpopValid === 0 || event.dpopError) { %>
-          <span class="jwt-status invalid">検証失敗</span>
+          <span class="jwt-status invalid"><%= t('learners:issuanceStatus.jwt.verificationFailed') %></span>
           <% } else { %>
-          <span class="jwt-status pending">未検証</span>
+          <span class="jwt-status pending"><%= t('learners:issuanceStatus.jwt.notVerified') %></span>
           <% } %>
           <span class="toggle-icon">&#9660;</span>
         </div>
         <div id="dpop-cred-<%= idx %>" class="jwt-content" style="display: none;">
           <% if (event.dpopError) { %>
           <div class="jwt-error">
-            <strong>エラー:</strong> <%= event.dpopError %>
+            <strong><%= t('learners:issuanceStatus.jwt.error') %>:</strong> <%= event.dpopError %>
           </div>
           <% } %>
           <% if (event.dpopJwt) { %>
           <div class="jwt-raw">
-            <label>生データ:</label>
+            <label><%= t('learners:issuanceStatus.jwt.rawData') %>:</label>
             <textarea readonly><%= event.dpopJwt %></textarea>
           </div>
           <% if (event.dpopHeader) { %>
           <div class="jwt-decoded">
-            <label>Header:</label>
+            <label><%= t('learners:issuanceStatus.jwt.header') %>:</label>
             <pre><%= JSON.stringify(JSON.parse(event.dpopHeader), null, 2) %></pre>
           </div>
           <% } %>
           <% if (event.dpopPayload) { %>
           <div class="jwt-decoded">
-            <label>Payload:</label>
+            <label><%= t('learners:issuanceStatus.jwt.payload') %>:</label>
             <pre><%= JSON.stringify(JSON.parse(event.dpopPayload), null, 2) %></pre>
           </div>
           <% } %>
           <% } else { %>
-          <p class="no-jwt-note">DPoP JWT は送信されませんでした</p>
+          <p class="no-jwt-note"><%= t('learners:issuanceStatus.jwt.dpopNotSent') %></p>
           <% } %>
         </div>
       </div>
       <% } %>
 
       <% if (!event.dpopJwt && !event.dpopError) { %>
-      <p class="no-jwt-note">受信したJWTはありません</p>
+      <p class="no-jwt-note"><%= t('learners:issuanceStatus.jwt.noJwt') %></p>
       <% } %>
     </div>
     <% }); %>
@@ -274,14 +274,14 @@
 
   <% if ((!tokenEvents || tokenEvents.length === 0) && (!credentialEvents || credentialEvents.length === 0)) { %>
   <div class="info-section">
-    <h3>イベント履歴</h3>
-    <p class="no-events-note">まだ発行要求を受信していません。</p>
+    <h3><%= t('learners:issuanceStatus.eventHistory') %></h3>
+    <p class="no-events-note"><%= t('learners:issuanceStatus.noEvents') %></p>
   </div>
   <% } %>
 
   <div class="form-actions">
-    <a href="/admin/learners" class="btn btn-secondary">学習者一覧に戻る</a>
-    <button onclick="location.reload()" class="btn btn-primary">更新</button>
+    <a href="/admin/learners" class="btn btn-secondary"><%= t('learners:issuanceStatus.backToList') %></a>
+    <button onclick="location.reload()" class="btn btn-primary"><%= t('learners:issuanceStatus.refresh') %></button>
   </div>
 </div>
 

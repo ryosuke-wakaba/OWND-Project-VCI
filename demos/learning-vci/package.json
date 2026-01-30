@@ -12,6 +12,8 @@
     "dotenv": "^16.3.1",
     "ejs": "^3.1.9",
     "elliptic-jwk": "^0.0.1",
+    "i18next": "^25.8.0",
+    "i18next-fs-backend": "^2.6.1",
     "jose": "^4.15.3",
     "js-crypto-key-utils": "^1.0.7",
     "jsrsasign": "^11.1.0",

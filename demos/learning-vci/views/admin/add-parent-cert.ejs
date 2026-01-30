@@ -1,30 +1,30 @@
 <nav class="breadcrumb">
-  <a href="/admin">トップ</a> &gt; <a href="/admin/keys">キーペア管理</a> &gt; <a href="/admin/keys/<%= key.kid %>/detail">詳細</a> &gt; <span>上位証明書追加</span>
+  <a href="/admin"><%= t('common:breadcrumb.top') %></a> &gt; <a href="/admin/keys"><%= t('keys:breadcrumb.management') %></a> &gt; <a href="/admin/keys/<%= key.kid %>/detail"><%= t('keys:breadcrumb.detail') %></a> &gt; <span><%= t('keys:breadcrumb.addParentCert') %></span>
 </nav>
 
-<h2>上位証明書の追加</h2>
+<h2><%= t('keys:addParentCert.title') %></h2>
 
 <div class="info-card">
-  <h3>対象キー</h3>
+  <h3><%= t('keys:addParentCert.targetKey') %></h3>
   <table class="detail-table">
     <tr>
-      <th>キーID</th>
+      <th><%= t('keys:addParentCert.keyId') %></th>
       <td><%= key.kid %></td>
     </tr>
     <tr>
-      <th>現在のチェーン長</th>
-      <td><%= currentChainLength %> 証明書</td>
+      <th><%= t('keys:addParentCert.currentChainLength') %></th>
+      <td><%= currentChainLength %> <%= t('keys:addParentCert.certificates') %></td>
     </tr>
     <% if (leafCertInfo) { %>
     <tr>
-      <th>リーフ証明書 Subject</th>
+      <th><%= t('keys:addParentCert.leafCertSubject') %></th>
       <td>
         <% if (leafCertInfo.subject.commonName) { %>CN=<%= leafCertInfo.subject.commonName %><% } %>
         <% if (leafCertInfo.subject.organizationName) { %>, O=<%= leafCertInfo.subject.organizationName %><% } %>
       </td>
     </tr>
     <tr>
-      <th>リーフ証明書 Issuer</th>
+      <th><%= t('keys:addParentCert.leafCertIssuer') %></th>
       <td>
         <% if (leafCertInfo.issuer.commonName) { %>CN=<%= leafCertInfo.issuer.commonName %><% } %>
         <% if (leafCertInfo.issuer.organizationName) { %>, O=<%= leafCertInfo.issuer.organizationName %><% } %>
@@ -36,7 +36,7 @@
 
 <form action="/admin/keys/<%= key.kid %>/add-parent-cert" method="POST" class="form-card">
   <div class="form-group">
-    <label for="certificatesPem">上位証明書 (PEM形式) <span class="required">*</span></label>
+    <label for="certificatesPem"><%= t('keys:addParentCert.parentCert') %> <span class="required">*</span></label>
     <textarea id="certificatesPem" name="certificatesPem" required rows="12"
               placeholder="-----BEGIN CERTIFICATE-----
 ...
@@ -44,22 +44,22 @@
 -----BEGIN CERTIFICATE-----
 ...
 -----END CERTIFICATE-----"></textarea>
-    <small class="form-text">中間証明書→ルート証明書の順にPEM形式で入力してください（複数可）</small>
+    <small class="form-text"><%= t('keys:addParentCert.parentCertHelp') %></small>
   </div>
 
   <div class="form-actions">
-    <a href="/admin/keys/<%= key.kid %>/detail" class="btn btn-secondary">キャンセル</a>
-    <button type="submit" class="btn btn-primary">追加</button>
+    <a href="/admin/keys/<%= key.kid %>/detail" class="btn btn-secondary"><%= t('common:buttons.cancel') %></a>
+    <button type="submit" class="btn btn-primary"><%= t('common:buttons.add') %></button>
   </div>
 </form>
 
 <div class="help-card">
-  <h3>ヘルプ</h3>
-  <p>既存のリーフ証明書に対して、上位の証明書チェーンを追加できます。</p>
+  <h3><%= t('common:help.title') %></h3>
+  <p><%= t('keys:addParentCert.helpText') %></p>
   <ul>
-    <li><strong>入力順序:</strong> 中間証明書（リーフに近い順）→ ルート証明書</li>
-    <li><strong>形式:</strong> <code>-----BEGIN CERTIFICATE-----</code> 形式のPEM</li>
-    <li>複数の証明書を連続して貼り付けることができます</li>
+    <li><strong><%= lng === 'en' ? 'Input Order:' : '入力順序:' %></strong> <%= t('keys:addParentCert.helpOrder') %></li>
+    <li><strong><%= lng === 'en' ? 'Format:' : '形式:' %></strong> <%- t('keys:addParentCert.helpFormat') %></li>
+    <li><%= t('keys:addParentCert.helpMultiple') %></li>
   </ul>
 </div>
 

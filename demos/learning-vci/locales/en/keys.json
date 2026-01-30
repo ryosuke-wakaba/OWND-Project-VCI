@@ -1,0 +1,109 @@
+{
+  "title": "Key Pair List",
+  "breadcrumb": {
+    "management": "Key Pair Management",
+    "new": "New Generation",
+    "import": "Import",
+    "detail": "Details",
+    "certificate": "Certificate Issuance",
+    "addParentCert": "Add Parent Certificate"
+  },
+  "new": {
+    "title": "Key Pair Generation",
+    "button": "New Generation"
+  },
+  "import": {
+    "title": "Key Pair Import",
+    "button": "Import"
+  },
+  "table": {
+    "keyId": "Key ID",
+    "curve": "Elliptic Curve",
+    "certificate": "Certificate",
+    "description": "Description",
+    "createdAt": "Created"
+  },
+  "form": {
+    "keyId": "Key ID",
+    "keyIdPlaceholder": "e.g., issuer-key-1",
+    "keyIdHelp": "Enter a unique identifier",
+    "curve": "Elliptic Curve",
+    "curveP256": "P-256 (NIST)",
+    "curveSecp256k1": "secp256k1 (Bitcoin/Ethereum)",
+    "curveHelp": "Select the elliptic curve to use for signing",
+    "privateKey": "Private Key (PEM format)",
+    "privateKeyHelp": "Enter EC private key in PEM format (P-256 or secp256k1)",
+    "certificateChain": "Certificate Chain (PEM format, optional)",
+    "certificateChainHelp": "Enter certificate chain in PEM format starting from leaf certificate (multiple allowed)",
+    "certDescription": "Certificate Description",
+    "certDescriptionPlaceholder": "e.g., Production signing certificate",
+    "certDescriptionHelp": "When importing certificate, optionally enter its description"
+  },
+  "empty": {
+    "message": "No key pairs registered",
+    "action": "Generate First Key Pair"
+  },
+  "detail": {
+    "title": "Key Pair Details",
+    "basicInfo": "Basic Information",
+    "keyId": "Key ID",
+    "keyType": "Key Type",
+    "curve": "Elliptic Curve",
+    "createdAt": "Created",
+    "status": "Status",
+    "revoked": "Revoked",
+    "valid": "Valid",
+    "publicKeyJwk": "Public Key (JWK)",
+    "x509CertChain": "X.509 Certificate Chain",
+    "description": "Description",
+    "descriptionPlaceholder": "Enter certificate description",
+    "certificate": "Certificate",
+    "endEntity": "End Entity",
+    "intermediate": "Intermediate",
+    "root": "Root",
+    "subject": "Subject",
+    "issuer": "Issuer",
+    "serialNumber": "Serial Number",
+    "validityPeriod": "Validity Period",
+    "showPem": "Show PEM format",
+    "addParentCert": "Add Parent Certificate",
+    "deleteCert": "Delete This Certificate",
+    "confirmDeleteCert": "Delete this certificate?",
+    "noCertificate": "No certificate registered.",
+    "issueCertificate": "Issue Certificate"
+  },
+  "certificate": {
+    "title": "Certificate Issuance",
+    "targetKey": "Target Key",
+    "subject": "Subject (DN format)",
+    "subjectPlaceholder": "/C=JP/ST=Tokyo/O=Example Corp/CN=example.com",
+    "subjectHelp": "e.g., /C=JP/ST=Tokyo/O=Organization/CN=Common Name",
+    "certType": "Certificate Type",
+    "selfSigned": "Self-signed Certificate (Root CA)",
+    "leafCert": "Leaf Certificate (signed by existing Root CA)",
+    "noKeysWithCert": "(No keys with certificates)",
+    "issuerRootCert": "Issuing Root Certificate",
+    "selectIssuer": "Please select"
+  },
+  "addParentCert": {
+    "title": "Add Parent Certificate",
+    "targetKey": "Target Key",
+    "keyId": "Key ID",
+    "currentChainLength": "Current Chain Length",
+    "certificates": "certificates",
+    "leafCertSubject": "Leaf Certificate Subject",
+    "leafCertIssuer": "Leaf Certificate Issuer",
+    "parentCert": "Parent Certificate (PEM format)",
+    "parentCertHelp": "Enter in PEM format from intermediate to root certificate (multiple allowed)",
+    "helpText": "You can add parent certificate chain to existing leaf certificate.",
+    "helpOrder": "Intermediate certificates (closest to leaf first) → Root certificate",
+    "helpFormat": "<code>-----BEGIN CERTIFICATE-----</code> format PEM",
+    "helpMultiple": "Multiple certificates can be pasted consecutively"
+  },
+  "importHelp": {
+    "text": "You can import private keys and certificates generated externally.",
+    "privateKey": "<code>-----BEGIN EC PRIVATE KEY-----</code> or <code>-----BEGIN PRIVATE KEY-----</code> format",
+    "supportedCurves": "P-256, secp256k1",
+    "certificate": "X.509 PEM format (optional, multiple allowed)"
+  }
+}

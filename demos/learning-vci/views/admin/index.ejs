@@ -1,27 +1,27 @@
-<h2>管理メニュー</h2>
+<h2><%= t('common:menu.title') %></h2>
 
 <div class="admin-menu">
   <a href="/admin/learners" class="menu-card">
     <div class="menu-icon">👥</div>
     <div class="menu-content">
-      <h3>学習者管理</h3>
-      <p>学習者の登録・編集・クレデンシャル発行</p>
+      <h3><%= t('common:menu.learners.title') %></h3>
+      <p><%= t('common:menu.learners.description') %></p>
     </div>
   </a>
 
   <a href="/admin/keys" class="menu-card">
     <div class="menu-icon">🔑</div>
     <div class="menu-content">
-      <h3>キーペア管理</h3>
-      <p>署名鍵の生成・インポート・証明書発行</p>
+      <h3><%= t('common:menu.keys.title') %></h3>
+      <p><%= t('common:menu.keys.description') %></p>
     </div>
   </a>
 
   <a href="/admin/metadata" class="menu-card">
     <div class="menu-icon">📋</div>
     <div class="menu-content">
-      <h3>メタデータ管理</h3>
-      <p>署名付きメタデータの生成・管理</p>
+      <h3><%= t('common:menu.metadata.title') %></h3>
+      <p><%= t('common:menu.metadata.description') %></p>
     </div>
   </a>
 </div>

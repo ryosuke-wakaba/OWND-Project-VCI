@@ -1,0 +1,126 @@
+{
+  "title": "学習者一覧",
+  "breadcrumb": {
+    "management": "学習者管理",
+    "new": "新規登録",
+    "edit": "編集",
+    "credentialIssue": "クレデンシャル発行",
+    "issuanceStatus": "発行状況"
+  },
+  "new": {
+    "title": "学習者登録"
+  },
+  "edit": {
+    "title": "学習者編集"
+  },
+  "table": {
+    "learnerNo": "学習者番号",
+    "name": "氏名",
+    "courseTitle": "コースタイトル",
+    "issuingAuthority": "発行機関",
+    "issuanceDate": "発行日"
+  },
+  "form": {
+    "learnerNo": "学習者番号",
+    "familyName": "姓",
+    "givenName": "名",
+    "issuingAuthority": "発行機関",
+    "issuingCountry": "発行国",
+    "achievementTitle": "コース/資格タイトル",
+    "achievementDescription": "実績の説明",
+    "learningOutcomes": "学習成果 (カンマ区切り)",
+    "learningOutcomesPlaceholder": "例: データ分析, 機械学習, Python",
+    "assessmentGrade": "評価/成績",
+    "assessmentGradePlaceholder": "例: A, 優, 合格",
+    "dateOfIssuance": "発行日",
+    "dateOfExpiry": "有効期限"
+  },
+  "empty": {
+    "message": "登録されている学習者がいません",
+    "action": "最初の学習者を登録"
+  },
+  "confirm": {
+    "delete": "この学習者を削除してもよろしいですか？"
+  },
+  "offer": {
+    "title": "クレデンシャル発行準備",
+    "learnerInfo": "学習者情報",
+    "signingKey": "署名鍵",
+    "selectSigningKey": "選択してください",
+    "latest": "最新",
+    "x5cMethod": "x5c方式",
+    "jwkMethod": "jwk方式",
+    "x5cDescription": "証明書チェーンをヘッダーに含めます（証明書が登録されている鍵）",
+    "jwkDescription": "公開鍵をヘッダーに含めます（証明書がない鍵）",
+    "requireClientAuth": "クライアント認証を要求する（Wallet Attestation）",
+    "requireClientAuthHelp": "チェックすると、ウォレットはクレデンシャル発行時にWallet Attestationを提示する必要があります。",
+    "requireDpop": "DPoPを必須にする",
+    "requireDpopHelp": "チェックすると、クレデンシャル発行時にDPoP Proofの提示が必須になります。",
+    "noSigningKeys": "利用可能な署名鍵がありません。先に<a href=\"/admin/keys/new\">キーペアを生成</a>してください。"
+  },
+  "credentialOffer": {
+    "title": "クレデンシャル発行",
+    "learnerInfo": "学習者情報",
+    "learnerNo": "学習者番号",
+    "qrScanNote": "このQRコードをウォレットアプリでスキャンしてクレデンシャルを取得してください。",
+    "issuanceInfo": "発行情報",
+    "txCode": "TX Code (PIN)",
+    "expiresAt": "有効期限",
+    "clientAuth": "クライアント認証",
+    "dpop": "DPoP",
+    "txCodeNote": "このPINコードは、クレデンシャルを取得する際に必要です。有効期限までにウォレットアプリで取得してください。",
+    "walletAttestationNote": "このCredential Offerでは、WalletはWallet Attestationを提示する必要があります。",
+    "dpopNote": "このCredential Offerでは、WalletはDPoP Proofを提示する必要があります。",
+    "backToList": "学習者一覧に戻る",
+    "checkStatus": "発行状況を確認",
+    "urlCopied": "URLをコピーしました"
+  },
+  "issuanceStatus": {
+    "title": "発行状況",
+    "authCodeInfo": "認可コード情報",
+    "authCodeId": "認可コードID",
+    "learner": "学習者",
+    "createdAt": "作成日時",
+    "expiresAt": "有効期限",
+    "clientAuth": "クライアント認証",
+    "dpop": "DPoP",
+    "expired": "(期限切れ)",
+    "statusTitle": "発行状況",
+    "status": {
+      "noRequest": "発行要求なし（待機中）",
+      "noRequestExpired": "発行要求なし（期限切れ）",
+      "tokenRequest": "Token要求中（エラーあり）",
+      "tokenIssued": "Token発行済み（Credential待ち）",
+      "credentialIssued": "Credential発行完了"
+    },
+    "tokenEndpoint": "Token Endpoint",
+    "credentialEndpoint": "Credential Endpoint",
+    "eventHistory": "イベント履歴",
+    "noEvents": "まだ発行要求を受信していません。",
+    "event": {
+      "issueSuccess": "発行成功",
+      "requestReceived": "リクエスト受信"
+    },
+    "jwt": {
+      "dpop": "DPoP JWT",
+      "walletAttestation": "Wallet Attestation JWT",
+      "walletAttestationPop": "Wallet Attestation PoP JWT",
+      "verificationSuccess": "検証成功",
+      "verificationFailed": "検証失敗",
+      "notVerified": "未検証",
+      "received": "受信済み",
+      "rawData": "生データ",
+      "header": "Header",
+      "payload": "Payload",
+      "error": "エラー",
+      "dpopNotSent": "DPoP JWT は送信されませんでした",
+      "walletAttestationNotSent": "Wallet Attestation JWT は送信されませんでした",
+      "walletAttestationPopNotSent": "Wallet Attestation PoP JWT は送信されませんでした",
+      "noJwt": "受信したJWTはありません"
+    },
+    "backToList": "学習者一覧に戻る",
+    "required": "必須",
+    "optional": "任意",
+    "refresh": "更新"
+  }
+}
