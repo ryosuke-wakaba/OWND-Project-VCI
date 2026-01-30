@@ -1,24 +1,24 @@
 <nav class="breadcrumb">
-  <a href="/admin">トップ</a> &gt; <span>学習者管理</span>
+  <a href="/admin"><%= t('common:breadcrumb.top') %></a> &gt; <span><%= t('learners:breadcrumb.management') %></span>
 </nav>
 
-<h2>学習者一覧</h2>
+<h2><%= t('learners:title') %></h2>
 
 <div class="toolbar">
   <div></div>
-  <a href="/admin/learners/new" class="btn btn-primary">新規登録</a>
+  <a href="/admin/learners/new" class="btn btn-primary"><%= t('common:buttons.new') %></a>
 </div>
 
 <% if (learners && learners.length > 0) { %>
   <table>
     <thead>
       <tr>
-        <th>学習者番号</th>
-        <th>氏名</th>
-        <th>コースタイトル</th>
-        <th>発行機関</th>
-        <th>発行日</th>
-        <th>アクション</th>
+        <th><%= t('learners:table.learnerNo') %></th>
+        <th><%= t('learners:table.name') %></th>
+        <th><%= t('learners:table.courseTitle') %></th>
+        <th><%= t('learners:table.issuingAuthority') %></th>
+        <th><%= t('learners:table.issuanceDate') %></th>
+        <th><%= t('common:labels.actions') %></th>
       </tr>
     </thead>
     <tbody>
@@ -31,9 +31,9 @@
           <td><%= learner.dateOfIssuance %></td>
           <td>
             <div class="actions">
-              <a href="/admin/learners/<%= learner.learnerNo %>/offer" class="btn btn-primary btn-small">発行</a>
-              <a href="/admin/learners/<%= learner.id %>/edit" class="btn btn-secondary btn-small">編集</a>
-              <button onclick="deleteLearner(<%= learner.id %>)" class="btn btn-danger btn-small">削除</button>
+              <a href="/admin/learners/<%= learner.learnerNo %>/offer" class="btn btn-primary btn-small"><%= t('common:buttons.issue') %></a>
+              <a href="/admin/learners/<%= learner.id %>/edit" class="btn btn-secondary btn-small"><%= t('common:buttons.edit') %></a>
+              <button onclick="deleteLearner(<%= learner.id %>)" class="btn btn-danger btn-small"><%= t('common:buttons.delete') %></button>
             </div>
           </td>
         </tr>
@@ -42,14 +42,14 @@
   </table>
 <% } else { %>
   <div class="empty-state">
-    <p>登録されている学習者がいません</p>
-    <a href="/admin/learners/new" class="btn btn-primary">最初の学習者を登録</a>
+    <p><%= t('learners:empty.message') %></p>
+    <a href="/admin/learners/new" class="btn btn-primary"><%= t('learners:empty.action') %></a>
   </div>
 <% } %>
 
 <script>
 async function deleteLearner(id) {
-  if (!confirm('この学習者を削除してもよろしいですか？')) {
+  if (!confirm('<%= t('learners:confirm.delete') %>')) {
     return;
   }
 
@@ -62,11 +62,11 @@ async function deleteLearner(id) {
     if (response.ok) {
       location.reload();
     } else {
-      alert('削除に失敗しました');
+      alert('<%= t('common:alert.deleteFailed') %>');
     }
   } catch (err) {
     console.error(err);
-    alert('削除に失敗しました');
+    alert('<%= t('common:alert.deleteFailed') %>');
   }
 }
 </script>

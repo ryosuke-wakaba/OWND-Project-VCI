@@ -8,7 +8,7 @@ await store.createDb();
 
 const port = process.env.APP_PORT;
 
-const app = init();
+const app = await init();
 app.listen(port, () => {
   console.log(`running on port: ${port}`);
 });

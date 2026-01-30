@@ -1,0 +1,42 @@
+{
+  "title": "Wallet Provider CA Management",
+  "breadcrumb": {
+    "management": "Wallet Provider CA Management"
+  },
+  "settings": {
+    "title": "Verification Settings",
+    "enableChainValidation": "Enable Certificate Chain Validation",
+    "helpText": "When enabled, validate x5c certificate chain from Wallet Attestation using registered CA certificates. When disabled, only perform signature verification and skip trust anchor validation.",
+    "save": "Save Settings"
+  },
+  "caList": {
+    "title": "Registered CA Certificates",
+    "empty": "No registered CA certificates.",
+    "table": {
+      "name": "Name",
+      "subject": "Subject",
+      "expiresAt": "Expires At",
+      "status": "Status",
+      "registeredAt": "Registered",
+      "operation": "Operation"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "actions": {
+      "disable": "Disable",
+      "enable": "Enable",
+      "delete": "Delete"
+    },
+    "confirmDelete": "Delete this CA certificate?"
+  },
+  "import": {
+    "title": "Import CA Certificate",
+    "caName": "CA Name",
+    "caNamePlaceholder": "e.g., Example Wallet Provider CA",
+    "rootCert": "Root Certificate (PEM format)",
+    "rootCertHelp": "Enter the root certificate in PEM format for the CA that issued Wallet Provider certificates.",
+    "submit": "Import"
+  }
+}

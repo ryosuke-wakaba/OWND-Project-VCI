@@ -1,69 +1,69 @@
 <nav class="breadcrumb">
-  <a href="/admin">トップ</a> &gt; <a href="/admin/learners">学習者管理</a> &gt; <span>新規登録</span>
+  <a href="/admin"><%= t('common:breadcrumb.top') %></a> &gt; <a href="/admin/learners"><%= t('learners:breadcrumb.management') %></a> &gt; <span><%= t('learners:breadcrumb.new') %></span>
 </nav>
 
-<h2>学習者登録</h2>
+<h2><%= t('learners:new.title') %></h2>
 
 <div class="form-container">
   <form action="/admin/learners/new" method="POST">
     <div class="form-group">
-      <label for="learnerNo">学習者番号 *</label>
+      <label for="learnerNo"><%= t('learners:form.learnerNo') %> *</label>
       <input type="text" id="learnerNo" name="learner[learnerNo]" required>
     </div>
 
     <div class="form-group">
-      <label for="familyName">姓 *</label>
+      <label for="familyName"><%= t('learners:form.familyName') %> *</label>
       <input type="text" id="familyName" name="learner[familyName]" required>
     </div>
 
     <div class="form-group">
-      <label for="givenName">名 *</label>
+      <label for="givenName"><%= t('learners:form.givenName') %> *</label>
       <input type="text" id="givenName" name="learner[givenName]" required>
     </div>
 
     <div class="form-group">
-      <label for="issuingAuthority">発行機関 *</label>
+      <label for="issuingAuthority"><%= t('learners:form.issuingAuthority') %> *</label>
       <input type="text" id="issuingAuthority" name="learner[issuingAuthority]" required>
     </div>
 
     <div class="form-group">
-      <label for="issuingCountry">発行国 *</label>
+      <label for="issuingCountry"><%= t('learners:form.issuingCountry') %> *</label>
       <input type="text" id="issuingCountry" name="learner[issuingCountry]" value="JP" required>
     </div>
 
     <div class="form-group">
-      <label for="achievementTitle">コース/資格タイトル *</label>
+      <label for="achievementTitle"><%= t('learners:form.achievementTitle') %> *</label>
       <input type="text" id="achievementTitle" name="learner[achievementTitle]" required>
     </div>
 
     <div class="form-group">
-      <label for="achievementDescription">実績の説明 *</label>
+      <label for="achievementDescription"><%= t('learners:form.achievementDescription') %> *</label>
       <textarea id="achievementDescription" name="learner[achievementDescription]" rows="3" required></textarea>
     </div>
 
     <div class="form-group">
-      <label for="learningOutcomes">学習成果 (カンマ区切り) *</label>
-      <textarea id="learningOutcomes" name="learner[learningOutcomes]" rows="3" placeholder="例: データ分析, 機械学習, Python" required></textarea>
+      <label for="learningOutcomes"><%= t('learners:form.learningOutcomes') %> *</label>
+      <textarea id="learningOutcomes" name="learner[learningOutcomes]" rows="3" placeholder="<%= t('learners:form.learningOutcomesPlaceholder') %>" required></textarea>
     </div>
 
     <div class="form-group">
-      <label for="assessmentGrade">評価/成績 *</label>
-      <input type="text" id="assessmentGrade" name="learner[assessmentGrade]" placeholder="例: A, 優, 合格" required>
+      <label for="assessmentGrade"><%= t('learners:form.assessmentGrade') %> *</label>
+      <input type="text" id="assessmentGrade" name="learner[assessmentGrade]" placeholder="<%= t('learners:form.assessmentGradePlaceholder') %>" required>
     </div>
 
     <div class="form-group">
-      <label for="dateOfIssuance">発行日 *</label>
+      <label for="dateOfIssuance"><%= t('learners:form.dateOfIssuance') %> *</label>
       <input type="date" id="dateOfIssuance" name="learner[dateOfIssuance]" required>
     </div>
 
     <div class="form-group">
-      <label for="dateOfExpiry">有効期限 *</label>
+      <label for="dateOfExpiry"><%= t('learners:form.dateOfExpiry') %> *</label>
       <input type="date" id="dateOfExpiry" name="learner[dateOfExpiry]" required>
     </div>
 
     <div class="form-actions">
-      <button type="submit" class="btn btn-primary">登録</button>
-      <a href="/admin/learners" class="btn btn-secondary">キャンセル</a>
+      <button type="submit" class="btn btn-primary"><%= t('common:buttons.register') %></button>
+      <a href="/admin/learners" class="btn btn-secondary"><%= t('common:buttons.cancel') %></a>
     </div>
   </form>
 </div>

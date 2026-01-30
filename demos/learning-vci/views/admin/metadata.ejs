@@ -1,26 +1,26 @@
 <nav class="breadcrumb">
-  <a href="/admin">トップ</a> &gt; <span>メタデータ管理</span>
+  <a href="/admin"><%= t('common:breadcrumb.top') %></a> &gt; <span><%= t('metadata:breadcrumb.management') %></span>
 </nav>
 
-<h2>メタデータ管理</h2>
+<h2><%= t('metadata:title') %></h2>
 
 <div class="section">
-  <h3>現在のメタデータ</h3>
+  <h3><%= t('metadata:currentMetadata') %></h3>
   <pre class="metadata-display"><%= metadata %></pre>
 </div>
 
 <div class="section">
-  <h3>署名</h3>
+  <h3><%= t('metadata:signing.title') %></h3>
   <form action="/admin/metadata/sign" method="POST" onsubmit="return confirmSign()">
     <% if (availableKeys && availableKeys.length > 0) { %>
       <div class="form-group">
-        <label for="signingKeyKid">署名鍵を選択:</label>
+        <label for="signingKeyKid"><%= t('metadata:signing.selectKey') %></label>
         <select name="signingKeyKid" id="signingKeyKid" required>
           <% availableKeys.forEach(function(key, index) { %>
             <option value="<%= key.kid %>">
               <%= key.kid %> (<%= key.crv %>)
-              <% if (key.hasCertificate) { %>- 証明書あり<% } %>
-              <% if (index === 0) { %> [最新]<% } %>
+              <% if (key.hasCertificate) { %>- <%= t('metadata:signing.withCert') %><% } %>
+              <% if (index === 0) { %> [<%= t('metadata:signing.latest') %>]<% } %>
             </option>
           <% }); %>
         </select>
@@ -28,29 +28,29 @@
       <div class="form-group checkbox-group">
         <label class="checkbox-label">
           <input type="checkbox" name="includeFullChain" value="true">
-          中間証明書を含める（デフォルト: リーフ証明書のみ）
+          <%= t('metadata:signing.includeFullChain') %>
         </label>
       </div>
       <div class="form-group">
-        <button type="submit" class="btn btn-primary">署名を実行</button>
+        <button type="submit" class="btn btn-primary"><%= t('metadata:signing.execute') %></button>
       </div>
     <% } else { %>
-      <p class="empty-message">利用可能な署名鍵がありません。<a href="/admin/keys/new">キーペアを生成</a>してください。</p>
+      <p class="empty-message"><%- t('metadata:signing.noKeys') %></p>
     <% } %>
   </form>
 </div>
 
 <div class="section">
-  <h3>署名履歴</h3>
+  <h3><%= t('metadata:history.title') %></h3>
   <% if (signedMetadataHistory && signedMetadataHistory.length > 0) { %>
     <table>
       <thead>
         <tr>
-          <th>ID</th>
-          <th>署名鍵</th>
-          <th>作成日時</th>
-          <th>状態</th>
-          <th>操作</th>
+          <th><%= t('metadata:history.id') %></th>
+          <th><%= t('metadata:history.signingKey') %></th>
+          <th><%= t('metadata:history.createdAt') %></th>
+          <th><%= t('metadata:history.status') %></th>
+          <th><%= t('metadata:history.operation') %></th>
         </tr>
       </thead>
       <tbody>
@@ -58,18 +58,18 @@
           <tr>
             <td><%= item.id %></td>
             <td><%= item.signingKeyKid || '-' %></td>
-            <td><%= new Date(item.createdAt).toLocaleString('ja-JP') %></td>
+            <td><%= new Date(item.createdAt).toLocaleString(lng === 'en' ? 'en-US' : 'ja-JP') %></td>
             <td>
               <% if (!item.revokedAt) { %>
-                <span class="badge badge-success">有効</span>
+                <span class="badge badge-success"><%= t('metadata:history.valid') %></span>
               <% } else { %>
-                <span class="badge badge-secondary">無効</span>
+                <span class="badge badge-secondary"><%= t('metadata:history.invalid') %></span>
               <% } %>
             </td>
             <td>
               <% if (!item.revokedAt) { %>
-                <form action="/admin/metadata/<%= item.id %>/revoke" method="POST" style="display:inline" onsubmit="return confirm('この署名付きメタデータを無効化しますか？')">
-                  <button type="submit" class="btn btn-danger btn-small">無効化</button>
+                <form action="/admin/metadata/<%= item.id %>/revoke" method="POST" style="display:inline" onsubmit="return confirm('<%= t('metadata:history.confirmInvalidate') %>')">
+                  <button type="submit" class="btn btn-danger btn-small"><%= t('metadata:history.invalidate') %></button>
                 </form>
               <% } else { %>
                 -
@@ -81,26 +81,26 @@
     </table>
   <% } else { %>
     <div class="empty-state">
-      <p>署名履歴がありません</p>
+      <p><%= t('metadata:history.empty') %></p>
     </div>
   <% } %>
 </div>
 
 <% if (activeSignedMetadata) { %>
 <div class="section">
-  <h3>有効な署名付きメタデータ (JWT)</h3>
+  <h3><%= t('metadata:activeJwt.title') %></h3>
   <details>
-    <summary>JWTを表示</summary>
+    <summary><%= t('metadata:activeJwt.showJwt') %></summary>
     <div class="jwt-container">
       <pre class="jwt-display" id="jwt-content"><%= activeSignedMetadata.jwt %></pre>
-      <button type="button" class="btn btn-secondary btn-copy" onclick="copyJwt()">コピー</button>
+      <button type="button" class="btn btn-secondary btn-copy" onclick="copyJwt()"><%= t('common:buttons.copy') %></button>
     </div>
   </details>
 </div>
 <% } %>
 
 <div class="section">
-  <h3>エンドポイント</h3>
+  <h3><%= t('metadata:endpoint.title') %></h3>
   <p>
     <a href="/.well-known/openid-credential-issuer" target="_blank" class="endpoint-link">
       /.well-known/openid-credential-issuer
@@ -108,21 +108,21 @@
   </p>
 
   <div class="curl-commands">
-    <h4>確認用コマンド</h4>
+    <h4><%= t('metadata:endpoint.verifyCommands') %></h4>
 
     <div class="curl-item">
-      <label>JSON形式（デフォルト）:</label>
+      <label><%= t('metadata:endpoint.jsonFormat') %></label>
       <div class="curl-container">
         <code id="curl-json">curl <%= credentialIssuer %>/.well-known/openid-credential-issuer</code>
-        <button type="button" class="btn btn-secondary btn-copy-small" onclick="copyCurl('curl-json')">コピー</button>
+        <button type="button" class="btn btn-secondary btn-copy-small" onclick="copyCurl('curl-json')"><%= t('common:buttons.copy') %></button>
       </div>
     </div>
 
     <div class="curl-item">
-      <label>JWT形式（署名付きメタデータ）:</label>
+      <label><%= t('metadata:endpoint.jwtFormat') %></label>
       <div class="curl-container">
         <code id="curl-jwt">curl -H "Accept: application/jwt" <%= credentialIssuer %>/.well-known/openid-credential-issuer</code>
-        <button type="button" class="btn btn-secondary btn-copy-small" onclick="copyCurl('curl-jwt')">コピー</button>
+        <button type="button" class="btn btn-secondary btn-copy-small" onclick="copyCurl('curl-jwt')"><%= t('common:buttons.copy') %></button>
       </div>
     </div>
   </div>
@@ -130,7 +130,7 @@
 
 <script>
 function confirmSign() {
-  return confirm('メタデータに署名を実行しますか？\n\n既存の署名付きメタデータは無効化されます。');
+  return confirm('<%= t('metadata:signing.confirm') %>');
 }
 
 function copyJwt() {
@@ -138,7 +138,7 @@ function copyJwt() {
   navigator.clipboard.writeText(jwtContent).then(() => {
     const btn = document.querySelector('.btn-copy');
     const originalText = btn.textContent;
-    btn.textContent = 'コピーしました';
+    btn.textContent = '<%= t('common:buttons.copied') %>';
     btn.classList.add('copied');
     setTimeout(() => {
       btn.textContent = originalText;
@@ -152,7 +152,7 @@ function copyCurl(elementId) {
   navigator.clipboard.writeText(curlContent).then(() => {
     const btn = document.getElementById(elementId).parentElement.querySelector('.btn-copy-small');
     const originalText = btn.textContent;
-    btn.textContent = 'コピーしました';
+    btn.textContent = '<%= t('common:buttons.copied') %>';
     btn.classList.add('copied');
     setTimeout(() => {
       btn.textContent = originalText;

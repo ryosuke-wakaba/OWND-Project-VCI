@@ -1,0 +1,40 @@
+{
+  "title": "メタデータ管理",
+  "breadcrumb": {
+    "management": "メタデータ管理"
+  },
+  "currentMetadata": "現在のメタデータ",
+  "signing": {
+    "title": "署名",
+    "selectKey": "署名鍵を選択:",
+    "withCert": "証明書あり",
+    "latest": "最新",
+    "includeFullChain": "中間証明書を含める（デフォルト: リーフ証明書のみ）",
+    "execute": "署名を実行",
+    "noKeys": "利用可能な署名鍵がありません。<a href=\"/admin/keys/new\">キーペアを生成</a>してください。",
+    "confirm": "メタデータに署名を実行しますか？\n\n既存の署名付きメタデータは無効化されます。"
+  },
+  "history": {
+    "title": "署名履歴",
+    "id": "ID",
+    "signingKey": "署名鍵",
+    "createdAt": "作成日時",
+    "status": "状態",
+    "operation": "操作",
+    "valid": "有効",
+    "invalid": "無効",
+    "invalidate": "無効化",
+    "empty": "署名履歴がありません",
+    "confirmInvalidate": "この署名付きメタデータを無効化しますか？"
+  },
+  "activeJwt": {
+    "title": "有効な署名付きメタデータ (JWT)",
+    "showJwt": "JWTを表示"
+  },
+  "endpoint": {
+    "title": "エンドポイント",
+    "verifyCommands": "確認用コマンド",
+    "jsonFormat": "JSON形式（デフォルト）:",
+    "jwtFormat": "JWT形式（署名付きメタデータ）:"
+  }
+}

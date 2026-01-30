@@ -1,22 +1,22 @@
 <nav class="breadcrumb">
-  <a href="/admin">トップ</a> &gt; <a href="/admin/learners">学習者管理</a> &gt; <span>クレデンシャル発行</span>
+  <a href="/admin"><%= t('common:breadcrumb.top') %></a> &gt; <a href="/admin/learners"><%= t('learners:breadcrumb.management') %></a> &gt; <span><%= t('learners:breadcrumb.credentialIssue') %></span>
 </nav>
 
-<h2>クレデンシャル発行準備</h2>
+<h2><%= t('learners:offer.title') %></h2>
 
 <div class="info-card">
-  <h3>学習者情報</h3>
+  <h3><%= t('learners:offer.learnerInfo') %></h3>
   <table class="detail-table">
     <tr>
-      <th>学習者番号</th>
+      <th><%= t('learners:table.learnerNo') %></th>
       <td><%= learner.learnerNo %></td>
     </tr>
     <tr>
-      <th>氏名</th>
+      <th><%= t('learners:table.name') %></th>
       <td><%= learner.familyName %> <%= learner.givenName %></td>
     </tr>
     <tr>
-      <th>コースタイトル</th>
+      <th><%= t('learners:table.courseTitle') %></th>
       <td><%= learner.achievementTitle %></td>
     </tr>
   </table>
@@ -24,54 +24,54 @@
 
 <form action="/admin/learners/<%= learner.learnerNo %>/offer" method="POST" class="form-card">
   <div class="form-group">
-    <label for="signingKeyKid">署名鍵 <span class="required">*</span></label>
+    <label for="signingKeyKid"><%= t('learners:offer.signingKey') %> <span class="required">*</span></label>
     <select id="signingKeyKid" name="signingKeyKid" required>
-      <option value="">選択してください</option>
+      <option value=""><%= t('learners:offer.selectSigningKey') %></option>
       <% availableKeys.forEach(function(key) { %>
         <option value="<%= key.kid %>" <%= key.isLatest ? 'selected' : '' %>>
           <%= key.kid %>
           <% if (key.certDescription) { %>- <%= key.certDescription %><% } %>
           (<%= key.crv %>,
-          <%= key.hasCertificate ? 'x5c方式' : 'jwk方式' %>)
-          <% if (key.isLatest) { %>[最新]<% } %>
+          <%= key.hasCertificate ? t('learners:offer.x5cMethod') : t('learners:offer.jwkMethod') %>)
+          <% if (key.isLatest) { %>[<%= t('learners:offer.latest') %>]<% } %>
         </option>
       <% }); %>
     </select>
     <small class="form-text">
-      <strong>x5c方式:</strong> 証明書チェーンをヘッダーに含めます（証明書が登録されている鍵）<br>
-      <strong>jwk方式:</strong> 公開鍵をヘッダーに含めます（証明書がない鍵）
+      <strong><%= t('learners:offer.x5cMethod') %>:</strong> <%= t('learners:offer.x5cDescription') %><br>
+      <strong><%= t('learners:offer.jwkMethod') %>:</strong> <%= t('learners:offer.jwkDescription') %>
     </small>
   </div>
 
   <div class="form-group">
     <label class="checkbox-label">
       <input type="checkbox" name="requireClientAuth" value="true">
-      クライアント認証を要求する（Wallet Attestation）
+      <%= t('learners:offer.requireClientAuth') %>
     </label>
     <small class="form-text">
-      チェックすると、ウォレットはクレデンシャル発行時にWallet Attestationを提示する必要があります。
+      <%= t('learners:offer.requireClientAuthHelp') %>
     </small>
   </div>
 
   <div class="form-group">
     <label class="checkbox-label">
       <input type="checkbox" name="requireDpop" value="true">
-      DPoPを必須にする
+      <%= t('learners:offer.requireDpop') %>
     </label>
     <small class="form-text">
-      チェックすると、クレデンシャル発行時にDPoP Proofの提示が必須になります。
+      <%= t('learners:offer.requireDpopHelp') %>
     </small>
   </div>
 
   <% if (availableKeys.length === 0) { %>
   <div class="alert alert-warning">
-    <p>利用可能な署名鍵がありません。先に<a href="/admin/keys/new">キーペアを生成</a>してください。</p>
+    <p><%- t('learners:offer.noSigningKeys') %></p>
   </div>
   <% } %>
 
   <div class="form-actions">
-    <a href="/admin/learners" class="btn btn-secondary">キャンセル</a>
-    <button type="submit" class="btn btn-primary" <%= availableKeys.length === 0 ? 'disabled' : '' %>>発行</button>
+    <a href="/admin/learners" class="btn btn-secondary"><%= t('common:buttons.cancel') %></a>
+    <button type="submit" class="btn btn-primary" <%= availableKeys.length === 0 ? 'disabled' : '' %>><%= t('common:buttons.issue') %></button>
   </div>
 </form>
 

@@ -1,0 +1,79 @@
+{
+  "title": "Learning VCI Admin",
+  "nav": {
+    "top": "Home",
+    "learners": "Learner Management",
+    "keys": "Key Pair Management",
+    "metadata": "Metadata Management",
+    "walletProviderCA": "Wallet Provider CA"
+  },
+  "footer": {
+    "copyright": "&copy; 2025 Learning VCI"
+  },
+  "breadcrumb": {
+    "top": "Home",
+    "adminMenu": "Admin Menu"
+  },
+  "buttons": {
+    "new": "New",
+    "edit": "Edit",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save",
+    "update": "Update",
+    "register": "Register",
+    "issue": "Issue",
+    "generate": "Generate",
+    "import": "Import",
+    "add": "Add",
+    "copy": "Copy",
+    "copied": "Copied",
+    "details": "Details",
+    "back": "Back",
+    "backToList": "Back to List",
+    "refresh": "Refresh"
+  },
+  "labels": {
+    "required": "Required",
+    "optional": "Optional",
+    "yes": "Yes",
+    "no": "No",
+    "valid": "Valid",
+    "invalid": "Invalid",
+    "active": "Active",
+    "inactive": "Inactive",
+    "expired": "Expired",
+    "description": "Description",
+    "createdAt": "Created",
+    "createdAtTime": "Created At",
+    "expiresAt": "Expires At",
+    "status": "Status",
+    "actions": "Actions",
+    "operation": "Operation"
+  },
+  "menu": {
+    "title": "Admin Menu",
+    "learners": {
+      "title": "Learner Management",
+      "description": "Register, edit, and issue credentials for learners"
+    },
+    "keys": {
+      "title": "Key Pair Management",
+      "description": "Generate, import signing keys, and issue certificates"
+    },
+    "metadata": {
+      "title": "Metadata Management",
+      "description": "Generate and manage signed metadata"
+    }
+  },
+  "confirm": {
+    "delete": "Are you sure you want to delete?"
+  },
+  "alert": {
+    "deleteFailed": "Failed to delete",
+    "copyFailed": "Failed to copy"
+  },
+  "help": {
+    "title": "Help"
+  }
+}

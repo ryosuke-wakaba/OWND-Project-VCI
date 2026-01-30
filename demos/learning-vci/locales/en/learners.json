@@ -1,0 +1,126 @@
+{
+  "title": "Learner List",
+  "breadcrumb": {
+    "management": "Learner Management",
+    "new": "New Registration",
+    "edit": "Edit",
+    "credentialIssue": "Credential Issuance",
+    "issuanceStatus": "Issuance Status"
+  },
+  "new": {
+    "title": "Learner Registration"
+  },
+  "edit": {
+    "title": "Edit Learner"
+  },
+  "table": {
+    "learnerNo": "Learner No.",
+    "name": "Name",
+    "courseTitle": "Course Title",
+    "issuingAuthority": "Issuing Authority",
+    "issuanceDate": "Issuance Date"
+  },
+  "form": {
+    "learnerNo": "Learner Number",
+    "familyName": "Family Name",
+    "givenName": "Given Name",
+    "issuingAuthority": "Issuing Authority",
+    "issuingCountry": "Issuing Country",
+    "achievementTitle": "Course/Credential Title",
+    "achievementDescription": "Achievement Description",
+    "learningOutcomes": "Learning Outcomes (comma-separated)",
+    "learningOutcomesPlaceholder": "e.g., Data Analysis, Machine Learning, Python",
+    "assessmentGrade": "Assessment Grade",
+    "assessmentGradePlaceholder": "e.g., A, Excellent, Pass",
+    "dateOfIssuance": "Date of Issuance",
+    "dateOfExpiry": "Date of Expiry"
+  },
+  "empty": {
+    "message": "No learners registered",
+    "action": "Register First Learner"
+  },
+  "confirm": {
+    "delete": "Are you sure you want to delete this learner?"
+  },
+  "offer": {
+    "title": "Credential Issuance Preparation",
+    "learnerInfo": "Learner Information",
+    "signingKey": "Signing Key",
+    "selectSigningKey": "Please select",
+    "latest": "Latest",
+    "x5cMethod": "x5c method",
+    "jwkMethod": "jwk method",
+    "x5cDescription": "Include certificate chain in header (for keys with registered certificates)",
+    "jwkDescription": "Include public key in header (for keys without certificates)",
+    "requireClientAuth": "Require Client Authentication (Wallet Attestation)",
+    "requireClientAuthHelp": "When checked, the wallet must present Wallet Attestation during credential issuance.",
+    "requireDpop": "Require DPoP",
+    "requireDpopHelp": "When checked, presentation of DPoP Proof becomes mandatory during credential issuance.",
+    "noSigningKeys": "No available signing keys. Please <a href=\"/admin/keys/new\">generate a key pair</a> first."
+  },
+  "credentialOffer": {
+    "title": "Credential Issuance",
+    "learnerInfo": "Learner Information",
+    "learnerNo": "Learner Number",
+    "qrScanNote": "Scan this QR code with a wallet app to obtain the credential.",
+    "issuanceInfo": "Issuance Information",
+    "txCode": "TX Code (PIN)",
+    "expiresAt": "Expires At",
+    "clientAuth": "Client Authentication",
+    "dpop": "DPoP",
+    "txCodeNote": "This PIN code is required when obtaining the credential. Please obtain it via the wallet app before the expiration.",
+    "walletAttestationNote": "This Credential Offer requires the Wallet to present Wallet Attestation.",
+    "dpopNote": "This Credential Offer requires the Wallet to present DPoP Proof.",
+    "backToList": "Back to Learner List",
+    "checkStatus": "Check Issuance Status",
+    "urlCopied": "URL copied"
+  },
+  "issuanceStatus": {
+    "title": "Issuance Status",
+    "authCodeInfo": "Authorization Code Information",
+    "authCodeId": "Authorization Code ID",
+    "learner": "Learner",
+    "createdAt": "Created At",
+    "expiresAt": "Expires At",
+    "clientAuth": "Client Authentication",
+    "dpop": "DPoP",
+    "expired": "(Expired)",
+    "statusTitle": "Issuance Status",
+    "status": {
+      "noRequest": "No request (waiting)",
+      "noRequestExpired": "No request (expired)",
+      "tokenRequest": "Token request in progress (with errors)",
+      "tokenIssued": "Token issued (waiting for credential)",
+      "credentialIssued": "Credential issued"
+    },
+    "tokenEndpoint": "Token Endpoint",
+    "credentialEndpoint": "Credential Endpoint",
+    "eventHistory": "Event History",
+    "noEvents": "No issuance requests received yet.",
+    "event": {
+      "issueSuccess": "Issue Success",
+      "requestReceived": "Request Received"
+    },
+    "jwt": {
+      "dpop": "DPoP JWT",
+      "walletAttestation": "Wallet Attestation JWT",
+      "walletAttestationPop": "Wallet Attestation PoP JWT",
+      "verificationSuccess": "Verification Success",
+      "verificationFailed": "Verification Failed",
+      "notVerified": "Not Verified",
+      "received": "Received",
+      "rawData": "Raw Data",
+      "header": "Header",
+      "payload": "Payload",
+      "error": "Error",
+      "dpopNotSent": "DPoP JWT was not sent",
+      "walletAttestationNotSent": "Wallet Attestation JWT was not sent",
+      "walletAttestationPopNotSent": "Wallet Attestation PoP JWT was not sent",
+      "noJwt": "No JWT received"
+    },
+    "backToList": "Back to Learner List",
+    "required": "Required",
+    "optional": "Optional",
+    "refresh": "Refresh"
+  }
+}
