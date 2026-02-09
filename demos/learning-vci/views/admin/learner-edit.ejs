@@ -41,9 +41,18 @@
       <textarea id="achievementDescription" name="learner[achievementDescription]" rows="3" required><%= learner.achievementDescription || '' %></textarea>
     </div>
 
+    <%
+      // Parse learningOutcomes from JSON string
+      let outcomes = [];
+      try {
+        if (learner.learningOutcomes) {
+          outcomes = JSON.parse(learner.learningOutcomes);
+        }
+      } catch (e) {}
+    %>
     <div class="form-group">
       <label for="learningOutcomes"><%= t('learners:form.learningOutcomes') %> *</label>
-      <textarea id="learningOutcomes" name="learner[learningOutcomes]" rows="3" required><%= learner.learningOutcomes || '' %></textarea>
+      <textarea id="learningOutcomes" name="learner[learningOutcomes]" rows="3" required><%= outcomes.join(', ') %></textarea>
     </div>
 
     <div class="form-group">
