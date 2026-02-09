@@ -33,7 +33,19 @@
     "assessmentGrade": "評価/成績",
     "assessmentGradePlaceholder": "例: A, 優, 合格",
     "dateOfIssuance": "発行日",
-    "dateOfExpiry": "有効期限"
+    "dateOfExpiry": "有効期限",
+    "v102FieldsTitle": "追加項目 (v1.02)",
+    "languageOfClasses": "授業言語",
+    "expectedStudyTime": "予想学習時間",
+    "expectedStudyTimePlaceholder": "例: 12ヶ月, 40時間",
+    "levelOfLearningExperience": "学習経験レベル (EQF)",
+    "levelOfLearningExperienceHint": "欧州資格フレームワーク (EQF) レベル 1-8",
+    "typesOfQualityAssurance": "品質保証タイプ",
+    "typesOfQualityAssurancePlaceholder": "例: 機関評価, 認定プログラム",
+    "prerequisitesToEnroll": "履修要件",
+    "prerequisitesToEnrollPlaceholder": "例: Python基礎, 線形代数",
+    "integrationStackabilityOptions": "積み上げ可能",
+    "integrationStackabilityOptionsHint": "この資格が他の資格に積み上げ可能かどうか"
   },
   "empty": {
     "message": "登録されている学習者がいません",

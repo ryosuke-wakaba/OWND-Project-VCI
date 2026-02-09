@@ -33,7 +33,19 @@
     "assessmentGrade": "Assessment Grade",
     "assessmentGradePlaceholder": "e.g., A, Excellent, Pass",
     "dateOfIssuance": "Date of Issuance",
-    "dateOfExpiry": "Date of Expiry"
+    "dateOfExpiry": "Date of Expiry",
+    "v102FieldsTitle": "Additional Fields (v1.02)",
+    "languageOfClasses": "Language of Classes",
+    "expectedStudyTime": "Expected Study Time",
+    "expectedStudyTimePlaceholder": "e.g., 12 months, 40 hours",
+    "levelOfLearningExperience": "Level of Learning Experience (EQF)",
+    "levelOfLearningExperienceHint": "European Qualifications Framework (EQF) Level 1-8",
+    "typesOfQualityAssurance": "Types of Quality Assurance",
+    "typesOfQualityAssurancePlaceholder": "e.g., Institutional Evaluation, Program Accreditation",
+    "prerequisitesToEnroll": "Prerequisites to Enroll",
+    "prerequisitesToEnrollPlaceholder": "e.g., Basic Python, Linear Algebra",
+    "integrationStackabilityOptions": "Stackable Credential",
+    "integrationStackabilityOptionsHint": "Whether this credential can be stacked with others"
   },
   "empty": {
     "message": "No learners registered",

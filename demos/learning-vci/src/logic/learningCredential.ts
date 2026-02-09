@@ -73,6 +73,7 @@ const issueLearningCredential = async (
   const vct = "urn:eu.europa.ec.eudi:learning:credential:1";
 
   const {
+    learnerNo,
     givenName,
     familyName,
     issuingAuthority,
@@ -83,6 +84,12 @@ const issueLearningCredential = async (
     assessmentGrade,
     dateOfIssuance,
     dateOfExpiry,
+    languageOfClasses,
+    expectedStudyTime,
+    levelOfLearningExperience,
+    typesOfQualityAssurance,
+    prerequisitesToEnroll,
+    integrationStackabilityOptions,
   } = learner;
 
   // Parse learning outcomes from JSON string if exists
@@ -95,15 +102,51 @@ const issueLearningCredential = async (
     }
   }
 
+  // Parse language_of_classes from JSON string
+  let parsedLanguageOfClasses: string[] = ["ja"];
+  if (languageOfClasses) {
+    try {
+      parsedLanguageOfClasses = JSON.parse(languageOfClasses);
+    } catch {
+      parsedLanguageOfClasses = ["ja"];
+    }
+  }
+
+  // Parse types_of_quality_assurance from JSON string
+  let parsedTypesOfQualityAssurance: string[] = [];
+  if (typesOfQualityAssurance) {
+    try {
+      parsedTypesOfQualityAssurance = JSON.parse(typesOfQualityAssurance);
+    } catch {
+      parsedTypesOfQualityAssurance = [];
+    }
+  }
+
+  // Parse prerequisites_to_enroll from JSON string if exists
+  let parsedPrerequisitesToEnroll: string[] | undefined;
+  if (prerequisitesToEnroll) {
+    try {
+      parsedPrerequisitesToEnroll = JSON.parse(prerequisitesToEnroll);
+    } catch {
+      parsedPrerequisitesToEnroll = undefined;
+    }
+  }
+
   const claims: Record<string, unknown> = {
     // Required fields
     issuing_authority: issuingAuthority,
     issuing_country: issuingCountry,
     date_of_issuance: dateOfIssuance,
     family_name: familyName,
-    given_name: givenName,
     achievement_title: achievementTitle,
+    // v1.02 新規必須フィールド
+    language_of_classes: parsedLanguageOfClasses,
+    learner_identification: learnerNo,
+    expected_study_time: expectedStudyTime || "",
+    level_of_learning_experience: levelOfLearningExperience || 1,
+    types_of_quality_assurance: parsedTypesOfQualityAssurance,
     // Optional fields
+    ...(givenName && { given_name: givenName }),
     ...(achievementDescription && {
       achievement_description: achievementDescription,
     }),
@@ -112,6 +155,14 @@ const issueLearningCredential = async (
     }),
     ...(assessmentGrade && { assessment_grade: assessmentGrade }),
     ...(dateOfExpiry && { date_of_expiry: dateOfExpiry }),
+    // v1.02 新規任意フィールド
+    ...(parsedPrerequisitesToEnroll && {
+      prerequisites_to_enroll: parsedPrerequisitesToEnroll,
+    }),
+    ...(integrationStackabilityOptions !== undefined &&
+      integrationStackabilityOptions !== null && {
+        integration_stackability_options: integrationStackabilityOptions,
+      }),
     // Standard claims
     cnf: { jwk },
     vct,
@@ -122,12 +173,19 @@ const issueLearningCredential = async (
 
   // SD: Always のクレームのみをselective disclosureに
   // SD: Never のクレームはJWTペイロードに直接含める
-  // 参照: docs/demos/learning-vci.md, SD-JWT Draft-22
+  // 参照: docs/demos/learning-vci.md, SD-JWT Draft-22, EUDI-Wallet-NiScy v1.02
   const selectivelyDisclosableClaims = [
     "family_name",
     "given_name",
     "learning_outcomes",
     "assessment_grade",
+    // v1.02 新規追加
+    "learner_identification",
+    "expected_study_time",
+    "level_of_learning_experience",
+    "types_of_quality_assurance",
+    "prerequisites_to_enroll",
+    "integration_stackability_options",
   ];
   const disclosureFrame: DisclosureFrame = {
     _sd: selectivelyDisclosableClaims.filter(

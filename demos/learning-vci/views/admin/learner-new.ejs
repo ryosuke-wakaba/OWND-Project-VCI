@@ -17,8 +17,8 @@
     </div>
 
     <div class="form-group">
-      <label for="givenName"><%= t('learners:form.givenName') %> *</label>
-      <input type="text" id="givenName" name="learner[givenName]" required>
+      <label for="givenName"><%= t('learners:form.givenName') %></label>
+      <input type="text" id="givenName" name="learner[givenName]">
     </div>
 
     <div class="form-group">
@@ -59,6 +59,56 @@
     <div class="form-group">
       <label for="dateOfExpiry"><%= t('learners:form.dateOfExpiry') %> *</label>
       <input type="date" id="dateOfExpiry" name="learner[dateOfExpiry]" required>
+    </div>
+
+    <div class="form-group">
+      <label><%= t('learners:form.languageOfClasses') %> *</label>
+      <div class="checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" name="learner[languageOfClasses][]" value="ja" checked> Japanese (ja)
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" name="learner[languageOfClasses][]" value="en"> English (en)
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="expectedStudyTime"><%= t('learners:form.expectedStudyTime') %> *</label>
+      <input type="text" id="expectedStudyTime" name="learner[expectedStudyTime]" placeholder="<%= t('learners:form.expectedStudyTimePlaceholder') %>" required>
+    </div>
+
+    <div class="form-group">
+      <label for="levelOfLearningExperience"><%= t('learners:form.levelOfLearningExperience') %> *</label>
+      <select id="levelOfLearningExperience" name="learner[levelOfLearningExperience]" required>
+        <option value="1">1 - Basic</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+        <option value="6">6</option>
+        <option value="7">7</option>
+        <option value="8">8 - Advanced</option>
+      </select>
+      <small class="form-hint"><%= t('learners:form.levelOfLearningExperienceHint') %></small>
+    </div>
+
+    <div class="form-group">
+      <label for="typesOfQualityAssurance"><%= t('learners:form.typesOfQualityAssurance') %> *</label>
+      <textarea id="typesOfQualityAssurance" name="learner[typesOfQualityAssurance]" rows="2" placeholder="<%= t('learners:form.typesOfQualityAssurancePlaceholder') %>" required></textarea>
+    </div>
+
+    <div class="form-group">
+      <label for="prerequisitesToEnroll"><%= t('learners:form.prerequisitesToEnroll') %></label>
+      <textarea id="prerequisitesToEnroll" name="learner[prerequisitesToEnroll]" rows="2" placeholder="<%= t('learners:form.prerequisitesToEnrollPlaceholder') %>"></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="learner[integrationStackabilityOptions]" value="true">
+        <%= t('learners:form.integrationStackabilityOptions') %>
+      </label>
+      <small class="form-hint"><%= t('learners:form.integrationStackabilityOptionsHint') %></small>
     </div>
 
     <div class="form-actions">

@@ -18,25 +18,34 @@ EUDI Wallet 仕様に準拠した教育クレデンシャルを発行する。`d
 
 ### データフィールド
 
+v1.02仕様（EUDI-Wallet-NiScy_JP EU pilot_v1.02.docx）に基づく。
+
 #### 必須フィールド (Mandatory)
 
-| フィールド名        | 型     | SD     | 説明                        |
-| ------------------- | ------ | ------ | --------------------------- |
-| `issuing_authority` | string | Never  | 発行機関名                  |
-| `issuing_country`   | string | Never  | 発行国 (ISO 3166-1 Alpha-2) |
-| `date_of_issuance`  | string | Never  | 発行日 (YYYY-MM-DD)         |
-| `family_name`       | string | Always | 姓                          |
-| `given_name`        | string | Always | 名                          |
-| `achievement_title` | string | Never  | コース/資格の公式タイトル   |
+| フィールド名                    | 型       | SD     | 説明                           |
+| ------------------------------- | -------- | ------ | ------------------------------ |
+| `issuing_authority`             | string   | Never  | 発行機関名                     |
+| `issuing_country`               | string   | Never  | 発行国 (ISO 3166-1 Alpha-2)    |
+| `date_of_issuance`              | string   | Never  | 発行日 (YYYY-MM-DD)            |
+| `family_name`                   | string   | Always | 姓                             |
+| `achievement_title`             | string   | Never  | コース/資格の公式タイトル      |
+| `language_of_classes`           | string[] | Never  | 授業で使用された言語 (en/ja)   |
+| `learner_identification`        | string   | Always | 学習者識別番号                 |
+| `expected_study_time`           | string   | Always | 予想学習時間                   |
+| `level_of_learning_experience`  | int      | Always | EQFレベル (1-8)                |
+| `types_of_quality_assurance`    | string[] | Always | 品質保証タイプ                 |
 
 #### オプションフィールド (Optional)
 
-| フィールド名              | 型       | SD     | 説明                  |
-| ------------------------- | -------- | ------ | --------------------- |
-| `date_of_expiry`          | string   | Never  | 有効期限 (YYYY-MM-DD) |
-| `achievement_description` | string   | Never  | 実績の説明            |
-| `learning_outcomes`       | string[] | Always | 学習成果リスト        |
-| `assessment_grade`        | string   | Always | 評価/成績             |
+| フィールド名                       | 型       | SD     | 説明                        |
+| ---------------------------------- | -------- | ------ | --------------------------- |
+| `given_name`                       | string   | Always | 名                          |
+| `date_of_expiry`                   | string   | Never  | 有効期限 (YYYY-MM-DD)       |
+| `achievement_description`          | string   | Never  | 実績の説明                  |
+| `learning_outcomes`                | string[] | Always | 学習成果リスト              |
+| `assessment_grade`                 | string   | Always | 評価/成績                   |
+| `prerequisites_to_enroll`          | string[] | Always | 履修に必要な前提条件        |
+| `integration_stackability_options` | bool     | Always | 積み上げ可能かどうか        |
 
 ---
 
@@ -150,7 +159,7 @@ demos/learning-vci/
 
 - [Learning Credential 移行ガイド](/Users/ryousuke/repositories/ownd/ipa2025/OWND-Project-VP/docs/archive/learning-credential-migration.md)
 - [employee-vci](./employee-vci.md)
-- EUDI-Wallet-NiScy_JP EU pilot_v0.10.docx
+- EUDI-Wallet-NiScy_JP EU pilot_v1.02.docx
 
 ---
 
@@ -384,4 +393,12 @@ CREATE TABLE wallet_attestation_settings (
   enableChainValidation BOOLEAN DEFAULT FALSE,
   updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
 );
+
+-- v1.02 Learning Credential Data Model 対応
+ALTER TABLE learners ADD COLUMN languageOfClasses TEXT DEFAULT '["ja"]';
+ALTER TABLE learners ADD COLUMN expectedStudyTime VARCHAR(100) DEFAULT '';
+ALTER TABLE learners ADD COLUMN levelOfLearningExperience INTEGER DEFAULT 1;
+ALTER TABLE learners ADD COLUMN typesOfQualityAssurance TEXT DEFAULT '[]';
+ALTER TABLE learners ADD COLUMN prerequisitesToEnroll TEXT;
+ALTER TABLE learners ADD COLUMN integrationStackabilityOptions BOOLEAN;
 ```
