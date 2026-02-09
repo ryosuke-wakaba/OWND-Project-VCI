@@ -14,14 +14,14 @@
     "title": "学習者編集"
   },
   "table": {
-    "learnerNo": "学習者番号",
+    "learnerNo": "学習者ID",
     "name": "氏名",
     "courseTitle": "コースタイトル",
     "issuingAuthority": "発行機関",
     "issuanceDate": "発行日"
   },
   "form": {
-    "learnerNo": "学習者番号",
+    "learnerNo": "学習者ID",
     "familyName": "姓",
     "givenName": "名",
     "issuingAuthority": "発行機関",
@@ -81,7 +81,7 @@
   "credentialOffer": {
     "title": "クレデンシャル発行",
     "learnerInfo": "学習者情報",
-    "learnerNo": "学習者番号",
+    "learnerNo": "学習者ID",
     "qrScanNote": "このQRコードをウォレットアプリでスキャンしてクレデンシャルを取得してください。",
     "issuanceInfo": "発行情報",
     "txCode": "TX Code (PIN)",

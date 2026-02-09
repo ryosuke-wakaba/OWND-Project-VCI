@@ -21,7 +21,7 @@
     "issuanceDate": "Issuance Date"
   },
   "form": {
-    "learnerNo": "Learner Number",
+    "learnerNo": "Learner ID",
     "familyName": "Family Name",
     "givenName": "Given Name",
     "issuingAuthority": "Issuing Authority",
@@ -81,7 +81,7 @@
   "credentialOffer": {
     "title": "Credential Issuance",
     "learnerInfo": "Learner Information",
-    "learnerNo": "Learner Number",
+    "learnerNo": "Learner ID",
     "qrScanNote": "Scan this QR code with a wallet app to obtain the credential.",
     "issuanceInfo": "Issuance Information",
     "txCode": "TX Code (PIN)",
