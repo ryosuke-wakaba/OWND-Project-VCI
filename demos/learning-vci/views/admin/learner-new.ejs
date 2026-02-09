@@ -81,14 +81,9 @@
     <div class="form-group">
       <label for="levelOfLearningExperience"><%= t('learners:form.levelOfLearningExperience') %> *</label>
       <select id="levelOfLearningExperience" name="learner[levelOfLearningExperience]" required>
-        <option value="1">1 - Basic</option>
-        <option value="2">2</option>
-        <option value="3">3</option>
-        <option value="4">4</option>
-        <option value="5">5</option>
-        <option value="6">6</option>
-        <option value="7">7</option>
-        <option value="8">8 - Advanced</option>
+        <% for (let i = 1; i <= 8; i++) { %>
+          <option value="<%= i %>"><%= t('learners:form.eqfLevel' + i) %></option>
+        <% } %>
       </select>
       <small class="form-hint"><%= t('learners:form.levelOfLearningExperienceHint') %></small>
     </div>

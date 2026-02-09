@@ -101,7 +101,7 @@
       <select id="levelOfLearningExperience" name="learner[levelOfLearningExperience]" required>
         <% for (let i = 1; i <= 8; i++) { %>
           <option value="<%= i %>" <%= (learner.levelOfLearningExperience || 1) == i ? 'selected' : '' %>>
-            <%= i %><%= i === 1 ? ' - Basic' : (i === 8 ? ' - Advanced' : '') %>
+            <%= t('learners:form.eqfLevel' + i) %>
           </option>
         <% } %>
       </select>
