@@ -119,9 +119,15 @@ export async function handleAuthServer(
   }
 }
 
+export interface TokenHandlerOptions {
+  /** Optional callback to get the matched certificate name after x5c validation */
+  getMatchedCertName?: () => string | undefined;
+}
+
 export async function handleToken(
   ctx: Koa.Context,
   configGenerator: () => TokenIssuerConfig,
+  options?: TokenHandlerOptions,
 ) {
   console.log("=== Token Request Started ===");
   console.log("Grant Type:", ctx.request.body?.grant_type);
@@ -177,6 +183,8 @@ export async function handleToken(
       // Wallet Attestation PoP valid if: JWT sent and no client error (even if request fails for other reason)
       walletAttestationPopValid: isClientError ? false : (walletAttestationPopJwt ? true : undefined),
       walletAttestationPopError: isClientError ? errorJson : undefined,
+      // Get matched certificate name if available
+      matchedCertName: options?.getMatchedCertName?.(),
     };
 
     try {

@@ -136,7 +136,8 @@
       "dpopNotSent": "DPoP JWT は送信されませんでした",
       "walletAttestationNotSent": "Wallet Attestation JWT は送信されませんでした",
       "walletAttestationPopNotSent": "Wallet Attestation PoP JWT は送信されませんでした",
-      "noJwt": "受信したJWTはありません"
+      "noJwt": "受信したJWTはありません",
+      "matchedCert": "一致した証明書"
     },
     "backToList": "学習者一覧に戻る",
     "required": "必須",

@@ -99,9 +99,107 @@ MIIBxxxxxxxxxxxxxxxx...
   </form>
 </section>
 
+<hr class="section-divider">
+
+<section class="settings-section">
+  <h3><%= t('wallet:certMatchingSettings.title') %></h3>
+  <form method="POST" action="/admin/wallet-provider-ca/cert-settings">
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="enableCertMatching" value="true" <%= settings.enableCertMatching ? 'checked' : '' %>>
+        <%= t('wallet:certMatchingSettings.enableCertMatching') %>
+      </label>
+      <p class="help-text">
+        <%= t('wallet:certMatchingSettings.helpText') %>
+      </p>
+    </div>
+    <button type="submit" class="btn btn-primary"><%= t('wallet:certMatchingSettings.save') %></button>
+  </form>
+</section>
+
+<section class="cert-list-section">
+  <h3><%= t('wallet:certList.title') %></h3>
+  <% if (certs.length === 0) { %>
+    <p class="empty-message"><%= t('wallet:certList.empty') %></p>
+  <% } else { %>
+    <table class="data-table">
+      <thead>
+        <tr>
+          <th><%= t('wallet:certList.table.name') %></th>
+          <th><%= t('wallet:certList.table.subject') %></th>
+          <th><%= t('wallet:certList.table.expiresAt') %></th>
+          <th><%= t('wallet:certList.table.status') %></th>
+          <th><%= t('wallet:certList.table.registeredAt') %></th>
+          <th><%= t('wallet:certList.table.operation') %></th>
+        </tr>
+      </thead>
+      <tbody>
+        <% certs.forEach(cert => { %>
+          <tr class="<%= !cert.enabled ? 'disabled-row' : '' %>">
+            <td><%= cert.name %></td>
+            <td>
+              <% if (cert.certInfo) { %>
+                <code class="subject"><%= cert.certInfo.subject.commonName || cert.certInfo.subject.organizationName || '-' %></code>
+              <% } else { %>
+                <span class="text-muted">-</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (cert.certInfo) { %>
+                <%= new Date(cert.certInfo.notAfter).toLocaleDateString(lng === 'en' ? 'en-US' : 'ja-JP') %>
+              <% } else { %>
+                <span class="text-muted">-</span>
+              <% } %>
+            </td>
+            <td>
+              <% if (cert.enabled) { %>
+                <span class="status-badge status-active"><%= t('wallet:certList.status.active') %></span>
+              <% } else { %>
+                <span class="status-badge status-inactive"><%= t('wallet:certList.status.inactive') %></span>
+              <% } %>
+            </td>
+            <td><%= new Date(cert.createdAt).toLocaleDateString(lng === 'en' ? 'en-US' : 'ja-JP') %></td>
+            <td class="actions">
+              <form method="POST" action="/admin/wallet-provider-ca/cert/<%= cert.id %>/toggle" style="display:inline;">
+                <button type="submit" class="btn btn-sm <%= cert.enabled ? 'btn-warning' : 'btn-success' %>">
+                  <%= cert.enabled ? t('wallet:certList.actions.disable') : t('wallet:certList.actions.enable') %>
+                </button>
+              </form>
+              <form method="POST" action="/admin/wallet-provider-ca/cert/<%= cert.id %>/delete" style="display:inline;" onsubmit="return confirm('<%= t('wallet:certList.confirmDelete') %>');">
+                <button type="submit" class="btn btn-sm btn-danger"><%= t('wallet:certList.actions.delete') %></button>
+              </form>
+            </td>
+          </tr>
+        <% }) %>
+      </tbody>
+    </table>
+  <% } %>
+</section>
+
+<section class="import-section">
+  <h3><%= t('wallet:certImport.title') %></h3>
+  <form method="POST" action="/admin/wallet-provider-ca/cert/import">
+    <div class="form-group">
+      <label for="certName"><%= t('wallet:certImport.certName') %> <span class="required">*</span></label>
+      <input type="text" id="certName" name="name" required placeholder="<%= t('wallet:certImport.certNamePlaceholder') %>">
+    </div>
+    <div class="form-group">
+      <label for="certPem"><%= t('wallet:certImport.cert') %> <span class="required">*</span></label>
+      <textarea id="certPem" name="certPem" rows="12" required placeholder="-----BEGIN CERTIFICATE-----
+MIIBxxxxxxxxxxxxxxxx...
+-----END CERTIFICATE-----"></textarea>
+      <p class="help-text">
+        <%= t('wallet:certImport.certHelp') %>
+      </p>
+    </div>
+    <button type="submit" class="btn btn-primary"><%= t('wallet:certImport.submit') %></button>
+  </form>
+</section>
+
 <style>
   .settings-section,
   .ca-list-section,
+  .cert-list-section,
   .import-section {
     background: #fff;
     border: 1px solid #e2e8f0;
@@ -112,12 +210,19 @@ MIIBxxxxxxxxxxxxxxxx...
 
   .settings-section h3,
   .ca-list-section h3,
+  .cert-list-section h3,
   .import-section h3 {
     margin-top: 0;
     margin-bottom: 1rem;
     color: #1e293b;
     border-bottom: 1px solid #e2e8f0;
     padding-bottom: 0.5rem;
+  }
+
+  .section-divider {
+    margin: 2rem 0;
+    border: none;
+    border-top: 2px solid #e2e8f0;
   }
 
   .checkbox-label {

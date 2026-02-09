@@ -269,6 +269,41 @@ const init = () => {
     },
   );
 
+  // Wallet Provider Certificate Management Routes
+  router.post(
+    "/admin/wallet-provider-ca/cert/import",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleWalletProviderCertImport(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/wallet-provider-ca/cert/:id/toggle",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleWalletProviderCertToggle(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/wallet-provider-ca/cert/:id/delete",
+    auth(basicAuthOpts()),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleWalletProviderCertDelete(ctx);
+    },
+  );
+
+  router.post(
+    "/admin/wallet-provider-ca/cert-settings",
+    auth(basicAuthOpts()),
+    koaBody(),
+    async (ctx: Koa.Context) => {
+      await routesHandler.handleCertMatchingSettingsUpdate(ctx);
+    },
+  );
+
   // Issuance Status Route
   router.get(
     "/admin/auth-codes/:authCodeId/status",

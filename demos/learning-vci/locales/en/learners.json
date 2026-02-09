@@ -136,7 +136,8 @@
       "dpopNotSent": "DPoP JWT was not sent",
       "walletAttestationNotSent": "Wallet Attestation JWT was not sent",
       "walletAttestationPopNotSent": "Wallet Attestation PoP JWT was not sent",
-      "noJwt": "No JWT received"
+      "noJwt": "No JWT received",
+      "matchedCert": "Matched Certificate"
     },
     "backToList": "Back to Learner List",
     "required": "Required",
