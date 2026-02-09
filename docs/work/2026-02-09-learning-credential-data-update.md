@@ -1,5 +1,9 @@
 # Learning Credential Data Model 更新作業
 
+**ステータス**: ✅ 完了
+**ブランチ**: `feature/update-learning-credential-data-model`
+**作業日**: 2026-02-09
+
 ## 概要
 
 EUDI-Wallet-NiScy_JP EU pilot_v1.02.docx の「3 Learning Credential Data Model」に基づき、
@@ -46,7 +50,7 @@ learning-vci デモアプリの教育クレデンシャルのデータ項目を�
 | 現在のclaim | DB カラム | 更新後のclaim |
 |------------|--------------|--------------|
 | family_name | familyName | family_name（変更なし）|
-| given_name | givenName | given_name（M必須に変更）|
+| given_name | givenName | given_name（O任意に変更）|
 | issuing_authority | issuingAuthority | issuing_authority（変更なし）|
 | issuing_country | issuingCountry | issuing_country（変更なし）|
 | achievement_title | achievementTitle | achievement_title（変更なし）|
@@ -87,7 +91,7 @@ ALTER TABLE learners ADD COLUMN integrationStackabilityOptions BOOLEAN;
 export interface Learner {
   id: number;
   learnerNo: string;
-  givenName: string;
+  givenName?: string; // v1.02: Optional
   familyName: string;
   issuingAuthority: string;
   issuingCountry: string;
@@ -192,23 +196,26 @@ credential_metadataに新規フィールドの表示情報を追加
 
 ## タスクリスト
 
-- [ ] 新しいブランチ作成（feature/update-learning-credential-data-model）
-- [ ] store.ts: Learnerインターフェース更新
-- [ ] store.ts: DDL_LEARNERS更新
-- [ ] store.ts: registerLearner, updateLearner関数更新
-- [ ] learningCredential.ts: claims構築ロジック更新
-- [ ] learningCredential.ts: selectivelyDisclosableClaims更新
-- [ ] credentialConfigs.ts: credential_metadata更新
-- [ ] routesHandler.ts: リクエストボディパース更新
-- [ ] learner-new.ejs: フォームフィールド追加
-- [ ] learner-edit.ejs: フォームフィールド追加
-- [ ] learners.ejs: 一覧表示更新（必要に応じて）
-- [ ] locales/ja/learners.json: 翻訳追加
-- [ ] locales/en/learners.json: 翻訳追加
-- [ ] docs/demos/learning-vci.md: 仕様ドキュメント更新
-- [ ] マイグレーションSQLを docs/demos/learning-vci.md に追加
-- [ ] ビルド・テスト実行
-- [ ] 動作確認
+- [x] 新しいブランチ作成（feature/update-learning-credential-data-model）
+- [x] store.ts: Learnerインターフェース更新
+- [x] store.ts: DDL_LEARNERS更新
+- [x] store.ts: registerLearner, updateLearner関数更新
+- [x] store.ts: 自動マイグレーション追加（addColumnIfNotExists使用）
+- [x] learningCredential.ts: claims構築ロジック更新
+- [x] learningCredential.ts: selectivelyDisclosableClaims更新
+- [x] credentialConfigs.ts: credential_metadata更新
+- [x] routesHandler.ts: リクエストボディパース更新
+- [x] learner-new.ejs: フォームフィールド追加
+- [x] learner-edit.ejs: フォームフィールド追加
+- [x] learner-edit.ejs: learningOutcomesをカンマ区切り表示に修正
+- [x] locales/ja/learners.json: 翻訳追加（EQFレベル説明含む）
+- [x] locales/en/learners.json: 翻訳追加（EQFレベル説明含む）
+- [x] locales: learnerNoラベルを「学習者ID」に変更
+- [x] docs/demos/learning-vci.md: 仕様ドキュメント更新
+- [x] マイグレーションSQLを docs/demos/learning-vci.md に追加
+- [x] テストケース追加（tests/vci.test.ts）
+- [x] ビルド・テスト実行（30件すべて成功）
+- [x] 動作確認
 
 ## マイグレーションSQL
 
@@ -224,11 +231,22 @@ ALTER TABLE learners ADD COLUMN prerequisitesToEnroll TEXT;
 ALTER TABLE learners ADD COLUMN integrationStackabilityOptions BOOLEAN;
 ```
 
+## コミット履歴
+
+| コミット | 説明 |
+|---------|------|
+| 0f1e28e | Update Learning Credential data model to EUDI-Wallet-NiScy v1.02 |
+| 20e6ad5 | Fix learningOutcomes display in edit form to use comma-separated format |
+| c345f8f | Add EQF level descriptions to learning experience dropdown |
+| b60045d | Rename learnerNo label to Learner ID |
+| 9fc9628 | Add VCI test cases for v1.02 data model verification |
+
 ## 注意事項
 
 - 既存のlearnerNoフィールドは、learner_identification claimにマッピングされる
-- given_nameは必須（M）になったため、既存データで空の場合は更新が必要
+- given_nameはv1.02で必須（M）から任意（O）に変更された
 - language_of_classesのデフォルト値は["ja"]とする
 - levelOfLearningExperienceはEQFレベル（1-8）の整数値
 - 配列フィールドはJSON文字列としてSQLiteに保存する（既存のlearningOutcomesと同様）
 - ~~form_of_participation~~ と ~~evaluator_verification~~ はドキュメントで取消線があるため実装対象外
+- サーバー起動時に自動マイグレーションが実行される（addColumnIfNotExists使用）
