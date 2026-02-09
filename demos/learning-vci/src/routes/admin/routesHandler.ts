@@ -80,12 +80,18 @@ const registerLearner = async (
       assessmentGrade,
       dateOfIssuance,
       dateOfExpiry,
+      // v1.02 新規フィールド
+      languageOfClasses,
+      expectedStudyTime,
+      levelOfLearningExperience,
+      typesOfQualityAssurance,
+      prerequisitesToEnroll,
+      integrationStackabilityOptions,
     } = payload;
 
-    // Validate required fields
+    // Validate required fields (given_name is optional in v1.02)
     if (
       typeof learnerNo !== "string" ||
-      typeof givenName !== "string" ||
       typeof familyName !== "string" ||
       typeof issuingAuthority !== "string" ||
       typeof issuingCountry !== "string" ||
@@ -95,23 +101,54 @@ const registerLearner = async (
       return { ok: false, error: { type: "INVALID_PARAMETER" } };
     }
 
-    // Convert comma-separated learning outcomes to JSON array
-    let learningOutcomesJson: string | undefined;
-    if (learningOutcomes && typeof learningOutcomes === "string") {
-      const trimmed = learningOutcomes.trim();
-      if (trimmed) {
-        // Check if already JSON array
-        if (trimmed.startsWith("[")) {
-          learningOutcomesJson = trimmed;
-        } else {
-          // Convert comma-separated string to JSON array
-          const items = trimmed
-            .split(",")
-            .map((s) => s.trim())
-            .filter((s) => s.length > 0);
-          learningOutcomesJson = JSON.stringify(items);
-        }
+    // Helper function to convert comma-separated or array fields to JSON array string
+    const toJsonArrayString = (
+      value: string | string[] | undefined,
+    ): string | undefined => {
+      if (!value) return undefined;
+      if (Array.isArray(value)) {
+        return JSON.stringify(value);
       }
+      const trimmed = value.trim();
+      if (!trimmed) return undefined;
+      if (trimmed.startsWith("[")) {
+        return trimmed;
+      }
+      const items = trimmed
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0);
+      return JSON.stringify(items);
+    };
+
+    // Convert comma-separated learning outcomes to JSON array
+    const learningOutcomesJson = toJsonArrayString(learningOutcomes);
+
+    // Convert language of classes (checkbox array or comma-separated)
+    let languageOfClassesJson = '["ja"]'; // default
+    if (languageOfClasses) {
+      if (Array.isArray(languageOfClasses)) {
+        languageOfClassesJson = JSON.stringify(languageOfClasses);
+      } else {
+        languageOfClassesJson =
+          toJsonArrayString(languageOfClasses) || '["ja"]';
+      }
+    }
+
+    // Convert types of quality assurance
+    const typesOfQualityAssuranceJson =
+      toJsonArrayString(typesOfQualityAssurance) || "[]";
+
+    // Convert prerequisites to enroll
+    const prerequisitesToEnrollJson = toJsonArrayString(prerequisitesToEnroll);
+
+    // Convert integration stackability options (checkbox)
+    let integrationStackabilityOptionsValue: boolean | undefined;
+    if (integrationStackabilityOptions !== undefined) {
+      integrationStackabilityOptionsValue =
+        integrationStackabilityOptions === "true" ||
+        integrationStackabilityOptions === true ||
+        integrationStackabilityOptions === "on";
     }
 
     const newLearner: NewLearner = {
@@ -126,6 +163,13 @@ const registerLearner = async (
       assessmentGrade: assessmentGrade || undefined,
       dateOfIssuance,
       dateOfExpiry: dateOfExpiry || undefined,
+      // v1.02 新規フィールド
+      languageOfClasses: languageOfClassesJson,
+      expectedStudyTime: expectedStudyTime || "",
+      levelOfLearningExperience: parseInt(levelOfLearningExperience, 10) || 1,
+      typesOfQualityAssurance: typesOfQualityAssuranceJson,
+      prerequisitesToEnroll: prerequisitesToEnrollJson,
+      integrationStackabilityOptions: integrationStackabilityOptionsValue,
     };
 
     await store.registerLearner(newLearner);
@@ -280,23 +324,64 @@ export async function handleLearnerUpdate(ctx: Koa.Context) {
       return;
     }
 
-    // Convert comma-separated learning outcomes to JSON array
-    if (
-      learner.learningOutcomes &&
-      typeof learner.learningOutcomes === "string"
-    ) {
-      const trimmed = learner.learningOutcomes.trim();
-      if (trimmed) {
-        if (!trimmed.startsWith("[")) {
-          const items = trimmed
-            .split(",")
-            .map((s: string) => s.trim())
-            .filter((s: string) => s.length > 0);
-          learner.learningOutcomes = JSON.stringify(items);
-        }
-      } else {
-        learner.learningOutcomes = undefined;
+    // Helper function to convert comma-separated or array fields to JSON array string
+    const toJsonArrayString = (
+      value: string | string[] | undefined,
+    ): string | undefined => {
+      if (!value) return undefined;
+      if (Array.isArray(value)) {
+        return JSON.stringify(value);
       }
+      const trimmed = value.trim();
+      if (!trimmed) return undefined;
+      if (trimmed.startsWith("[")) {
+        return trimmed;
+      }
+      const items = trimmed
+        .split(",")
+        .map((s: string) => s.trim())
+        .filter((s: string) => s.length > 0);
+      return JSON.stringify(items);
+    };
+
+    // Convert comma-separated learning outcomes to JSON array
+    learner.learningOutcomes = toJsonArrayString(learner.learningOutcomes);
+
+    // Convert language of classes (checkbox array or comma-separated)
+    if (learner.languageOfClasses) {
+      if (Array.isArray(learner.languageOfClasses)) {
+        learner.languageOfClasses = JSON.stringify(learner.languageOfClasses);
+      } else {
+        learner.languageOfClasses =
+          toJsonArrayString(learner.languageOfClasses) || '["ja"]';
+      }
+    } else {
+      learner.languageOfClasses = '["ja"]';
+    }
+
+    // Convert types of quality assurance
+    learner.typesOfQualityAssurance =
+      toJsonArrayString(learner.typesOfQualityAssurance) || "[]";
+
+    // Convert prerequisites to enroll
+    learner.prerequisitesToEnroll = toJsonArrayString(
+      learner.prerequisitesToEnroll,
+    );
+
+    // Convert level of learning experience to integer
+    if (learner.levelOfLearningExperience) {
+      learner.levelOfLearningExperience =
+        parseInt(learner.levelOfLearningExperience, 10) || 1;
+    } else {
+      learner.levelOfLearningExperience = 1;
+    }
+
+    // Convert integration stackability options (checkbox)
+    if (learner.integrationStackabilityOptions !== undefined) {
+      learner.integrationStackabilityOptions =
+        learner.integrationStackabilityOptions === "true" ||
+        learner.integrationStackabilityOptions === true ||
+        learner.integrationStackabilityOptions === "on";
     }
 
     await store.updateLearner(Number(id), learner);

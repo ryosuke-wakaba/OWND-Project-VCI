@@ -26,6 +26,12 @@ entity learners {
   * assessmentGrade string
   * dateOfIssuance string
   * dateOfExpiry string
+  * languageOfClasses string (JSON array)
+  * expectedStudyTime string
+  * levelOfLearningExperience int
+  * typesOfQualityAssurance string (JSON array)
+  * prerequisitesToEnroll string (JSON array)
+  * integrationStackabilityOptions boolean
   * createdAt datetime
   * updatedAt datetime
 }
@@ -65,6 +71,12 @@ const DDL_LEARNERS = `
     assessmentGrade VARCHAR(50),
     dateOfIssuance VARCHAR(20),
     dateOfExpiry VARCHAR(20),
+    languageOfClasses TEXT DEFAULT '["ja"]',
+    expectedStudyTime VARCHAR(100) DEFAULT '',
+    levelOfLearningExperience INTEGER DEFAULT 1,
+    typesOfQualityAssurance TEXT DEFAULT '[]',
+    prerequisitesToEnroll TEXT,
+    integrationStackabilityOptions BOOLEAN,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
   )
@@ -78,6 +90,38 @@ const createDb = async () => {
   await keyStore.createDb();
   await authStore.createDb();
   await store.createDb(DDL_MAP);
+
+  // v1.02 マイグレーション: 新規カラムを追加
+  await store.addColumnIfNotExists(
+    TBL_NM_LEARNERS,
+    "languageOfClasses",
+    "TEXT DEFAULT '[\"ja\"]'",
+  );
+  await store.addColumnIfNotExists(
+    TBL_NM_LEARNERS,
+    "expectedStudyTime",
+    "VARCHAR(100) DEFAULT ''",
+  );
+  await store.addColumnIfNotExists(
+    TBL_NM_LEARNERS,
+    "levelOfLearningExperience",
+    "INTEGER DEFAULT 1",
+  );
+  await store.addColumnIfNotExists(
+    TBL_NM_LEARNERS,
+    "typesOfQualityAssurance",
+    "TEXT DEFAULT '[]'",
+  );
+  await store.addColumnIfNotExists(
+    TBL_NM_LEARNERS,
+    "prerequisitesToEnroll",
+    "TEXT",
+  );
+  await store.addColumnIfNotExists(
+    TBL_NM_LEARNERS,
+    "integrationStackabilityOptions",
+    "BOOLEAN",
+  );
 };
 
 const destroyDb = async () => {
@@ -89,7 +133,7 @@ const destroyDb = async () => {
 export interface Learner {
   id: number;
   learnerNo: string;
-  givenName: string;
+  givenName?: string; // v1.02: Optional
   familyName: string;
   issuingAuthority: string;
   issuingCountry: string;
@@ -99,6 +143,13 @@ export interface Learner {
   assessmentGrade?: string;
   dateOfIssuance: string;
   dateOfExpiry?: string;
+  // v1.02 新規フィールド
+  languageOfClasses: string; // JSON array string: ["en", "ja"]
+  expectedStudyTime: string;
+  levelOfLearningExperience: number; // EQF level 1-8
+  typesOfQualityAssurance: string; // JSON array string
+  prerequisitesToEnroll?: string; // JSON array string
+  integrationStackabilityOptions?: boolean;
 }
 export type NewLearner = Omit<Learner, "id">;
 
@@ -110,8 +161,10 @@ export const registerLearner = async (
     INSERT INTO ${TBL_NM_LEARNERS}
     (learnerNo, givenName, familyName, issuingAuthority, issuingCountry,
      achievementTitle, achievementDescription, learningOutcomes, assessmentGrade,
-     dateOfIssuance, dateOfExpiry)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     dateOfIssuance, dateOfExpiry, languageOfClasses, expectedStudyTime,
+     levelOfLearningExperience, typesOfQualityAssurance, prerequisitesToEnroll,
+     integrationStackabilityOptions)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   const params = [
     newLearner.learnerNo,
@@ -125,6 +178,12 @@ export const registerLearner = async (
     newLearner.assessmentGrade || null,
     newLearner.dateOfIssuance,
     newLearner.dateOfExpiry || null,
+    newLearner.languageOfClasses || '["ja"]',
+    newLearner.expectedStudyTime || "",
+    newLearner.levelOfLearningExperience || 1,
+    newLearner.typesOfQualityAssurance || "[]",
+    newLearner.prerequisitesToEnroll || null,
+    newLearner.integrationStackabilityOptions ?? null,
   ];
 
   try {
@@ -284,7 +343,10 @@ export const updateLearner = async (
       SET learnerNo = ?, givenName = ?, familyName = ?, issuingAuthority = ?,
           issuingCountry = ?, achievementTitle = ?, achievementDescription = ?,
           learningOutcomes = ?, assessmentGrade = ?, dateOfIssuance = ?,
-          dateOfExpiry = ?, updatedAt = CURRENT_TIMESTAMP
+          dateOfExpiry = ?, languageOfClasses = ?, expectedStudyTime = ?,
+          levelOfLearningExperience = ?, typesOfQualityAssurance = ?,
+          prerequisitesToEnroll = ?, integrationStackabilityOptions = ?,
+          updatedAt = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
     await db.run(
@@ -300,6 +362,12 @@ export const updateLearner = async (
       learner.assessmentGrade || null,
       learner.dateOfIssuance,
       learner.dateOfExpiry || null,
+      learner.languageOfClasses || '["ja"]',
+      learner.expectedStudyTime || "",
+      learner.levelOfLearningExperience || 1,
+      learner.typesOfQualityAssurance || "[]",
+      learner.prerequisitesToEnroll || null,
+      learner.integrationStackabilityOptions ?? null,
       id,
     );
   } catch (err) {

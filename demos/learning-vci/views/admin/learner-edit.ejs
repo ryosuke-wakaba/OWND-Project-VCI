@@ -17,8 +17,8 @@
     </div>
 
     <div class="form-group">
-      <label for="givenName"><%= t('learners:form.givenName') %> *</label>
-      <input type="text" id="givenName" name="learner[givenName]" value="<%= learner.givenName %>" required>
+      <label for="givenName"><%= t('learners:form.givenName') %></label>
+      <input type="text" id="givenName" name="learner[givenName]" value="<%= learner.givenName || '' %>">
     </div>
 
     <div class="form-group">
@@ -41,9 +41,18 @@
       <textarea id="achievementDescription" name="learner[achievementDescription]" rows="3" required><%= learner.achievementDescription || '' %></textarea>
     </div>
 
+    <%
+      // Parse learningOutcomes from JSON string
+      let outcomes = [];
+      try {
+        if (learner.learningOutcomes) {
+          outcomes = JSON.parse(learner.learningOutcomes);
+        }
+      } catch (e) {}
+    %>
     <div class="form-group">
       <label for="learningOutcomes"><%= t('learners:form.learningOutcomes') %> *</label>
-      <textarea id="learningOutcomes" name="learner[learningOutcomes]" rows="3" required><%= learner.learningOutcomes || '' %></textarea>
+      <textarea id="learningOutcomes" name="learner[learningOutcomes]" rows="3" required><%= outcomes.join(', ') %></textarea>
     </div>
 
     <div class="form-group">
@@ -59,6 +68,80 @@
     <div class="form-group">
       <label for="dateOfExpiry"><%= t('learners:form.dateOfExpiry') %> *</label>
       <input type="date" id="dateOfExpiry" name="learner[dateOfExpiry]" value="<%= learner.dateOfExpiry || '' %>" required>
+    </div>
+
+    <%
+      // Parse languageOfClasses from JSON string
+      let langClasses = ['ja'];
+      try {
+        if (learner.languageOfClasses) {
+          langClasses = JSON.parse(learner.languageOfClasses);
+        }
+      } catch (e) {}
+    %>
+    <div class="form-group">
+      <label><%= t('learners:form.languageOfClasses') %> *</label>
+      <div class="checkbox-group">
+        <label class="checkbox-label">
+          <input type="checkbox" name="learner[languageOfClasses][]" value="ja" <%= langClasses.includes('ja') ? 'checked' : '' %>> Japanese (ja)
+        </label>
+        <label class="checkbox-label">
+          <input type="checkbox" name="learner[languageOfClasses][]" value="en" <%= langClasses.includes('en') ? 'checked' : '' %>> English (en)
+        </label>
+      </div>
+    </div>
+
+    <div class="form-group">
+      <label for="expectedStudyTime"><%= t('learners:form.expectedStudyTime') %> *</label>
+      <input type="text" id="expectedStudyTime" name="learner[expectedStudyTime]" value="<%= learner.expectedStudyTime || '' %>" placeholder="<%= t('learners:form.expectedStudyTimePlaceholder') %>" required>
+    </div>
+
+    <div class="form-group">
+      <label for="levelOfLearningExperience"><%= t('learners:form.levelOfLearningExperience') %> *</label>
+      <select id="levelOfLearningExperience" name="learner[levelOfLearningExperience]" required>
+        <% for (let i = 1; i <= 8; i++) { %>
+          <option value="<%= i %>" <%= (learner.levelOfLearningExperience || 1) == i ? 'selected' : '' %>>
+            <%= t('learners:form.eqfLevel' + i) %>
+          </option>
+        <% } %>
+      </select>
+      <small class="form-hint"><%= t('learners:form.levelOfLearningExperienceHint') %></small>
+    </div>
+
+    <%
+      // Parse typesOfQualityAssurance from JSON string
+      let qaTypes = [];
+      try {
+        if (learner.typesOfQualityAssurance) {
+          qaTypes = JSON.parse(learner.typesOfQualityAssurance);
+        }
+      } catch (e) {}
+    %>
+    <div class="form-group">
+      <label for="typesOfQualityAssurance"><%= t('learners:form.typesOfQualityAssurance') %> *</label>
+      <textarea id="typesOfQualityAssurance" name="learner[typesOfQualityAssurance]" rows="2" placeholder="<%= t('learners:form.typesOfQualityAssurancePlaceholder') %>" required><%= qaTypes.join(', ') %></textarea>
+    </div>
+
+    <%
+      // Parse prerequisitesToEnroll from JSON string
+      let prereqs = [];
+      try {
+        if (learner.prerequisitesToEnroll) {
+          prereqs = JSON.parse(learner.prerequisitesToEnroll);
+        }
+      } catch (e) {}
+    %>
+    <div class="form-group">
+      <label for="prerequisitesToEnroll"><%= t('learners:form.prerequisitesToEnroll') %></label>
+      <textarea id="prerequisitesToEnroll" name="learner[prerequisitesToEnroll]" rows="2" placeholder="<%= t('learners:form.prerequisitesToEnrollPlaceholder') %>"><%= prereqs.join(', ') %></textarea>
+    </div>
+
+    <div class="form-group">
+      <label class="checkbox-label">
+        <input type="checkbox" name="learner[integrationStackabilityOptions]" value="true" <%= learner.integrationStackabilityOptions ? 'checked' : '' %>>
+        <%= t('learners:form.integrationStackabilityOptions') %>
+      </label>
+      <small class="form-hint"><%= t('learners:form.integrationStackabilityOptionsHint') %></small>
     </div>
 
     <div class="form-actions">
