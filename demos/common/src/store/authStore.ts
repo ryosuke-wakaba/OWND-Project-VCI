@@ -215,6 +215,13 @@ const runMigrations = async () => {
     "enableCertMatching",
     "BOOLEAN DEFAULT FALSE",
   );
+
+  // Migration: Add matchedCertName column to issuance_events table
+  await store.addColumnIfNotExists(
+    TBL_NM_ISSUANCE_EVENTS,
+    "matchedCertName",
+    "TEXT DEFAULT NULL",
+  );
 };
 
 export const createDb = async () => {
@@ -1034,6 +1041,7 @@ export interface IssuanceEvent {
   walletAttestationPopPayload?: string;
   walletAttestationPopValid?: boolean;
   walletAttestationPopError?: string;
+  matchedCertName?: string;
   createdAt: string;
 }
 
@@ -1055,6 +1063,7 @@ export interface AddIssuanceEventParams {
   walletAttestationPopPayload?: string;
   walletAttestationPopValid?: boolean;
   walletAttestationPopError?: string;
+  matchedCertName?: string;
 }
 
 /**
@@ -1072,8 +1081,9 @@ export const addIssuanceEvent = async (
         authCodeId, eventType,
         dpopJwt, dpopHeader, dpopPayload, dpopValid, dpopError,
         walletAttestationJwt, walletAttestationHeader, walletAttestationPayload, walletAttestationValid, walletAttestationError,
-        walletAttestationPopJwt, walletAttestationPopHeader, walletAttestationPopPayload, walletAttestationPopValid, walletAttestationPopError
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        walletAttestationPopJwt, walletAttestationPopHeader, walletAttestationPopPayload, walletAttestationPopValid, walletAttestationPopError,
+        matchedCertName
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       params.authCodeId,
       params.eventType,
       params.dpopJwt || null,
@@ -1091,6 +1101,7 @@ export const addIssuanceEvent = async (
       params.walletAttestationPopPayload || null,
       params.walletAttestationPopValid ?? null,
       params.walletAttestationPopError || null,
+      params.matchedCertName || null,
     );
     return result.lastID;
   } catch (err) {

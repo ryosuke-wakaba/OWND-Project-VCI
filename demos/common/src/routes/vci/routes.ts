@@ -7,7 +7,7 @@ import { CredentialIssuerConfig } from "ownd-vci/dist/oid4vci/credentialEndpoint
 import { NonceIssuerConfig } from "ownd-vci/dist/oid4vci/nonceEndpoint/types.js";
 import { StoredAccessToken } from "../../store/authStore.js";
 import { IMetadataRepository } from "ownd-vci/dist/metadata/IMetadataRepository.js";
-import routesHandler from "./routesHandler.js";
+import routesHandler, { TokenHandlerOptions } from "./routesHandler.js";
 
 export const setupCommonRoute = (
   router: Router<any, {}>,
@@ -18,6 +18,7 @@ export const setupCommonRoute = (
   dirname: string,
   availableLocales: string[] = ["en-US", "ja-JP"],
   defaultLocale: string = "ja-JP",
+  tokenHandlerOptions?: TokenHandlerOptions,
 ) => {
   router.get(
     "/.well-known/openid-credential-issuer",
@@ -37,7 +38,7 @@ export const setupCommonRoute = (
     },
   );
   router.post("/token", koaBody(), async (ctx: Koa.Context) => {
-    await routesHandler.handleToken(ctx, tokenConfigGenerator);
+    await routesHandler.handleToken(ctx, tokenConfigGenerator, tokenHandlerOptions);
   });
   router.post("/credentials", koaBody(), async (ctx: Koa.Context) => {
     await routesHandler.handleCredential(ctx, credentialConfigGenerator);
@@ -46,6 +47,8 @@ export const setupCommonRoute = (
     await routesHandler.handleNonce(ctx, nonceConfigGenerator);
   });
 };
+
+export { TokenHandlerOptions };
 
 export default {
   setupCommonRoute,

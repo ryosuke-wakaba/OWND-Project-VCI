@@ -8,6 +8,30 @@ import authStore from "ownd-vci-common/dist/store/authStore.js";
 import type { X5cChainValidator } from "ownd-vci/dist/oid4vci/clientAuthentication/types.js";
 
 /**
+ * Module-level variable to store the last matched certificate name.
+ * This is used to communicate the matched cert name to the calling code
+ * since the X5cChainValidator interface only returns { valid: boolean; error?: string }.
+ */
+let lastMatchedCertName: string | undefined = undefined;
+
+/**
+ * Get the name of the last matched certificate.
+ * Call this after x5cValidator returns to get the matched certificate name.
+ * @returns The name of the matched certificate, or undefined if no match or cert matching disabled
+ */
+export const getLastMatchedCertName = (): string | undefined => {
+  return lastMatchedCertName;
+};
+
+/**
+ * Clear the last matched certificate name.
+ * Call this before a new validation to reset the state.
+ */
+export const clearLastMatchedCertName = (): void => {
+  lastMatchedCertName = undefined;
+};
+
+/**
  * Convert a base64-encoded certificate to PEM format
  */
 const base64ToPem = (base64Cert: string): string => {
@@ -67,6 +91,8 @@ const checkCertificatePublicKeyMatch = async (
           console.log(
             `[x5cValidator] Public key matches trusted certificate: ${trustedCert.name}`,
           );
+          // Store the matched certificate name for later retrieval
+          lastMatchedCertName = trustedCert.name;
           return { valid: true };
         }
       } catch (err) {
@@ -184,6 +210,9 @@ const validateCertificateChain = async (
 export const x5cValidator: X5cChainValidator = async (
   x5cChain: string[],
 ): Promise<{ valid: boolean; error?: string }> => {
+  // Clear previous matched certificate name
+  lastMatchedCertName = undefined;
+
   // Phase 1: Certificate chain validation
   const chainValidationResult = await validateCertificateChain(x5cChain);
   if (!chainValidationResult.valid) {
@@ -199,4 +228,8 @@ export const x5cValidator: X5cChainValidator = async (
   return { valid: true };
 };
 
-export default { x5cValidator };
+export default {
+  x5cValidator,
+  getLastMatchedCertName,
+  clearLastMatchedCertName,
+};

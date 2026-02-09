@@ -151,6 +151,12 @@
             <pre><%= JSON.stringify(JSON.parse(event.walletAttestationPayload), null, 2) %></pre>
           </div>
           <% } %>
+          <% if (event.matchedCertName) { %>
+          <div class="matched-cert-info">
+            <label><%= t('learners:issuanceStatus.jwt.matchedCert') %>:</label>
+            <span class="matched-cert-name"><%= event.matchedCertName %></span>
+          </div>
+          <% } %>
           <% } else { %>
           <p class="no-jwt-note"><%= t('learners:issuanceStatus.jwt.walletAttestationNotSent') %></p>
           <% } %>
@@ -537,6 +543,28 @@ function toggleJwtSection(id) {
   overflow-x: auto;
   font-size: 0.75rem;
   margin: 0;
+}
+
+.matched-cert-info {
+  background: #f0fdf4;
+  border: 1px solid #86efac;
+  border-radius: 4px;
+  padding: 0.75rem;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.matched-cert-info label {
+  font-weight: 600;
+  color: #166534;
+  margin-bottom: 0;
+}
+
+.matched-cert-name {
+  color: #166534;
+  font-weight: 500;
 }
 
 .no-jwt-note,

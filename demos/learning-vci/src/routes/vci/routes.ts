@@ -8,6 +8,7 @@ import { tokenConfigure } from "../../logic/vciConfigProvider.js";
 import { configure } from "../../logic/credentialsConfigProvider.js";
 import { nonceConfigure } from "../../logic/nonceConfigProvider.js";
 import { MetadataRepository } from "../../metadata/MetadataRepository.js";
+import { getLastMatchedCertName } from "../../logic/x5cValidator.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename).split("/src")[0];
@@ -27,6 +28,9 @@ const init = () => {
     nonceConfigure,
     metadataRepository,
     __dirname,
+    ["en-US", "ja-JP"],
+    "ja-JP",
+    { getMatchedCertName: getLastMatchedCertName },
   );
 
   return router;
