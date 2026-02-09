@@ -169,13 +169,17 @@
                          │   updatedAt                 │
                          └─────────────────────────────┘
 
-┌─────────────────────────────┐
-│ wallet_attestation_settings │
-├─────────────────────────────┤
-│ * id (PK)                   │
-│   enableChainValidation     │
-│   updatedAt                 │
-└─────────────────────────────┘
+┌───────────────────────────────┐  ┌─────────────────────────────┐
+│ trusted_wallet_provider_certs │  │ wallet_attestation_settings │
+├───────────────────────────────┤  ├─────────────────────────────┤
+│ * id (PK)                     │  │ * id (PK)                   │
+│   name                        │  │   enableChainValidation     │
+│   certPem                     │  │   enableCertMatching        │
+│   publicKeyJwk                │  │   updatedAt                 │
+│   enabled                     │  └─────────────────────────────┘
+│   createdAt                   │
+│   updatedAt                   │
+└───────────────────────────────┘
 ```
 
 #### テーブル定義
@@ -241,6 +245,19 @@ Wallet Attestation検証用の信頼されたCA証明書を格納。
 | createdAt | DATETIME | 作成日時 |
 | updatedAt | DATETIME | 更新日時 |
 
+##### trusted_wallet_provider_certs
+Wallet Attestation検証用の信頼されたWallet Provider証明書を格納。公開鍵マッチングに使用。
+
+| カラム | 型 | 説明 |
+|--------|------|------|
+| id | INTEGER | 主キー（自動採番） |
+| name | VARCHAR(255) | 証明書名 |
+| certPem | TEXT | 証明書（PEM形式） |
+| publicKeyJwk | TEXT | 公開鍵参照用データ |
+| enabled | BOOLEAN | 有効か（デフォルト: TRUE） |
+| createdAt | DATETIME | 作成日時 |
+| updatedAt | DATETIME | 更新日時 |
+
 ##### wallet_attestation_settings
 Wallet Attestation検証のグローバル設定を格納。
 
@@ -248,6 +265,7 @@ Wallet Attestation検証のグローバル設定を格納。
 |--------|------|------|
 | id | INTEGER | 主キー（自動採番） |
 | enableChainValidation | BOOLEAN | 証明書チェーン検証を有効化（デフォルト: FALSE） |
+| enableCertMatching | BOOLEAN | 証明書公開鍵マッチングを有効化（デフォルト: FALSE） |
 | updatedAt | DATETIME | 更新日時 |
 
 ##### issuance_events
@@ -310,6 +328,17 @@ Wallet Attestation検証のグローバル設定を格納。
 | `getTrustedWalletProviderCA` | IDでCA証明書を取得 |
 | `updateTrustedWalletProviderCAEnabled` | CA証明書の有効/無効を更新 |
 | `deleteTrustedWalletProviderCA` | CA証明書を削除 |
+
+##### Wallet Provider証明書管理
+
+| 関数 | 説明 |
+|------|------|
+| `addTrustedWalletProviderCert` | 信頼された証明書を登録（公開鍵マッチング用） |
+| `getAllTrustedWalletProviderCerts` | 全証明書を取得 |
+| `getEnabledTrustedWalletProviderCerts` | 有効な証明書を取得 |
+| `getTrustedWalletProviderCert` | IDで証明書を取得 |
+| `updateTrustedWalletProviderCertEnabled` | 証明書の有効/無効を更新 |
+| `deleteTrustedWalletProviderCert` | 証明書を削除 |
 
 ##### Wallet Attestation設定
 

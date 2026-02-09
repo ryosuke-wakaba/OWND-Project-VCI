@@ -57,6 +57,8 @@ export const TBL_NM_C_NONCES = "c_nonces";
 export const TBL_NM_AUTH_CODE_METADATA = "auth_code_metadata";
 export const TBL_NM_SIGNED_METADATA = "signed_metadata";
 export const TBL_NM_TRUSTED_WALLET_PROVIDER_CAS = "trusted_wallet_provider_cas";
+export const TBL_NM_TRUSTED_WALLET_PROVIDER_CERTS =
+  "trusted_wallet_provider_certs";
 export const TBL_NM_WALLET_ATTESTATION_SETTINGS = "wallet_attestation_settings";
 export const TBL_NM_ISSUANCE_EVENTS = "issuance_events";
 
@@ -125,6 +127,18 @@ const DDL_TRUSTED_WALLET_PROVIDER_CAS = `
   )
 `.trim();
 
+const DDL_TRUSTED_WALLET_PROVIDER_CERTS = `
+  CREATE TABLE ${TBL_NM_TRUSTED_WALLET_PROVIDER_CERTS} (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name VARCHAR(255) NOT NULL,
+    certPem TEXT NOT NULL,
+    publicKeyJwk TEXT NOT NULL,
+    enabled BOOLEAN DEFAULT TRUE,
+    createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+    updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
+  )
+`.trim();
+
 const DDL_WALLET_ATTESTATION_SETTINGS = `
   CREATE TABLE ${TBL_NM_WALLET_ATTESTATION_SETTINGS} (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -165,6 +179,7 @@ const DDL_MAP = {
   [TBL_NM_AUTH_CODE_METADATA]: DDL_AUTH_CODE_METADATA,
   [TBL_NM_SIGNED_METADATA]: DDL_SIGNED_METADATA,
   [TBL_NM_TRUSTED_WALLET_PROVIDER_CAS]: DDL_TRUSTED_WALLET_PROVIDER_CAS,
+  [TBL_NM_TRUSTED_WALLET_PROVIDER_CERTS]: DDL_TRUSTED_WALLET_PROVIDER_CERTS,
   [TBL_NM_WALLET_ATTESTATION_SETTINGS]: DDL_WALLET_ATTESTATION_SETTINGS,
   [TBL_NM_ISSUANCE_EVENTS]: DDL_ISSUANCE_EVENTS,
 };
@@ -191,6 +206,13 @@ const runMigrations = async () => {
   await store.addColumnIfNotExists(
     TBL_NM_AUTH_CODES,
     "requireDpop",
+    "BOOLEAN DEFAULT FALSE",
+  );
+
+  // Migration: Add enableCertMatching column to wallet_attestation_settings table
+  await store.addColumnIfNotExists(
+    TBL_NM_WALLET_ATTESTATION_SETTINGS,
+    "enableCertMatching",
     "BOOLEAN DEFAULT FALSE",
   );
 };
@@ -751,12 +773,150 @@ export const deleteTrustedWalletProviderCA = async (
 };
 
 // ========================================
+// Trusted Wallet Provider Certificate Management
+// ========================================
+
+export interface TrustedWalletProviderCert {
+  id: number;
+  name: string;
+  certPem: string;
+  publicKeyJwk: string;
+  enabled: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+/**
+ * Add a trusted wallet provider certificate
+ * @param name - Display name for the certificate
+ * @param certPem - Certificate in PEM format
+ * @param publicKeyJwk - Public key in JWK format (JSON string)
+ * @returns The ID of the inserted record
+ */
+export const addTrustedWalletProviderCert = async (
+  name: string,
+  certPem: string,
+  publicKeyJwk: string,
+): Promise<number | undefined> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.run(
+      `INSERT INTO ${TBL_NM_TRUSTED_WALLET_PROVIDER_CERTS} (name, certPem, publicKeyJwk) VALUES (?, ?, ?)`,
+      name,
+      certPem,
+      publicKeyJwk,
+    );
+    return result.lastID;
+  } catch (err) {
+    handleError(err);
+  }
+};
+
+/**
+ * Get all trusted wallet provider certificates
+ * @returns All certificates
+ */
+export const getAllTrustedWalletProviderCerts = async (): Promise<
+  TrustedWalletProviderCert[]
+> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.all<TrustedWalletProviderCert[]>(
+      `SELECT * FROM ${TBL_NM_TRUSTED_WALLET_PROVIDER_CERTS} ORDER BY createdAt DESC`,
+    );
+    return result || [];
+  } catch (err) {
+    handleError(err);
+    return [];
+  }
+};
+
+/**
+ * Get all enabled trusted wallet provider certificates
+ * @returns Enabled certificates
+ */
+export const getEnabledTrustedWalletProviderCerts = async (): Promise<
+  TrustedWalletProviderCert[]
+> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.all<TrustedWalletProviderCert[]>(
+      `SELECT * FROM ${TBL_NM_TRUSTED_WALLET_PROVIDER_CERTS} WHERE enabled = TRUE ORDER BY createdAt DESC`,
+    );
+    return result || [];
+  } catch (err) {
+    handleError(err);
+    return [];
+  }
+};
+
+/**
+ * Get a trusted wallet provider certificate by ID
+ * @param id - The certificate ID
+ * @returns The certificate or undefined
+ */
+export const getTrustedWalletProviderCert = async (
+  id: number,
+): Promise<TrustedWalletProviderCert | undefined> => {
+  try {
+    const db = await store.openDb();
+    const result = await db.get<TrustedWalletProviderCert>(
+      `SELECT * FROM ${TBL_NM_TRUSTED_WALLET_PROVIDER_CERTS} WHERE id = ?`,
+      id,
+    );
+    return result;
+  } catch (err) {
+    handleError(err);
+  }
+};
+
+/**
+ * Update the enabled status of a trusted wallet provider certificate
+ * @param id - The certificate ID
+ * @param enabled - The new enabled status
+ */
+export const updateTrustedWalletProviderCertEnabled = async (
+  id: number,
+  enabled: boolean,
+): Promise<void> => {
+  try {
+    const db = await store.openDb();
+    await db.run(
+      `UPDATE ${TBL_NM_TRUSTED_WALLET_PROVIDER_CERTS} SET enabled = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+      enabled,
+      id,
+    );
+  } catch (err) {
+    handleError(err);
+  }
+};
+
+/**
+ * Delete a trusted wallet provider certificate
+ * @param id - The certificate ID to delete
+ */
+export const deleteTrustedWalletProviderCert = async (
+  id: number,
+): Promise<void> => {
+  try {
+    const db = await store.openDb();
+    await db.run(
+      `DELETE FROM ${TBL_NM_TRUSTED_WALLET_PROVIDER_CERTS} WHERE id = ?`,
+      id,
+    );
+  } catch (err) {
+    handleError(err);
+  }
+};
+
+// ========================================
 // Wallet Attestation Settings Management
 // ========================================
 
 export interface WalletAttestationSettings {
   id: number;
   enableChainValidation: boolean;
+  enableCertMatching: boolean;
   updatedAt: string;
 }
 
@@ -775,12 +935,14 @@ export const getWalletAttestationSettings =
         return {
           ...result,
           enableChainValidation: Boolean(result.enableChainValidation),
+          enableCertMatching: Boolean(result.enableCertMatching),
         };
       }
       // Return default settings if none exist
       return {
         id: 0,
         enableChainValidation: false,
+        enableCertMatching: false,
         updatedAt: new Date().toISOString(),
       };
     } catch (err) {
@@ -788,34 +950,54 @@ export const getWalletAttestationSettings =
       return {
         id: 0,
         enableChainValidation: false,
+        enableCertMatching: false,
         updatedAt: new Date().toISOString(),
       };
     }
   };
 
+export interface UpdateWalletAttestationSettingsParams {
+  enableChainValidation?: boolean;
+  enableCertMatching?: boolean;
+}
+
 /**
  * Update wallet attestation settings
- * @param enableChainValidation - Whether to enable certificate chain validation
+ * @param params - Settings to update (only provided values are updated)
  */
 export const updateWalletAttestationSettings = async (
-  enableChainValidation: boolean,
+  params: UpdateWalletAttestationSettingsParams | boolean,
 ): Promise<void> => {
   try {
+    // Handle legacy boolean parameter for backward compatibility
+    const settings: UpdateWalletAttestationSettingsParams =
+      typeof params === "boolean"
+        ? { enableChainValidation: params }
+        : params;
+
     const db = await store.openDb();
     // Check if settings exist
-    const existing = await db.get<{ id: number }>(
-      `SELECT id FROM ${TBL_NM_WALLET_ATTESTATION_SETTINGS} LIMIT 1`,
+    const existing = await db.get<WalletAttestationSettings>(
+      `SELECT * FROM ${TBL_NM_WALLET_ATTESTATION_SETTINGS} LIMIT 1`,
     );
+
     if (existing) {
+      const newEnableChainValidation =
+        settings.enableChainValidation ?? existing.enableChainValidation;
+      const newEnableCertMatching =
+        settings.enableCertMatching ?? existing.enableCertMatching;
+
       await db.run(
-        `UPDATE ${TBL_NM_WALLET_ATTESTATION_SETTINGS} SET enableChainValidation = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
-        enableChainValidation,
+        `UPDATE ${TBL_NM_WALLET_ATTESTATION_SETTINGS} SET enableChainValidation = ?, enableCertMatching = ?, updatedAt = CURRENT_TIMESTAMP WHERE id = ?`,
+        newEnableChainValidation,
+        newEnableCertMatching,
         existing.id,
       );
     } else {
       await db.run(
-        `INSERT INTO ${TBL_NM_WALLET_ATTESTATION_SETTINGS} (enableChainValidation) VALUES (?)`,
-        enableChainValidation,
+        `INSERT INTO ${TBL_NM_WALLET_ATTESTATION_SETTINGS} (enableChainValidation, enableCertMatching) VALUES (?, ?)`,
+        settings.enableChainValidation ?? false,
+        settings.enableCertMatching ?? false,
       );
     }
   } catch (err) {
@@ -987,6 +1169,12 @@ export default {
   getTrustedWalletProviderCA,
   updateTrustedWalletProviderCAEnabled,
   deleteTrustedWalletProviderCA,
+  addTrustedWalletProviderCert,
+  getAllTrustedWalletProviderCerts,
+  getEnabledTrustedWalletProviderCerts,
+  getTrustedWalletProviderCert,
+  updateTrustedWalletProviderCertEnabled,
+  deleteTrustedWalletProviderCert,
   getWalletAttestationSettings,
   updateWalletAttestationSettings,
   addIssuanceEvent,

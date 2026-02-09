@@ -933,6 +933,7 @@ export async function handleMetadataRevoke(ctx: Koa.Context) {
 export async function handleWalletProviderCAIndex(ctx: Koa.Context) {
   try {
     const cas = await authStore.getAllTrustedWalletProviderCAs();
+    const certs = await authStore.getAllTrustedWalletProviderCerts();
     const settings = await authStore.getWalletAttestationSettings();
 
     // Parse certificate info for each CA
@@ -949,9 +950,24 @@ export async function handleWalletProviderCAIndex(ctx: Koa.Context) {
       return { ...ca, certInfo };
     });
 
+    // Parse certificate info for each trusted certificate
+    const certsWithInfo = certs.map((cert) => {
+      let certInfo = null;
+      try {
+        const certInfos = getCertificatesInfo([cert.certPem]);
+        if (certInfos.length > 0) {
+          certInfo = certInfos[0];
+        }
+      } catch (e) {
+        console.error("Failed to parse certificate:", e);
+      }
+      return { ...cert, certInfo };
+    });
+
     await ctx.render("admin/wallet-provider-ca", {
       title: "Wallet Provider CA 管理",
       cas: casWithInfo,
+      certs: certsWithInfo,
       settings,
     });
   } catch (err) {
@@ -1044,12 +1060,125 @@ export async function handleWalletAttestationSettingsUpdate(ctx: Koa.Context) {
   try {
     const enableChainValidation =
       ctx.request.body?.enableChainValidation === "true";
-    await authStore.updateWalletAttestationSettings(enableChainValidation);
+    await authStore.updateWalletAttestationSettings({ enableChainValidation });
     ctx.redirect("/admin/wallet-provider-ca");
   } catch (err) {
     console.error(err);
     ctx.status = 500;
     ctx.body = { error: "Failed to update settings" };
+  }
+}
+
+// Wallet Provider Certificate Management Handlers
+export async function handleWalletProviderCertImport(ctx: Koa.Context) {
+  try {
+    const { name, certPem } = ctx.request.body;
+
+    if (!name || !name.trim()) {
+      ctx.status = 400;
+      ctx.body = { error: "Certificate name is required" };
+      return;
+    }
+
+    if (!certPem || !certPem.trim()) {
+      ctx.status = 400;
+      ctx.body = { error: "Certificate is required" };
+      return;
+    }
+
+    // Validate the certificate format
+    const trimmedCert = certPem.trim();
+    if (
+      !trimmedCert.includes("-----BEGIN CERTIFICATE-----") ||
+      !trimmedCert.includes("-----END CERTIFICATE-----")
+    ) {
+      ctx.status = 400;
+      ctx.body = { error: "Invalid certificate format. Must be PEM format." };
+      return;
+    }
+
+    // Try to parse the certificate to validate it and extract public key
+    let certInfo;
+    try {
+      const certInfos = getCertificatesInfo([trimmedCert]);
+      if (certInfos.length === 0) {
+        throw new Error("No certificate found");
+      }
+      certInfo = certInfos[0];
+    } catch (e) {
+      ctx.status = 400;
+      ctx.body = { error: "Invalid certificate. Could not parse." };
+      return;
+    }
+
+    // Extract the base64 content and store it as publicKeyJwk placeholder
+    // We store the PEM directly as it's used for comparison
+    // The actual public key comparison will use the PEM
+    const certBase64 = trimmedCert
+      .replace(/-----BEGIN CERTIFICATE-----/, "")
+      .replace(/-----END CERTIFICATE-----/, "")
+      .replace(/\s/g, "");
+
+    // Store the public key extracted from certificate as a fingerprint for comparison
+    // We use the certificate's base64 content as a reference
+    // The actual comparison will re-extract and compare public keys
+    await authStore.addTrustedWalletProviderCert(
+      name.trim(),
+      trimmedCert,
+      certBase64, // Store base64 cert for later public key extraction
+    );
+
+    ctx.redirect("/admin/wallet-provider-ca");
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to import certificate" };
+  }
+}
+
+export async function handleWalletProviderCertToggle(ctx: Koa.Context) {
+  try {
+    const { id } = ctx.params;
+    const cert = await authStore.getTrustedWalletProviderCert(Number(id));
+    if (!cert) {
+      ctx.status = 404;
+      ctx.body = { error: "Certificate not found" };
+      return;
+    }
+
+    await authStore.updateTrustedWalletProviderCertEnabled(
+      Number(id),
+      !cert.enabled,
+    );
+    ctx.redirect("/admin/wallet-provider-ca");
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to toggle certificate status" };
+  }
+}
+
+export async function handleWalletProviderCertDelete(ctx: Koa.Context) {
+  try {
+    const { id } = ctx.params;
+    await authStore.deleteTrustedWalletProviderCert(Number(id));
+    ctx.redirect("/admin/wallet-provider-ca");
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to delete certificate" };
+  }
+}
+
+export async function handleCertMatchingSettingsUpdate(ctx: Koa.Context) {
+  try {
+    const enableCertMatching = ctx.request.body?.enableCertMatching === "true";
+    await authStore.updateWalletAttestationSettings({ enableCertMatching });
+    ctx.redirect("/admin/wallet-provider-ca");
+  } catch (err) {
+    console.error(err);
+    ctx.status = 500;
+    ctx.body = { error: "Failed to update certificate matching settings" };
   }
 }
 
@@ -1183,6 +1312,11 @@ export default {
   handleWalletProviderCAToggle,
   handleWalletProviderCADelete,
   handleWalletAttestationSettingsUpdate,
+  // Wallet Provider Certificate management
+  handleWalletProviderCertImport,
+  handleWalletProviderCertToggle,
+  handleWalletProviderCertDelete,
+  handleCertMatchingSettingsUpdate,
   // Issuance status
   handleIssuanceStatus,
 };

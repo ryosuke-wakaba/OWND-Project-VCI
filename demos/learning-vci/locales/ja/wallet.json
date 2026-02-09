@@ -9,6 +9,12 @@
     "helpText": "有効にすると、Wallet Attestation の x5c 証明書チェーンを登録済み CA 証明書で検証します。無効の場合、x5c の署名検証のみ行い、トラストアンカーの検証はスキップされます。",
     "save": "設定を保存"
   },
+  "certMatchingSettings": {
+    "title": "証明書マッチング設定",
+    "enableCertMatching": "証明書の公開鍵一致チェックを有効にする",
+    "helpText": "有効にすると、Wallet Attestation の x5c 証明書の公開鍵が、登録済み信頼証明書のいずれかと一致するかを検証します。",
+    "save": "設定を保存"
+  },
   "caList": {
     "title": "登録済み CA 証明書",
     "empty": "登録済みの CA 証明書はありません。",
@@ -31,12 +37,42 @@
     },
     "confirmDelete": "この CA 証明書を削除しますか？"
   },
+  "certList": {
+    "title": "登録済み信頼証明書",
+    "empty": "登録済みの信頼証明書はありません。",
+    "table": {
+      "name": "名前",
+      "subject": "Subject",
+      "expiresAt": "有効期限",
+      "status": "状態",
+      "registeredAt": "登録日",
+      "operation": "操作"
+    },
+    "status": {
+      "active": "有効",
+      "inactive": "無効"
+    },
+    "actions": {
+      "disable": "無効化",
+      "enable": "有効化",
+      "delete": "削除"
+    },
+    "confirmDelete": "この証明書を削除しますか？"
+  },
   "import": {
     "title": "CA 証明書をインポート",
     "caName": "CA 名",
     "caNamePlaceholder": "例: Example Wallet Provider CA",
     "rootCert": "ルート証明書（PEM 形式）",
     "rootCertHelp": "Wallet Provider の証明書を発行した CA のルート証明書を PEM 形式で入力してください。",
+    "submit": "インポート"
+  },
+  "certImport": {
+    "title": "信頼証明書をインポート",
+    "certName": "証明書名",
+    "certNamePlaceholder": "例: Wallet Provider 証明書",
+    "cert": "証明書（PEM 形式）",
+    "certHelp": "CA が発行した証明書を PEM 形式で入力してください。この証明書の公開鍵がマッチングに使用されます。",
     "submit": "インポート"
   }
 }
