@@ -189,24 +189,31 @@ const selectivelyDisclosableClaims = [
 
 **ファイル**: `demos/learning-vci/src/logic/learningCredential.ts`
 
+すべてのオプションフィールドを常にnullで含めるように変更。
+
 ```typescript
 // Before: 値がない場合は省略
+...(givenName && { given_name: givenName }),
 ...(dateOfExpiry && { date_of_expiry: dateOfExpiry }),
-...(achievementDescription && {
-  achievement_description: achievementDescription,
-}),
+// ...
 
-// After: 常に含める（nullで無期限/未設定を表現）
+// After: 常に含める（nullで未設定を表現）
+given_name: givenName || null,
 date_of_expiry: dateOfExpiry || null,
-achievement_description: achievementDescription || null,
+// ...
 ```
 
-### 動作の変更
+### 対象フィールド
 
-| 値の状態 | 変更前 | 変更後 |
-|---------|--------|--------|
-| 値あり | JWTペイロードに含まれる | JWTペイロードに含まれる（変更なし） |
-| 値なし | クレーム省略 | `null`としてJWTペイロードに含まれる |
+| フィールド名 | SD | 変更前 | 変更後 |
+|-------------|------|--------|--------|
+| `given_name` | Always | 省略 | null |
+| `learning_outcomes` | Always | 省略 | null |
+| `assessment_grade` | Always | 省略 | null |
+| `prerequisites_to_enroll` | Always | 省略 | null |
+| `integration_stackability_options` | Always | 省略 | null |
+| `date_of_expiry` | Never | 省略 | null |
+| `achievement_description` | Never | 省略 | null |
 
 ### SD-JWT出力例
 
@@ -252,6 +259,7 @@ achievement_description: achievementDescription || null,
 - [x] プレゼンテーション時の問題点調査（OpenID4VP/DCQL）
 - [x] 結論まとめ
 - [x] ドキュメント作成
-- [x] null対応の実装
+- [x] SD:Never オプションフィールドのnull対応
+- [x] SD:Always オプションフィールドのnull対応
 - [x] achievement_descriptionフォームを任意入力に変更
 - [x] ビルド確認
