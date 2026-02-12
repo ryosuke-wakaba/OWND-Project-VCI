@@ -145,16 +145,15 @@ const issueLearningCredential = async (
     expected_study_time: expectedStudyTime || "",
     level_of_learning_experience: levelOfLearningExperience || 1,
     types_of_quality_assurance: parsedTypesOfQualityAssurance,
-    // Optional fields
+    // Optional fields (SD: Always) - 値がない場合は省略
     ...(givenName && { given_name: givenName }),
-    ...(achievementDescription && {
-      achievement_description: achievementDescription,
-    }),
     ...(parsedLearningOutcomes && {
       learning_outcomes: parsedLearningOutcomes,
     }),
     ...(assessmentGrade && { assessment_grade: assessmentGrade }),
-    ...(dateOfExpiry && { date_of_expiry: dateOfExpiry }),
+    // Optional fields (SD: Never) - Verifier要求に対応するため常に含める（nullで無期限/未設定を表現）
+    date_of_expiry: dateOfExpiry || null,
+    achievement_description: achievementDescription || null,
     // v1.02 新規任意フィールド
     ...(parsedPrerequisitesToEnroll && {
       prerequisites_to_enroll: parsedPrerequisitesToEnroll,
