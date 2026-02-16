@@ -67,12 +67,12 @@ const issueLearningCredential = async (
     d: privateJwk.d,
   };
 
-  const iss = process.env.CREDENTIAL_ISSUER_IDENTIFIER;
   const iat = Math.floor(Date.now() / 1000);
   const exp = iat + 60 * 60 * 24 * 365; // 1 year
   const vct = "urn:eu.europa.ec.eudi:learning:credential:1";
 
   const {
+    credentialIssuer,
     learnerNo,
     givenName,
     familyName,
@@ -91,6 +91,9 @@ const issueLearningCredential = async (
     prerequisitesToEnroll,
     integrationStackabilityOptions,
   } = learner;
+
+  // issクレームは学習者登録時に入力されたcredentialIssuerを使用
+  const iss = credentialIssuer;
 
   // Parse learning outcomes from JSON string if exists
   let parsedLearningOutcomes: string[] | undefined;

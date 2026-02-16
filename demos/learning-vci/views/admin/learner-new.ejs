@@ -7,6 +7,12 @@
 <div class="form-container">
   <form action="/admin/learners/new" method="POST">
     <div class="form-group">
+      <label for="credentialIssuer"><%= t('learners:form.credentialIssuer') %> *</label>
+      <input type="text" id="credentialIssuer" name="learner[credentialIssuer]" placeholder="<%= t('learners:form.credentialIssuerPlaceholder') %>" required>
+      <small class="form-hint"><%= t('learners:form.credentialIssuerHint') %></small>
+    </div>
+
+    <div class="form-group">
       <label for="learnerNo"><%= t('learners:form.learnerNo') %> *</label>
       <input type="text" id="learnerNo" name="learner[learnerNo]" required>
     </div>

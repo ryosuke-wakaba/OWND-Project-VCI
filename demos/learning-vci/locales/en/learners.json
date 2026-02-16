@@ -21,6 +21,9 @@
     "issuanceDate": "Issuance Date"
   },
   "form": {
+    "credentialIssuer": "Credential Issuer (iss)",
+    "credentialIssuerPlaceholder": "e.g., https://issuer.example.com",
+    "credentialIssuerHint": "Issuer identifier (URL) to be set in the iss claim of SD-JWT",
     "learnerNo": "Learner ID",
     "familyName": "Family Name",
     "givenName": "Given Name",
