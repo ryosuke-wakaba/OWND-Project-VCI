@@ -21,6 +21,9 @@
     "issuanceDate": "発行日"
   },
   "form": {
+    "credentialIssuer": "クレデンシャル発行者 (iss)",
+    "credentialIssuerPlaceholder": "例: https://issuer.example.com",
+    "credentialIssuerHint": "SD-JWTのissクレームに設定される発行者識別子（URL）",
     "learnerNo": "学習者ID",
     "familyName": "姓",
     "givenName": "名",

@@ -69,6 +69,7 @@ const registerLearner = async (
     }
 
     const {
+      credentialIssuer,
       learnerNo,
       givenName,
       familyName,
@@ -91,6 +92,7 @@ const registerLearner = async (
 
     // Validate required fields (given_name is optional in v1.02)
     if (
+      typeof credentialIssuer !== "string" ||
       typeof learnerNo !== "string" ||
       typeof familyName !== "string" ||
       typeof issuingAuthority !== "string" ||
@@ -152,6 +154,7 @@ const registerLearner = async (
     }
 
     const newLearner: NewLearner = {
+      credentialIssuer,
       learnerNo,
       givenName,
       familyName,

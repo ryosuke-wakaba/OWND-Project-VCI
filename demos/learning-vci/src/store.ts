@@ -32,6 +32,7 @@ entity learners {
   * typesOfQualityAssurance string (JSON array)
   * prerequisitesToEnroll string (JSON array)
   * integrationStackabilityOptions boolean
+  * credentialIssuer string
   * createdAt datetime
   * updatedAt datetime
 }
@@ -77,6 +78,7 @@ const DDL_LEARNERS = `
     typesOfQualityAssurance TEXT DEFAULT '[]',
     prerequisitesToEnroll TEXT,
     integrationStackabilityOptions BOOLEAN,
+    credentialIssuer VARCHAR(255) NOT NULL,
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
     updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP
   )
@@ -122,6 +124,11 @@ const createDb = async () => {
     "integrationStackabilityOptions",
     "BOOLEAN",
   );
+  await store.addColumnIfNotExists(
+    TBL_NM_LEARNERS,
+    "credentialIssuer",
+    "VARCHAR(255) NOT NULL DEFAULT ''",
+  );
 };
 
 const destroyDb = async () => {
@@ -150,6 +157,8 @@ export interface Learner {
   typesOfQualityAssurance: string; // JSON array string
   prerequisitesToEnroll?: string; // JSON array string
   integrationStackabilityOptions?: boolean;
+  // issクレーム用
+  credentialIssuer: string;
 }
 export type NewLearner = Omit<Learner, "id">;
 
@@ -163,8 +172,8 @@ export const registerLearner = async (
      achievementTitle, achievementDescription, learningOutcomes, assessmentGrade,
      dateOfIssuance, dateOfExpiry, languageOfClasses, expectedStudyTime,
      levelOfLearningExperience, typesOfQualityAssurance, prerequisitesToEnroll,
-     integrationStackabilityOptions)
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+     integrationStackabilityOptions, credentialIssuer)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `;
   const params = [
     newLearner.learnerNo,
@@ -184,6 +193,7 @@ export const registerLearner = async (
     newLearner.typesOfQualityAssurance || "[]",
     newLearner.prerequisitesToEnroll || null,
     newLearner.integrationStackabilityOptions ?? null,
+    newLearner.credentialIssuer,
   ];
 
   try {
@@ -346,6 +356,7 @@ export const updateLearner = async (
           dateOfExpiry = ?, languageOfClasses = ?, expectedStudyTime = ?,
           levelOfLearningExperience = ?, typesOfQualityAssurance = ?,
           prerequisitesToEnroll = ?, integrationStackabilityOptions = ?,
+          credentialIssuer = ?,
           updatedAt = CURRENT_TIMESTAMP
       WHERE id = ?
     `;
@@ -368,6 +379,7 @@ export const updateLearner = async (
       learner.typesOfQualityAssurance || "[]",
       learner.prerequisitesToEnroll || null,
       learner.integrationStackabilityOptions ?? null,
+      learner.credentialIssuer,
       id,
     );
   } catch (err) {
