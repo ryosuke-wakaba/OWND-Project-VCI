@@ -550,8 +550,9 @@ describe("POST /credential", () => {
       assert.isUndefined(response.body.format);
       assert.isString(response.body.c_nonce);
       assert.isNumber(response.body.c_nonce_expires_in);
-      assert.isString(response.body.credential);
-      const tmp = response.body.credential.split("~");
+      assert.isArray(response.body.credentials);
+      assert.isString(response.body.credentials[0].credential);
+      const tmp = response.body.credentials[0].credential.split("~");
       const disclosures = decodeDisclosure(tmp.slice(1, tmp.length - 1));
       assert.equal(disclosures.length, 17);
       assert.equal(disclosures[0].key, "first_name");

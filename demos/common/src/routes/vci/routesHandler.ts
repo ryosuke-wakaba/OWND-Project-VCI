@@ -277,7 +277,7 @@ export async function handleCredential(
   }
 
   console.log("✅ Credential Issued Successfully");
-  console.log("Credential format:", result.payload.credential ? "credential field" : "credentials field");
+  console.log("Credential format:", result.payload.credentials ? "credentials field" : "deferred");
   console.log("=== Credential Request Completed ===\n");
 
   ctx.body = result.payload;

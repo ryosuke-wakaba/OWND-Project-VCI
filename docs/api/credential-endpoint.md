@@ -23,13 +23,16 @@ Access Tokenを検証し、Credentialを発行する。
 
 ```json
 {
-  "credential": "eyJ...~...",
-  "transaction_id": "...",
+  "credentials": [
+    {
+      "credential": "eyJ...~..."
+    }
+  ],
   "notification_id": "..."
 }
 ```
 
-※ credential / transaction_id は排他（どちらか一方が返る）
+※ credentials / transaction_id は排他（どちらか一方が返る）
 
 ## 認証
 `Authorization: Bearer <access_token>`
