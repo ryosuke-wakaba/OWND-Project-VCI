@@ -117,9 +117,21 @@ export interface NonceResponse {
   c_nonce_expires_in?: number;
 }
 
+/**
+ * Individual credential item in the credentials array
+ * https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-8.3
+ */
+export interface CredentialResponseItem {
+  // REQUIRED. Contains one issued Credential.
+  // The encoding of the Credential depends on the Credential Format.
+  credential: unknown;
+}
+
 export interface CredentialResponse {
-  // OPTIONAL. Contains issued Credential. It MUST be present when transaction_id is not returned.
-  credential?: unknown;
+  // OPTIONAL. Contains an array of one or more issued Credentials.
+  // It MUST NOT be used if the transaction_id parameter is present.
+  // https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#section-8.3
+  credentials?: CredentialResponseItem[];
 
   transaction_id?: string;
   notification_id?: string;

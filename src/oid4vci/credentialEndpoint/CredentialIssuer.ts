@@ -178,7 +178,7 @@ export class CredentialIssuer<T> {
     return {
       ok: true,
       payload: {
-        credential: issueResult.payload,
+        credentials: [{ credential: issueResult.payload }],
       },
     };
   }

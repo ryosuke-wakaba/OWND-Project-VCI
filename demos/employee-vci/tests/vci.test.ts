@@ -282,8 +282,9 @@ describe("POST /credential", () => {
         .set("Authorization", "BEARER validToken")
         .send(body);
       assert.equal(response.status, 200);
-      assert.isString(response.body.credential);
-      const tmp = response.body.credential.split("~");
+      assert.isArray(response.body.credentials);
+      assert.isString(response.body.credentials[0].credential);
+      const tmp = response.body.credentials[0].credential.split("~");
       const disclosures = decodeDisclosure(tmp.slice(1, tmp.length - 1));
       console.log("==================================");
       console.log(disclosures);

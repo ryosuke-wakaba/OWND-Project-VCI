@@ -174,10 +174,11 @@ describe("Learning VCI - Credential Issuance", () => {
         });
 
       assert.equal(response.status, 200);
-      assert.isString(response.body.credential);
+      assert.isArray(response.body.credentials);
+      assert.isString(response.body.credentials[0].credential);
 
       // SD-JWT の disclosure を解析
-      const parts = response.body.credential.split("~");
+      const parts = response.body.credentials[0].credential.split("~");
       const disclosures = decodeDisclosure(parts.slice(1, parts.length - 1));
 
       console.log("==================================");
@@ -264,7 +265,7 @@ describe("Learning VCI - Credential Issuance", () => {
       assert.equal(response.status, 200);
 
       // given_name が disclosure に含まれていないことを確認
-      const parts = response.body.credential.split("~");
+      const parts = response.body.credentials[0].credential.split("~");
       const disclosures = decodeDisclosure(parts.slice(1, parts.length - 1));
       const disclosureMap = new Map(disclosures.map((d) => [d.key, d.value]));
 
