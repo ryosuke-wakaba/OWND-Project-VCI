@@ -131,7 +131,7 @@ const credentialOfferForEmployee = async (
     process.env.CREDENTIAL_ISSUER || "",
     ["EmployeeIdentificationCredential"],
     code,
-    {},
+    { input_mode: "numeric", length: 6 },
   );
 
   console.log("✅ Credential Offer URL generated");
