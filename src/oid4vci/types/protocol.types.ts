@@ -328,4 +328,12 @@ export interface AuthorizationServerMetadata {
   introspection_endpoint_auth_methods_supported?: string[];
   introspection_endpoint_auth_signing_alg_values_supported?: string[];
   code_challenge_methods_supported?: string[];
+
+  // HAIP (High Assurance Interoperability Profile) requirements
+  pushed_authorization_request_endpoint?: string; // PAR endpoint (HAIP required)
+  dpop_signing_alg_values_supported?: string[]; // DPoP signing algorithms
+
+  // Attestation-based client authentication (OAuth 2.0 Attestation-Based Client Authentication)
+  client_attestation_signing_alg_values_supported?: string[];
+  client_attestation_pop_signing_alg_values_supported?: string[];
 }

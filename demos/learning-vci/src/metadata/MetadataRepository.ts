@@ -31,10 +31,16 @@ export class MetadataRepository implements IMetadataRepository {
       issuer: this.credentialIssuer,
       authorization_endpoint: `${this.credentialIssuer}/authorize`,
       token_endpoint: `${this.credentialIssuer}/token`,
+      pushed_authorization_request_endpoint: `${this.credentialIssuer}/par`,
       grant_types_supported: [
         "urn:ietf:params:oauth:grant-type:pre-authorized_code",
       ],
-      token_endpoint_auth_methods_supported: ["none"],
+      token_endpoint_auth_methods_supported: ["none", "attest_jwt_client_auth"],
+      // HAIP compliance: Attestation-based client authentication
+      client_attestation_signing_alg_values_supported: ["ES256"],
+      client_attestation_pop_signing_alg_values_supported: ["ES256"],
+      // HAIP compliance: DPoP signing algorithms
+      dpop_signing_alg_values_supported: ["ES256"],
     };
   }
 

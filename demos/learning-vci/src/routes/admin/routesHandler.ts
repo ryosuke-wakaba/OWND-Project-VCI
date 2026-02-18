@@ -257,7 +257,7 @@ const credentialOfferForLearner = async (
     process.env.CREDENTIAL_ISSUER || "",
     ["LearningCredential"],
     code,
-    {},
+    { input_mode: "numeric", length: 6 },
   );
 
   console.log("Credential Offer URL generated");
