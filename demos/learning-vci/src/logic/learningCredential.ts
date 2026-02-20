@@ -151,7 +151,9 @@ const issueLearningCredential = async (
     // Optional fields - 値がある場合のみ含める
     // SD: Always
     ...(givenName && { given_name: givenName }),
-    ...(parsedLearningOutcomes && { learning_outcomes: parsedLearningOutcomes }),
+    ...(parsedLearningOutcomes && {
+      learning_outcomes: parsedLearningOutcomes,
+    }),
     ...(assessmentGrade && { assessment_grade: assessmentGrade }),
     ...(parsedPrerequisitesToEnroll && {
       prerequisites_to_enroll: parsedPrerequisitesToEnroll,
@@ -194,6 +196,10 @@ const issueLearningCredential = async (
       (name) => name in claims,
     ) as string[],
   };
+
+  // Log claims for verification
+  console.log("SD-JWT Claims:", JSON.stringify(claims, null, 2));
+  console.log("Claims keys:", Object.keys(claims));
 
   // Issue credential with x5c (if available) or jwk mode (if no certificate)
   const credential = await issueCredentialCore(
