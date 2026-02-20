@@ -57,13 +57,13 @@
       } catch (e) {}
     %>
     <div class="form-group">
-      <label for="learningOutcomes"><%= t('learners:form.learningOutcomes') %> *</label>
-      <textarea id="learningOutcomes" name="learner[learningOutcomes]" rows="3" required><%= outcomes.join(', ') %></textarea>
+      <label for="learningOutcomes"><%= t('learners:form.learningOutcomes') %></label>
+      <textarea id="learningOutcomes" name="learner[learningOutcomes]" rows="3"><%= outcomes.join(', ') %></textarea>
     </div>
 
     <div class="form-group">
-      <label for="assessmentGrade"><%= t('learners:form.assessmentGrade') %> *</label>
-      <input type="text" id="assessmentGrade" name="learner[assessmentGrade]" value="<%= learner.assessmentGrade || '' %>" required>
+      <label for="assessmentGrade"><%= t('learners:form.assessmentGrade') %></label>
+      <input type="text" id="assessmentGrade" name="learner[assessmentGrade]" value="<%= learner.assessmentGrade || '' %>">
     </div>
 
     <div class="form-group">
