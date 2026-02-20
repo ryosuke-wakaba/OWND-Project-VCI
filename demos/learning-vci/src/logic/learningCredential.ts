@@ -151,7 +151,9 @@ const issueLearningCredential = async (
     // Optional fields - 値がある場合のみ含める
     // SD: Always
     ...(givenName && { given_name: givenName }),
-    ...(parsedLearningOutcomes && { learning_outcomes: parsedLearningOutcomes }),
+    ...(parsedLearningOutcomes && {
+      learning_outcomes: parsedLearningOutcomes,
+    }),
     ...(assessmentGrade && { assessment_grade: assessmentGrade }),
     ...(parsedPrerequisitesToEnroll && {
       prerequisites_to_enroll: parsedPrerequisitesToEnroll,
