@@ -148,20 +148,23 @@ const issueLearningCredential = async (
     expected_study_time: expectedStudyTime || "",
     level_of_learning_experience: levelOfLearningExperience || 1,
     types_of_quality_assurance: parsedTypesOfQualityAssurance,
-    // Optional fields - Verifier要求に対応するため常に含める（nullで未設定を表現）
+    // Optional fields - 値がある場合のみ含める
     // SD: Always
-    given_name: givenName || null,
-    learning_outcomes: parsedLearningOutcomes || null,
-    assessment_grade: assessmentGrade || null,
-    prerequisites_to_enroll: parsedPrerequisitesToEnroll || null,
-    integration_stackability_options:
-      integrationStackabilityOptions !== undefined &&
-      integrationStackabilityOptions !== null
-        ? integrationStackabilityOptions
-        : null,
+    ...(givenName && { given_name: givenName }),
+    ...(parsedLearningOutcomes && { learning_outcomes: parsedLearningOutcomes }),
+    ...(assessmentGrade && { assessment_grade: assessmentGrade }),
+    ...(parsedPrerequisitesToEnroll && {
+      prerequisites_to_enroll: parsedPrerequisitesToEnroll,
+    }),
+    ...(integrationStackabilityOptions !== undefined &&
+      integrationStackabilityOptions !== null && {
+        integration_stackability_options: integrationStackabilityOptions,
+      }),
     // SD: Never
-    date_of_expiry: dateOfExpiry || null,
-    achievement_description: achievementDescription || null,
+    ...(dateOfExpiry && { date_of_expiry: dateOfExpiry }),
+    ...(achievementDescription && {
+      achievement_description: achievementDescription,
+    }),
     // Standard claims
     cnf: { jwk },
     vct,
