@@ -211,108 +211,117 @@ const validMetadata = [
             proof_signing_alg_values_supported: ["ES256", "ES256K"],
           },
         },
-        display: [
-          {
-            name: "社員証",
-            locale: "ja-JP",
-            logo: {
-              uri: "https://example.co.jp/public/employee-identification-credential-logo.png",
-              alt_text: "社員証のロゴ",
-            },
-            background_color: "#003289",
-            background_image: {
-              uri: "https://example.co.jp/images/example.png",
-            },
-            text_color: "#FFFFFF",
-          },
-          {
-            name: "Employee Identification Credential",
-            locale: "en-US",
-            logo: {
-              uri: "https://example.co.jp/public/employee-identification-credential-logo.png",
-              alt_text: "a square logo of a Employee Identification Credential",
-            },
-            background_color: "#003289",
-            background_image: {
-              uri: "https://example.co.jp/images/example.png",
-            },
-            text_color: "#FFFFFF",
-          },
-        ],
         vct: "EmployeeIdentificationCredential",
         credential_metadata: {
-          companyName: {
-            display: [
-              {
-                name: "会社名",
-                locale: "ja-JP",
+          display: [
+            {
+              name: "社員証",
+              locale: "ja-JP",
+              logo: {
+                uri: "https://example.co.jp/public/employee-identification-credential-logo.png",
+                alt_text: "社員証のロゴ",
               },
-              {
-                name: "Company Name",
-                locale: "en-US",
+              background_color: "#003289",
+              background_image: {
+                uri: "https://example.co.jp/images/example.png",
               },
-            ],
-          },
-          employeeNo: {
-            display: [
-              {
-                name: "社員番号",
-                locale: "ja-JP",
+              text_color: "#FFFFFF",
+            },
+            {
+              name: "Employee Identification Credential",
+              locale: "en-US",
+              logo: {
+                uri: "https://example.co.jp/public/employee-identification-credential-logo.png",
+                alt_text:
+                  "a square logo of a Employee Identification Credential",
               },
-              {
-                name: "Employee Number",
-                locale: "en-US",
+              background_color: "#003289",
+              background_image: {
+                uri: "https://example.co.jp/images/example.png",
               },
-            ],
-          },
-          givenName: {
-            display: [
-              {
-                name: "名",
-                locale: "ja-JP",
-              },
-              {
-                name: "First Name",
-                locale: "en-US",
-              },
-            ],
-          },
-          familyName: {
-            display: [
-              {
-                name: "姓",
-                locale: "ja-JP",
-              },
-              {
-                name: "Last Name",
-                locale: "en-US",
-              },
-            ],
-          },
-          gender: {
-            display: [
-              {
-                name: "性別情報",
-                locale: "ja-JP",
-              },
-              {
-                name: "Gender",
-                locale: "en-US",
-              },
-            ],
-          },
-          division: {
-            display: [
-              {
-                name: "部署",
-                locale: "ja-JP",
-              },
-              {
-                name: "Division",
-                locale: "en-US",
-              },
-            ],
-          },
+              text_color: "#FFFFFF",
+            },
+          ],
+          claims: [
+            {
+              path: ["companyName"],
+              display: [
+                {
+                  name: "会社名",
+                  locale: "ja-JP",
+                },
+                {
+                  name: "Company Name",
+                  locale: "en-US",
+                },
+              ],
+            },
+            {
+              path: ["employeeNo"],
+              display: [
+                {
+                  name: "社員番号",
+                  locale: "ja-JP",
+                },
+                {
+                  name: "Employee Number",
+                  locale: "en-US",
+                },
+              ],
+            },
+            {
+              path: ["givenName"],
+              display: [
+                {
+                  name: "名",
+                  locale: "ja-JP",
+                },
+                {
+                  name: "First Name",
+                  locale: "en-US",
+                },
+              ],
+            },
+            {
+              path: ["familyName"],
+              display: [
+                {
+                  name: "姓",
+                  locale: "ja-JP",
+                },
+                {
+                  name: "Last Name",
+                  locale: "en-US",
+                },
+              ],
+            },
+            {
+              path: ["gender"],
+              display: [
+                {
+                  name: "性別情報",
+                  locale: "ja-JP",
+                },
+                {
+                  name: "Gender",
+                  locale: "en-US",
+                },
+              ],
+            },
+            {
+              path: ["division"],
+              display: [
+                {
+                  name: "部署",
+                  locale: "ja-JP",
+                },
+                {
+                  name: "Division",
+                  locale: "en-US",
+                },
+              ],
+            },
+          ],
         },
       },
     },

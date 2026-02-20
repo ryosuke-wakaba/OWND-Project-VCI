@@ -420,23 +420,26 @@ describe("GET /.well-known/openid-credential-issuer", () => {
         .EmployeeIdentificationCredential;
     const credentialMetadata = empConfig.credential_metadata;
 
-    assert.property(credentialMetadata, "companyName");
-    assert.property(credentialMetadata, "employeeNo");
-    assert.property(credentialMetadata, "givenName");
-    assert.property(credentialMetadata, "familyName");
-    assert.property(credentialMetadata, "gender");
-    assert.property(credentialMetadata, "division");
+    // OID4VCI v1.0: claims is an array with path property
+    assert.isArray(credentialMetadata.claims);
+    const claimPaths = credentialMetadata.claims.map((c: any) => c.path[0]);
+    assert.include(claimPaths, "companyName");
+    assert.include(claimPaths, "employeeNo");
+    assert.include(claimPaths, "givenName");
+    assert.include(claimPaths, "familyName");
+    assert.include(claimPaths, "gender");
+    assert.include(claimPaths, "division");
 
     // Check display names for one claim
-    assert.isArray(credentialMetadata.companyName.display);
-    assert.equal(credentialMetadata.companyName.display.length, 2);
-    assert.equal(credentialMetadata.companyName.display[0].name, "会社名");
-    assert.equal(credentialMetadata.companyName.display[0].locale, "ja-JP");
-    assert.equal(
-      credentialMetadata.companyName.display[1].name,
-      "Company Name",
+    const companyNameClaim = credentialMetadata.claims.find(
+      (c: any) => c.path[0] === "companyName",
     );
-    assert.equal(credentialMetadata.companyName.display[1].locale, "en-US");
+    assert.isArray(companyNameClaim.display);
+    assert.equal(companyNameClaim.display.length, 2);
+    assert.equal(companyNameClaim.display[0].name, "会社名");
+    assert.equal(companyNameClaim.display[0].locale, "ja-JP");
+    assert.equal(companyNameClaim.display[1].name, "Company Name");
+    assert.equal(companyNameClaim.display[1].locale, "en-US");
   });
 
   it("should use default company name and brand color", async () => {
@@ -481,11 +484,11 @@ describe("GET /.well-known/openid-credential-issuer", () => {
       `${credentialIssuer}/images/company-logo.png`,
     );
 
-    // Check credential display URIs
+    // Check credential display URIs (OID4VCI v1.0: display is inside credential_metadata for SD-JWT VC)
     const empConfig =
       response.body.credential_configurations_supported
         .EmployeeIdentificationCredential;
-    const credDisplay = empConfig.display[0];
+    const credDisplay = empConfig.credential_metadata.display[0];
     assert.equal(
       credDisplay.logo.uri,
       `${credentialIssuer}/images/credential-logo.png`,

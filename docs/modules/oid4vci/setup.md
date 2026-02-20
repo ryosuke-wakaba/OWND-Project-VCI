@@ -138,22 +138,26 @@ export const learningCredentialConfig = {
     },
   },
   vct: "urn:eu.europa.ec.eudi:learning:credential:1",
-  display: [
-    {
-      name: "学習証明書",
-      locale: "ja-JP",
-      background_color: "#1E3A5F",
-      text_color: "#FFFFFF",
-    },
-  ],
   credential_metadata: {
-    family_name: {
-      display: [{ name: "姓", locale: "ja-JP" }],
-    },
-    given_name: {
-      display: [{ name: "名", locale: "ja-JP" }],
-    },
-    // 他のフィールド...
+    display: [
+      {
+        name: "学習証明書",
+        locale: "ja-JP",
+        background_color: "#1E3A5F",
+        text_color: "#FFFFFF",
+      },
+    ],
+    claims: [
+      {
+        path: ["family_name"],
+        display: [{ name: "姓", locale: "ja-JP" }],
+      },
+      {
+        path: ["given_name"],
+        display: [{ name: "名", locale: "ja-JP" }],
+      },
+      // 他のフィールド...
+    ],
   },
 };
 ```

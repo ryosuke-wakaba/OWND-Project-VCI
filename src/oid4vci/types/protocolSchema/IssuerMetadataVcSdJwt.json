@@ -17,24 +17,6 @@
             ],
             "type": "object"
         },
-        "Claim": {
-            "additionalProperties": false,
-            "properties": {
-                "display": {
-                    "items": {
-                        "$ref": "#/definitions/ClaimDisplay"
-                    },
-                    "type": "array"
-                },
-                "mandatory": {
-                    "type": "boolean"
-                },
-                "value_type": {
-                    "type": "string"
-                }
-            },
-            "type": "object"
-        },
         "ClaimDisplay": {
             "additionalProperties": true,
             "properties": {
@@ -47,10 +29,36 @@
             },
             "type": "object"
         },
-        "Claims": {
-            "additionalProperties": {
-                "$ref": "#/definitions/Claim"
+        "ClaimMetadata": {
+            "additionalProperties": false,
+            "description": "Claim metadata for SD-JWT VC format (OID4VCI v1.0 compliant array format)\nhttps://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-issuer-metadata-p",
+            "properties": {
+                "display": {
+                    "description": "Array of objects containing localized display information",
+                    "items": {
+                        "$ref": "#/definitions/ClaimDisplay"
+                    },
+                    "type": "array"
+                },
+                "mandatory": {
+                    "description": "When true, indicates the claim must be included in issued credentials",
+                    "type": "boolean"
+                },
+                "path": {
+                    "description": "Non-empty array serving as a claims path pointer identifying the specific claim",
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                "value_type": {
+                    "description": "Data type of the claim value (e.g., \"string\", \"number\", \"boolean\")",
+                    "type": "string"
+                }
             },
+            "required": [
+                "path"
+            ],
             "type": "object"
         },
         "CredentialDisplay": {
@@ -86,6 +94,27 @@
                 },
                 "text_color": {
                     "type": "string"
+                }
+            },
+            "type": "object"
+        },
+        "CredentialMetadataContent": {
+            "additionalProperties": false,
+            "description": "Credential metadata content for SD-JWT VC format\nContains claims array and optional credential-level display",
+            "properties": {
+                "claims": {
+                    "description": "Array of claim metadata objects",
+                    "items": {
+                        "$ref": "#/definitions/ClaimMetadata"
+                    },
+                    "type": "array"
+                },
+                "display": {
+                    "description": "Credential-level display information",
+                    "items": {
+                        "$ref": "#/definitions/CredentialDisplay"
+                    },
+                    "type": "array"
                 }
             },
             "type": "object"
@@ -154,7 +183,7 @@
                 "additionalProperties": false,
                 "properties": {
                     "credential_metadata": {
-                        "$ref": "#/definitions/Claims"
+                        "$ref": "#/definitions/CredentialMetadataContent"
                     },
                     "credential_signing_alg_values_supported": {
                         "items": {
@@ -165,12 +194,6 @@
                     "cryptographic_binding_methods_supported": {
                         "items": {
                             "type": "string"
-                        },
-                        "type": "array"
-                    },
-                    "display": {
-                        "items": {
-                            "$ref": "#/definitions/CredentialDisplay"
                         },
                         "type": "array"
                     },

@@ -64,7 +64,8 @@ export const localizeIssuerMetadata = (
   Object.keys(metadata.credential_configurations_supported).forEach((key) => {
     const config = metadata.credential_configurations_supported[key];
 
-    if (config.display) {
+    // Handle display at config level (for non-SD-JWT VC formats like jwt_vc_json, ldp_vc)
+    if ("display" in config && config.display) {
       config.display = localizeCredentialDisplay(
         config.display,
         locale,
@@ -91,17 +92,28 @@ export const localizeIssuerMetadata = (
       );
     }
 
-    if ("credential_metadata" in config) {
-      Object.keys(config.credential_metadata).forEach((claimKey) => {
-        const claim = config.credential_metadata![claimKey];
-        if (claim.display) {
-          claim.display = localizeClaimDisplay(
-            claim.display,
-            locale,
-            defaultLocale,
-          );
-        }
-      });
+    if ("credential_metadata" in config && config.credential_metadata) {
+      // Handle OID4VCI v1.0 compliant format for SD-JWT VC
+      // Credential display is inside credential_metadata for SD-JWT VC
+      if (config.credential_metadata.display) {
+        config.credential_metadata.display = localizeCredentialDisplay(
+          config.credential_metadata.display,
+          locale,
+          defaultLocale,
+        );
+      }
+      // Handle claims array
+      if (config.credential_metadata.claims) {
+        config.credential_metadata.claims.forEach((claim) => {
+          if (claim.display) {
+            claim.display = localizeClaimDisplay(
+              claim.display,
+              locale,
+              defaultLocale,
+            );
+          }
+        });
+      }
     }
 
     localizedMetadata.credential_configurations_supported[key] = config;

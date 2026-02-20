@@ -72,7 +72,11 @@ describe("localizeIssuerMetadata", () => {
       },
     };
 
-    const localizedMetadata = localizeIssuerMetadata(metadata, "es", "en");
+    const localizedMetadata = localizeIssuerMetadata(
+      metadata,
+      "es",
+      "en",
+    ) as IssuerMetadataJwtVcJson;
     assert.deepEqual(
       localizedMetadata.credential_configurations_supported.config1.display,
       [{ name: "Credential Spanish", locale: "es" }],
@@ -127,12 +131,15 @@ describe("localizeIssuerMetadata", () => {
           credential_signing_alg_values_supported: ["ES256"],
           vct: "vct",
           credential_metadata: {
-            claim1: {
-              display: [
-                { name: "Claim Default", locale: "en" },
-                { name: "Claim Spanish", locale: "es" },
-              ],
-            },
+            claims: [
+              {
+                path: ["claim1"],
+                display: [
+                  { name: "Claim Default", locale: "en" },
+                  { name: "Claim Spanish", locale: "es" },
+                ],
+              },
+            ],
           },
           order: ["order"],
         },
@@ -146,8 +153,50 @@ describe("localizeIssuerMetadata", () => {
     ) as IssuerMetadataVcSdJwt;
     assert.deepEqual(
       localizedMetadata.credential_configurations_supported.config1
-        .credential_metadata?.claim1.display,
+        .credential_metadata?.claims?.[0].display,
       [{ name: "Claim Spanish", locale: "es" }],
+    );
+  });
+
+  it("should localize CredentialDisplay within credential_metadata for SD-JWT VC", () => {
+    const metadata: IssuerMetadataVcSdJwt = {
+      credential_issuer: "issuer",
+      credential_endpoint: "endpoint",
+      credential_configurations_supported: {
+        config1: {
+          format: "format",
+          cryptographic_binding_methods_supported: ["jwk"],
+          credential_signing_alg_values_supported: ["ES256"],
+          vct: "vct",
+          credential_metadata: {
+            display: [
+              { name: "Credential Default", locale: "en" },
+              { name: "Credential Spanish", locale: "es" },
+            ],
+            claims: [
+              {
+                path: ["claim1"],
+                display: [
+                  { name: "Claim Default", locale: "en" },
+                  { name: "Claim Spanish", locale: "es" },
+                ],
+              },
+            ],
+          },
+          order: ["order"],
+        },
+      },
+    };
+
+    const localizedMetadata = localizeIssuerMetadata(
+      metadata,
+      "es",
+      "en",
+    ) as IssuerMetadataVcSdJwt;
+    assert.deepEqual(
+      localizedMetadata.credential_configurations_supported.config1
+        .credential_metadata?.display,
+      [{ name: "Credential Spanish", locale: "es" }],
     );
   });
 });
