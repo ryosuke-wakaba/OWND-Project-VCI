@@ -195,6 +195,10 @@ const issueLearningCredential = async (
     ) as string[],
   };
 
+  // Log claims for verification
+  console.log("SD-JWT Claims:", JSON.stringify(claims, null, 2));
+  console.log("Claims keys:", Object.keys(claims));
+
   // Issue credential with x5c (if available) or jwk mode (if no certificate)
   const credential = await issueCredentialCore(
     claims,
