@@ -215,6 +215,32 @@ export interface Claims {
   [key: string]: Claim;
 }
 
+/**
+ * Claim metadata for SD-JWT VC format (OID4VCI v1.0 compliant array format)
+ * https://openid.net/specs/openid-4-verifiable-credential-issuance-1_0.html#name-credential-issuer-metadata-p
+ */
+export interface ClaimMetadata {
+  /** Non-empty array serving as a claims path pointer identifying the specific claim */
+  path: string[];
+  /** Array of objects containing localized display information */
+  display?: ClaimDisplay[];
+  /** Data type of the claim value (e.g., "string", "number", "boolean") */
+  value_type?: string;
+  /** When true, indicates the claim must be included in issued credentials */
+  mandatory?: boolean;
+}
+
+/**
+ * Credential metadata content for SD-JWT VC format
+ * Contains claims array and optional credential-level display
+ */
+export interface CredentialMetadataContent {
+  /** Array of claim metadata objects */
+  claims?: ClaimMetadata[];
+  /** Credential-level display information */
+  display?: CredentialDisplay[];
+}
+
 export interface ClaimsOnlyMandatory {
   // todo: support nested structure
   [key: string]: ClaimOnlyMandatory;
@@ -276,6 +302,7 @@ export interface IssuerMetadataLdpVc extends BaseIssuerMetadata {
 export interface IssuerMetadataJwtVcJsonLd extends IssuerMetadataLdpVc {}
 
 // A.3 IETF SD-JWT VC
+// Per OID4VCI v1.0 spec, display for SD-JWT VC is inside credential_metadata, not at config level
 export interface IssuerMetadataVcSdJwt extends BaseIssuerMetadata {
   credential_configurations_supported: {
     [key: string]: {
@@ -288,11 +315,10 @@ export interface IssuerMetadataVcSdJwt extends BaseIssuerMetadata {
           proof_signing_alg_values_supported: string[];
         };
       };
-      display?: CredentialDisplay[];
 
       // Added parameters specific to A.3.
       vct: string;
-      credential_metadata: Claims; // Updated from 'claims' to 'credential_metadata' per latest spec
+      credential_metadata: CredentialMetadataContent; // OID4VCI v1.0 compliant array format (includes display)
       order?: string[];
     };
   };

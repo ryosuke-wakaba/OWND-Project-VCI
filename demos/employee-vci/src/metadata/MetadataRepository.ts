@@ -88,11 +88,12 @@ export class MetadataRepository implements IMetadataRepository {
    * サポートするクレデンシャル設定を構築
    */
   private buildCredentialConfigurations() {
-    // employeeCredentialConfigのdisplay配列内のURIを動的に設定
+    // credential_metadata.display配列内のURIを動的に設定
+    // OID4VCI v1.0: display is inside credential_metadata for SD-JWT VC
     const config = structuredClone(employeeCredentialConfig);
 
-    if (config.display) {
-      for (const display of config.display) {
+    if (config.credential_metadata?.display) {
+      for (const display of config.credential_metadata.display) {
         if (display.logo) {
           display.logo.uri = `${this.credentialIssuer}/images/credential-logo.png`;
         }

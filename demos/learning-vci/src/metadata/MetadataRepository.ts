@@ -77,8 +77,9 @@ export class MetadataRepository implements IMetadataRepository {
   private buildCredentialConfigurations() {
     const config = structuredClone(learningCredentialConfig);
 
-    if (config.display) {
-      for (const display of config.display) {
+    // OID4VCI v1.0: display is inside credential_metadata for SD-JWT VC
+    if (config.credential_metadata?.display) {
+      for (const display of config.credential_metadata.display) {
         if (display.logo) {
           display.logo.uri = `${this.credentialIssuer}/images/credential-logo.png`;
         }
