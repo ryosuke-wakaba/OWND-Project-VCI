@@ -161,7 +161,9 @@ const issueLearningCredential = async (
     ...(integrationStackabilityOptions !== undefined &&
       integrationStackabilityOptions !== null && {
         // SQLiteはBOOLEANを0/1として保存するため、明示的にbooleanに変換
-        integration_stackability_options: Boolean(integrationStackabilityOptions),
+        integration_stackability_options: Boolean(
+          integrationStackabilityOptions,
+        ),
       }),
     // SD: Never
     ...(dateOfExpiry && { date_of_expiry: dateOfExpiry }),
