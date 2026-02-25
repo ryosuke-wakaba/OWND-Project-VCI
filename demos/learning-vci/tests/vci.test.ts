@@ -39,6 +39,7 @@ const testLearner: NewLearner = {
   typesOfQualityAssurance: '["機関認証","プログラム認定"]',
   prerequisitesToEnroll: '["Python基礎","数学基礎"]',
   integrationStackabilityOptions: true,
+  credentialIssuer: "https://test-issuer.example.com",
 };
 
 let app: any;
@@ -317,22 +318,30 @@ describe("Learning VCI - Metadata Endpoint", () => {
         response.body.credential_configurations_supported.LearningCredential;
       const credentialMetadata = learningConfig.credential_metadata;
 
+      // OID4VCI v1.0: claimsは配列形式
+      assert.isArray(credentialMetadata.claims);
+
+      // クレーム名のセットを作成
+      const claimPaths = new Set(
+        credentialMetadata.claims.map((c: { path: string[] }) => c.path[0]),
+      );
+
       // 既存フィールド
-      assert.property(credentialMetadata, "family_name");
-      assert.property(credentialMetadata, "given_name");
-      assert.property(credentialMetadata, "issuing_authority");
-      assert.property(credentialMetadata, "issuing_country");
-      assert.property(credentialMetadata, "date_of_issuance");
-      assert.property(credentialMetadata, "achievement_title");
+      assert.isTrue(claimPaths.has("family_name"));
+      assert.isTrue(claimPaths.has("given_name"));
+      assert.isTrue(claimPaths.has("issuing_authority"));
+      assert.isTrue(claimPaths.has("issuing_country"));
+      assert.isTrue(claimPaths.has("date_of_issuance"));
+      assert.isTrue(claimPaths.has("achievement_title"));
 
       // v1.02 新規フィールド
-      assert.property(credentialMetadata, "language_of_classes");
-      assert.property(credentialMetadata, "learner_identification");
-      assert.property(credentialMetadata, "expected_study_time");
-      assert.property(credentialMetadata, "level_of_learning_experience");
-      assert.property(credentialMetadata, "types_of_quality_assurance");
-      assert.property(credentialMetadata, "prerequisites_to_enroll");
-      assert.property(credentialMetadata, "integration_stackability_options");
+      assert.isTrue(claimPaths.has("language_of_classes"));
+      assert.isTrue(claimPaths.has("learner_identification"));
+      assert.isTrue(claimPaths.has("expected_study_time"));
+      assert.isTrue(claimPaths.has("level_of_learning_experience"));
+      assert.isTrue(claimPaths.has("types_of_quality_assurance"));
+      assert.isTrue(claimPaths.has("prerequisites_to_enroll"));
+      assert.isTrue(claimPaths.has("integration_stackability_options"));
     });
 
     it("should include display names for v1.02 claims", async () => {
@@ -344,13 +353,21 @@ describe("Learning VCI - Metadata Endpoint", () => {
         response.body.credential_configurations_supported.LearningCredential
           .credential_metadata;
 
+      // OID4VCI v1.0: claimsは配列形式
+      const claimsMap = new Map(
+        credentialMetadata.claims.map((c: { path: string[]; display: unknown[] }) => [
+          c.path[0],
+          c,
+        ]),
+      );
+
       // language_of_classes の display を確認
-      const langClasses = credentialMetadata.language_of_classes;
+      const langClasses = claimsMap.get("language_of_classes") as { display: unknown[] };
       assert.isArray(langClasses.display);
       assert.isAtLeast(langClasses.display.length, 1);
 
       // learner_identification の display を確認
-      const learnerId = credentialMetadata.learner_identification;
+      const learnerId = claimsMap.get("learner_identification") as { display: unknown[] };
       assert.isArray(learnerId.display);
       assert.isAtLeast(learnerId.display.length, 1);
     });
